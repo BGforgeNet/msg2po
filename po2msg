@@ -12,16 +12,18 @@ dest_file=sys.argv[2]
 with open (source_file, 'r') as po_file:
   lines = {}
   msgid_list = []
-  dest_filename =  dest_file.rsplit('/', 1)[1] #compare only filename
-  for line in po_file:
+  if len(dest_file.rsplit('/', 1)) > 1: #compare only filename
+    dest_filename = dest_file.rsplit('/', 1)[1]
+  else:
+    dest_filename = dest_file
 
+  for line in po_file:
     match = re.findall('^#: .*/([^/]+.msg):(\d+)',line) #compare only filename
     if match:
       m_file = match[0][0]
       seq = match[0][1]
       if m_file == dest_filename:
         msgid_list.append(seq)
-
     match_str = re.findall('msgstr "(.*)"',line)
     if match_str:
       string = match_str[0]
