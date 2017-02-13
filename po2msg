@@ -35,6 +35,7 @@ with open (source_file, 'r') as po_file:
           lines[msgid_seq] = string
 
   lines2=[]
+  lines = {int(k):v for k,v in lines.items()} #convert key to int
   keylist = lines.keys()
   keylist.sort()
   for n in keylist:
