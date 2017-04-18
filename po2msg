@@ -24,6 +24,11 @@ with open (source_file, 'r') as po_file:
       seq = match[0][1]
       if m_file == dest_filename:
         msgid_list.append(seq)
+    match_gid = re.findall('msgid "(.*)"',line)
+    if match_gid:
+      gid = match_gid[0]
+      gid = gid.replace('\\n','\n')
+      gid = gid.replace('\\"','\"')
     match_str = re.findall('msgstr "(.*)"',line)
     if match_str:
       string = match_str[0]
@@ -32,7 +37,10 @@ with open (source_file, 'r') as po_file:
       if len(msgid_list) > 0:
         for msgid in msgid_list:
           msgid_seq = msgid_list.pop()
-          lines[msgid_seq] = string
+          if len(string) > 0:
+            lines[msgid_seq] = string
+          else:
+            lines[msgid_seq] = gid
 
   lines2=[]
   lines = {int(k):v for k,v in lines.items()} #convert key to int
