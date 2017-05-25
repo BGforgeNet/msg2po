@@ -35,25 +35,24 @@ text = open(source_file, 'r').read()
 found_entries = re.findall(pattern, text, re.DOTALL)
 
 po_lines = []
-#now = datetime.datetime.utcnow()
-#now_str = "{}-{}-{} {}:{}".format(now.year, now.month, now.day, now.hour, now.minute)
-#po_lines.append(header.format(source_file,now_str,version))
 po_lines.append(header.format(source_file,version))
 
 skip = []
 for entry in found_entries:
   index = entry[0]
   if len(skip)==0 or (len(skip)>0 and not index in skip): #if not a dupe
-    value = entry[1].replace('\n','\\n').replace('\"','\\"')
-    po_lines.append('#: {}:{}\n'.format(source_file,index)) #file reference
+    value = entry[1].replace('\\','\\\\').replace('\n','\\n')
+    if not value == "":
+      po_lines.append('#: {}:{}\n'.format(source_file,index)) #file reference
     for entry2 in found_entries: #search dupes
       index2 = entry2[0]
       value2 = entry2[1].replace('\n','\\n').replace('\"','\\"')
-      if value2 == value and index2 != index:
+      if value2 == value and index2 != index and not value2 == "":
         po_lines.append('#: {}:{}\n'.format(source_file,index2)) #next file
         skip.append(index2) #mark as dupe
-    po_lines.append('msgid "{}"\n'.format(value))
-    po_lines.append('msgstr ""\n\n')
+    if not value == "":
+      po_lines.append('msgid "{}"\n'.format(value))
+      po_lines.append('msgstr ""\n\n')
 
 with open(dest_po, 'w') as po_file:
   po_file.writelines(po_lines)
