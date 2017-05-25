@@ -28,11 +28,13 @@ with open (source_file, 'r') as po_file:
     if match_gid:
       gid = match_gid[0]
       gid = gid.replace('\\n','\n')
+      gid = gid.replace('\"','\\"')
       gid = gid.replace('\\\\','\\')
     match_str = re.findall('msgstr "(.*)"',line)
     if match_str:
       string = match_str[0]
       string = string.replace('\\n','\n')
+      string = string.replace('\\"','\"')
       string = string.replace('\\\\','\\')
       if len(msgid_list) > 0:
         for msgid in msgid_list:

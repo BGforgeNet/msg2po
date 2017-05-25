@@ -41,12 +41,16 @@ skip = []
 for entry in found_entries:
   index = entry[0]
   if len(skip)==0 or (len(skip)>0 and not index in skip): #if not a dupe
-    value = entry[1].replace('\\','\\\\').replace('\n','\\n')
+    value = entry[1].replace('\\','\\\\')
+    value = value.replace('\"','\\"')
+    value = value.replace('\n','\\n')
     if not value == "":
       po_lines.append('#: {}:{}\n'.format(source_file,index)) #file reference
     for entry2 in found_entries: #search dupes
       index2 = entry2[0]
-      value2 = entry2[1].replace('\n','\\n').replace('\"','\\"')
+      value2 = entry2[1].replace('\\','\\\\')
+      value2 = value2.replace('\"','\\"')
+      value2 = value2.replace('\n','\\n')
       if value2 == value and index2 != index and not value2 == "":
         po_lines.append('#: {}:{}\n'.format(source_file,index2)) #next file
         skip.append(index2) #mark as dupe
