@@ -40,23 +40,43 @@ po_lines.append(header.format(source_file,version))
 skip = []
 for entry in found_entries:
   index = entry[0]
+  value = entry[1]
+  if value == '': #skip empty entries
+    print 'WARN: {} - empty value found, skipping: {{{}}}{{}}{{}}'.format(source_file,index)
+    continue
+  if index == '000': #skip invalid '000' entries
+    print 'WARN: {} - invalid entry number found, skipping: {{000}}{{}}{{{}}}'.format(source_file,value)
+    continue
   if len(skip)==0 or (len(skip)>0 and not index in skip): #if not a dupe
-    value = entry[1].replace('\\','\\\\')
+    index_seen = 0
+    value = value.replace('\\','\\\\')
     value = value.replace('\"','\\"')
     value = value.replace('\n','\\n')
-    if not value == "":
-      po_lines.append('#: {}:{}\n'.format(source_file,index)) #file reference
+    po_lines.append('#: {}:{}\n'.format(source_file,index)) #file reference
+
     for entry2 in found_entries: #search dupes
       index2 = entry2[0]
-      value2 = entry2[1].replace('\\','\\\\')
+      value2 = entry2[1]
+      if value2 == '': #skip empty entries
+        continue
+      if index2 == '000': #skip invalid '000' entries
+        continue
+
+      value2 = value2.replace('\\','\\\\')
       value2 = value2.replace('\"','\\"')
       value2 = value2.replace('\n','\\n')
-      if value2 == value and index2 != index and not value2 == "":
+      if value2 == value and index2 != index: #check for duplicate values
         po_lines.append('#: {}:{}\n'.format(source_file,index2)) #next file
-        skip.append(index2) #mark as dupe
-    if not value == "":
-      po_lines.append('msgid "{}"\n'.format(value))
-      po_lines.append('msgstr ""\n\n')
+        skip.append(index2) #mark for skipping
+
+      if index2 == index: #check for duplicate entry numbers
+        index_seen += 1
+        if index_seen > 1:
+          skip.append(index2) #mark as dupe
+          print 'WARN: {} - duplicate entry number found, skipping: {{{}}}{{}}{{{}}}'.format(source_file,index2,value2)
+
+    po_lines.append('msgid "{}"\n'.format(value))
+    po_lines.append('msgstr ""\n\n')
 
 with open(dest_po, 'w') as po_file:
   po_file.writelines(po_lines)
