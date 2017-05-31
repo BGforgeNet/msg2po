@@ -1,0 +1,36 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+import re
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+import polib
+import io
+
+version='1.0.0'
+
+po_file=sys.argv[1]
+msg_file_mark=sys.argv[2]
+msg_file=sys.argv[3]
+msg_enc=sys.argv[4]
+msg_ctxt=sys.argv[5]
+
+po = polib.pofile(po_file,wrapwidth=999999)
+po_entries = [e for e in po]
+
+msg_text = io.open(msg_file, 'r', encoding=msg_enc).read()
+msg_pattern = "{(\d+)}{}{([^}]*)}"
+msg_entries = re.findall(msg_pattern, msg_text, re.DOTALL)
+
+for t in msg_entries:
+  t_seq = t[0]
+  t_str = t[1]
+  t_str_u = unicode(t_str)
+  for e in po_entries:
+    for o in e.occurrences:
+      if o[0] == msg_file_mark and o[1] == t_seq:
+        e.msgstr = t_str_u
+        e.msgctxt = msg_ctxt
+
+po.save(po_file)
