@@ -15,7 +15,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Convert Fallout MSG to gettext PO',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-i', dest='input_file', help='input file', required=True)
 parser.add_argument('-o', dest='output_file', help='output file')
-parser.add_argument('-e', dest='enc', default='utf-8', help='source encoding')
+parser.add_argument('--encoding', dest='enc', default='utf-8', help='source encoding')
 args=parser.parse_args()
 
 #init vars
