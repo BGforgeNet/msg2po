@@ -1,12 +1,28 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+version='2.0.0'
+
+import io
 import re
 import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 import datetime
 import collections
+import argparse
 
-version='1.0.0'
+parser = argparse.ArgumentParser(description='Convert Fallout MSG to gettext PO',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('-i', dest='input_file', help='input file', required=True)
+parser.add_argument('-o', dest='output_file', help='output file')
+parser.add_argument('-e', dest='enc', default='utf-8', help='source encoding')
+args=parser.parse_args()
+
+#init vars
+input_file=args.input_file
+output_file=args.output_file
+enc=args.enc
+
 
 header='''#. extracted from {}
 #, fuzzy
@@ -26,33 +42,31 @@ msgstr ""
 
 '''
 
-source_file=sys.argv[1]
-dest_po=sys.argv[2]
 
 pattern = '{(\d+)}{}{([^}]*)}'
 
-text = open(source_file, 'r').read()
+text = io.open(input_file, 'r', encoding=enc).read()
 found_entries = re.findall(pattern, text, re.DOTALL)
 
 po_lines = []
-po_lines.append(header.format(source_file,version))
+po_lines.append(header.format(input_file,version))
 
 skip = []
 for entry in found_entries:
   index = entry[0]
-  value = entry[1]
+  value = unicode(entry[1])
   if value == '': #skip empty entries
-    print 'WARN: {} - empty value found, skipping: {{{}}}{{}}{{}}'.format(source_file,index)
+    print 'WARN: {} - empty value found, skipping: {{{}}}{{}}{{}}'.format(input_file,index)
     continue
   if index == '000': #skip invalid '000' entries
-    print 'WARN: {} - invalid entry number found, skipping: {{000}}{{}}{{{}}}'.format(source_file,value)
+    print 'WARN: {} - invalid entry number found, skipping: {{000}}{{}}{{{}}}'.format(input_file,value)
     continue
   if len(skip)==0 or (len(skip)>0 and not index in skip): #if not a dupe
     index_seen = 0
     value = value.replace('\\','\\\\')
     value = value.replace('\"','\\"')
     value = value.replace('\n','\\n')
-    po_lines.append('#: {}:{}\n'.format(source_file,index)) #file reference
+    po_lines.append('#: {}:{}\n'.format(input_file,index)) #file reference
 
     for entry2 in found_entries: #search dupes
       index2 = entry2[0]
@@ -66,18 +80,22 @@ for entry in found_entries:
       value2 = value2.replace('\"','\\"')
       value2 = value2.replace('\n','\\n')
       if value2 == value and index2 != index: #check for duplicate values
-        po_lines.append('#: {}:{}\n'.format(source_file,index2)) #next file
+        po_lines.append('#: {}:{}\n'.format(input_file,index2)) #next file
         skip.append(index2) #mark for skipping
 
       if index2 == index: #check for duplicate entry numbers
         index_seen += 1
         if index_seen > 1:
           skip.append(index2) #mark as dupe
-          print 'WARN: {} - duplicate entry number found, skipping: {{{}}}{{}}{{{}}}'.format(source_file,index2,value2)
+          print 'WARN: {} - duplicate entry number found, skipping: {{{}}}{{}}{{{}}}'.format(input_file,index2,value2)
 
     po_lines.append('msgid "{}"\n'.format(value))
     po_lines.append('msgstr ""\n\n')
 
-with open(dest_po, 'w') as po_file:
-  po_file.writelines(po_lines)
-po_file.close()
+if output_file == None:
+  for po_line in po_lines:
+    print po_line,
+else:
+  with open(output_file, 'w') as po_file:
+    po_file.writelines(po_lines)
+  po_file.close()

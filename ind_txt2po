@@ -13,7 +13,7 @@ version='1.0.0'
 
 sve_file=sys.argv[1]
 po_file=sys.argv[2]
-sve_enc=sys.argv[3]
+#sve_enc=sys.argv[3]
 
 po = polib.POFile(wrapwidth=999999)
 po.metadata = {
@@ -30,9 +30,10 @@ po.metadata = {
   'X-Generator': 'sve2po v.{}'.format(version),
 }
 
-sve_text = io.open(sve_file, 'r', encoding=sve_enc).read()
+sve_text = io.open(sve_file, 'r', encoding='utf-8').read()
 sve_pattern = "(\d+):(.*)"
 sve_entries = re.findall(sve_pattern, sve_text)
+entry_added = 0
 
 for t in sve_entries:
   t_seq = t[0]
@@ -40,12 +41,21 @@ for t in sve_entries:
   if t_str == '':
     print "WARN: {} - empty entry at {}. Skipping".format(sve_file,t_seq)
     continue
-  t_str_u = unicode(t_str)
-  entry = polib.POEntry(
-    msgid=t_str_u,
-    msgstr='',
-    occurrences=[(sve_file, t_seq),]
-  )
-  po.append(entry)
+  current_entries = [e for e in po]
+  for entry in current_entries:
+    entry_added = 0
+    print entry.msgid
+    if entry.msgid == t_str:
+      print "dupe found"
+      entry.occurrences.append((sve_file, t_seq))
+      entry_added = 1
+      break
+  if entry_added == 0:
+    entry = polib.POEntry(
+      msgid=t_str,
+      msgstr='',
+      occurrences=[(sve_file, t_seq),]
+    )
+    po.append(entry)
 
 po.save(po_file)
