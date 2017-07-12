@@ -7,13 +7,20 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 import polib
 import io
+import argparse
 
 version='1.0.0'
 
+parser = argparse.ArgumentParser(description='Convert indexed TXT files to gettext PO',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('-i', dest='input_file', help='input file', required=True)
+parser.add_argument('-o', dest='output_file', help='output file')
+parser.add_argument('--encoding', dest='enc', default='utf-8', help='source encoding')
+args=parser.parse_args()
 
-sve_file=sys.argv[1]
-po_file=sys.argv[2]
-#sve_enc=sys.argv[3]
+#init vars
+input_file=args.input_file
+output_file=args.output_file
+enc=args.enc
 
 po = polib.POFile(wrapwidth=999999)
 po.metadata = {
@@ -27,19 +34,19 @@ po.metadata = {
   'MIME-Version': '1.0',
   'Content-Type': 'text/plain; charset=UTF-8',
   'Content-Transfer-Encoding': '8bit',
-  'X-Generator': 'sve2po v.{}'.format(version),
+  'X-Generator': 'indexed_txt2po v.{}'.format(version),
 }
 
-sve_text = io.open(sve_file, 'r', encoding='utf-8').read()
-sve_pattern = "(\d+):(.*)"
-sve_entries = re.findall(sve_pattern, sve_text)
+text = io.open(input_file, 'r', encoding='utf-8').read()
+pattern = "(\d+):(.*)"
+entries = re.findall(pattern, text)
 entry_added = 0
 
-for t in sve_entries:
+for t in entries:
   t_seq = t[0]
   t_str = t[1]
   if t_str == '':
-    print "WARN: {} - empty entry at {}. Skipping".format(sve_file,t_seq)
+    print "WARN: {} - empty entry at {}. Skipping".format(input_file,t_seq)
     continue
   current_entries = [e for e in po]
   for entry in current_entries:
@@ -47,15 +54,15 @@ for t in sve_entries:
     print entry.msgid
     if entry.msgid == t_str:
       print "dupe found"
-      entry.occurrences.append((sve_file, t_seq))
+      entry.occurrences.append((input_file, t_seq))
       entry_added = 1
       break
   if entry_added == 0:
     entry = polib.POEntry(
       msgid=t_str,
       msgstr='',
-      occurrences=[(sve_file, t_seq),]
+      occurrences=[(input_file, t_seq),]
     )
     po.append(entry)
 
-po.save(po_file)
+po.save(output_file)
