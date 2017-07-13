@@ -10,13 +10,12 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 import argparse
 import polib
-from operator import itemgetter
 
-parser = argparse.ArgumentParser(description='Extract Fallout MSG from gettext PO',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Extract indexed TXT from gettext PO',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-i', dest='input_file', help='input file', required=True)
 parser.add_argument('-o', dest='output_file', help='output file')
-parser.add_argument('-e', '--encoding', dest='enc', help='MSG encoding',default='cp1252')
-parser.add_argument('--extract-file', dest='extract_file', help='file to extract, as recorded in PO')
+parser.add_argument('-e', '--encoding', dest='enc', help='output encoding',default='cp1252')
+parser.add_argument('--extract-file', dest='extract_file', help='filename to extract, as recorded in PO')
 args=parser.parse_args()
 
 #init vars
@@ -41,8 +40,6 @@ if not extract_file in present_files:
     print pf
   sys.exit(1)
 
-voice = ''
-lines = []
 resulting_entries = []
 for entry in po:
   for eo in entry.occurrences:
@@ -52,15 +49,12 @@ for entry in po:
         value = entry.msgid
       else:
         value = entry.msgstr
-      if entry.msgctxt != None:
-        voice = entry.msgctxt
-      else:
-        voice = ''
-      resulting_entries.append([int(index),voice,value])
+      resulting_entries.append([int(index),value])
 
-resulting_entries.sort()
+resulting_entries.sort() #because strings with multiple occurences mix order
+lines = []
 for re in resulting_entries:
-  lines.append('{{{}}}{{{}}}{{{}}}\n'.format(re[0],re[1],re[2]))
+  lines.append('{}:{}\n'.format(re[0],re[1]))
 
 file = io.open(output_file, 'w', encoding=enc)
 for line in lines:
