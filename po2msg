@@ -29,6 +29,18 @@ if extract_file == None:
 
 po = polib.pofile(input_file)
 
+#check if extract fie is present in po, exit with error if not
+present_files = {}
+for entry in po:
+  for eo in entry.occurrences:
+    present_files[eo[0]] = 1
+if not extract_file in present_files:
+  print "{} is not present in {}".format(extract_file,input_file)
+  print "supply one of present file with --extract-file argument:"
+  for pf in present_files:
+    print pf
+  sys.exit(1)
+
 voice = ''
 lines = []
 msg_entries = []
@@ -40,8 +52,8 @@ for entry in po:
         value = entry.msgid
       else:
         value = entry.msgstr
-      if entry.previous_msgctxt != None:
-        voice = entry.previous_msgctxt
+      if entry.msgctxt != None:
+        voice = entry.msgctxt
       else:
         voice = ''
       msg_entries.append([int(index),voice,value])
