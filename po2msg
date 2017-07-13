@@ -36,7 +36,7 @@ for entry in po:
     present_files[eo[0]] = 1
 if not extract_file in present_files:
   print "{} is not present in {}".format(extract_file,input_file)
-  print "supply one of present file with --extract-file argument:"
+  print "supply one of present files with --extract-file argument:"
   for pf in present_files:
     print pf
   sys.exit(1)
