@@ -1,55 +1,55 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import re
-import sys
-
 version='1.0.0'
 
-source_file=sys.argv[1]
-dest_file=sys.argv[2]
+import io
+import re
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+import argparse
+import polib
+from operator import itemgetter
 
-with open (source_file, 'r') as po_file:
-  lines = {}
-  msgid_list = []
-  if len(dest_file.rsplit('/', 1)) > 1: #compare only filename
-    dest_filename = dest_file.rsplit('/', 1)[1]
-  else:
-    dest_filename = dest_file
+parser = argparse.ArgumentParser(description='Extract Fallout MSG from gettext PO',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('-i', dest='input_file', help='input file', required=True)
+parser.add_argument('-o', dest='output_file', help='output file')
+parser.add_argument('-e', '--encoding', dest='enc', help='MSG encoding',default='cp1252')
+parser.add_argument('--extract-file', dest='extract_file', help='file to extract, as recorded in PO')
+args=parser.parse_args()
 
-  for line in po_file:
-    match = re.findall('^#: .*/([^/]+.msg):(\d+)',line) #compare only filename
-    if match:
-      m_file = match[0][0]
-      seq = match[0][1]
-      if m_file == dest_filename:
-        msgid_list.append(seq)
-    match_gid = re.findall('msgid "(.*)"',line)
-    if match_gid:
-      gid = match_gid[0]
-      gid = gid.replace('\\n','\n')
-      gid = gid.replace('\"','\\"')
-      gid = gid.replace('\\\\','\\')
-    match_str = re.findall('msgstr "(.*)"',line)
-    if match_str:
-      string = match_str[0]
-      string = string.replace('\\n','\n')
-      string = string.replace('\\"','\"')
-      string = string.replace('\\\\','\\')
-      if len(msgid_list) > 0:
-        for msgid in msgid_list:
-          msgid_seq = msgid_list.pop()
-          if len(string) > 0:
-            lines[msgid_seq] = string
-          else:
-            lines[msgid_seq] = gid
+#init vars
+input_file=args.input_file
+output_file=args.output_file
+extract_file=args.extract_file
+enc=args.enc
+if extract_file == None:
+  extract_file = output_file
 
-  lines2=[]
-  lines = {int(k):v for k,v in lines.items()} #convert key to int
-  keylist = lines.keys()
-  keylist.sort()
-  for n in keylist:
-    lines2.append('{{{}}}{{}}{{{}}}\n'.format(n,lines[n]))
+po = polib.pofile(input_file)
 
-  for l2 in lines2:
-    print l2,
+voice = ''
+lines = []
+msg_entries = []
+for entry in po:
+  for eo in entry.occurrences:
+    if eo[0] == extract_file:
+      index = eo[1]
+      if entry.msgstr == '':
+        value = entry.msgid
+      else:
+        value = entry.msgstr
+      if entry.previous_msgctxt != None:
+        voice = entry.previous_msgctxt
+      else:
+        voice = ''
+      msg_entries.append([int(index),voice,value])
+
+msg_entries.sort()
+for msg_entry in msg_entries:
+  lines.append('{{{}}}{{{}}}{{{}}}\n'.format(msg_entry[0],msg_entry[1],msg_entry[2]))
+
+file = io.open(output_file, 'w', encoding=enc)
+for line in lines:
+  file.write("%s" % unicode(line))
