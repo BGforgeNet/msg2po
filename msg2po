@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-version='2.0.1'
+version='1.0.0'
 
 import io
 import re
@@ -16,7 +16,7 @@ import polib
 parser = argparse.ArgumentParser(description='Convert Fallout MSG to gettext PO',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-i', dest='input_file', help='input file', required=True)
 parser.add_argument('-o', dest='output_file', help='output file')
-parser.add_argument('-e','--encoding', dest='enc', default='utf-8', help='source encoding')
+parser.add_argument('-e','--encoding', dest='enc', default='cp1252', help='source encoding')
 args=parser.parse_args()
 
 #init vars
@@ -39,7 +39,7 @@ po.metadata = {
   'X-Generator': 'msg2po v.{}'.format(version),
 }
 
-pattern = '{(\d+)}{}{([^}]*)}'
+pattern = '{(\d+)}{([^}]*)}{([^}]*)}'
 
 text = io.open(input_file, 'r', encoding=enc).read()
 found_entries = re.findall(pattern, text, re.DOTALL)
@@ -47,7 +47,8 @@ found_entries = re.findall(pattern, text, re.DOTALL)
 entry_added = 0
 for entry in found_entries:
   index = entry[0]
-  value = unicode(entry[1])
+  voice = entry[1]
+  value = unicode(entry[2])
 
   if value == '': #skip empty entries
     print 'WARN: {} - empty value found, skipping: {{{}}}{{}}{{}}'.format(input_file,index)
@@ -60,8 +61,7 @@ for entry in found_entries:
   current_entries = [e for e in po]
   for entry in current_entries:
     entry_added = 0
-    if entry.msgid == value:
-      print "dupe found, adding occurence"
+    if entry.msgid == value and entry.previous_msgctxt == voice:
       entry.occurrences.append((input_file, index))
       entry_added = 1
       break
@@ -71,7 +71,8 @@ for entry in found_entries:
     entry = polib.POEntry(
       msgid=value,
       msgstr='',
-      occurrences=[(input_file, index),]
+      occurrences=[(input_file, index),],
+      previous_msgctxt = voice,
     )
     po.append(entry)
 
