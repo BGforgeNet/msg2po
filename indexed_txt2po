@@ -50,10 +50,12 @@ for e0 in entries:
   index = e0[0]
   value = e0[1]
 
-  if noempty:
-    if value == '':
+  if value == '': #handle empty lines
+    if noempty:
       print "WARN: {} - empty entry at {}. Skipping".format(input_file,index)
       continue
+    else:
+      value = ' '
 
   current_entries = [e1 for e1 in po]
   for e2 in current_entries:

@@ -56,10 +56,12 @@ for e0 in found_entries:
     voice = None #used later for comapring e2.msgctxt
   value = unicode(e0[2])
 
-  if noempty:
-    if value == '': #skip empty entries
+  if value == '': #handle empty lines
+    if noempty:
       print 'WARN: {} - empty value found, skipping: {{{}}}{{}}{{}}'.format(input_file,index)
       continue
+    else:
+      value = ' '
 
   if index == '000': #skip invalid '000' entries
     print 'WARN: {} - invalid entry number found, skipping: {{000}}{{}}{{{}}}'.format(input_file,value)
