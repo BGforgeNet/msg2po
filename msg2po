@@ -18,6 +18,7 @@ parser.add_argument('-i', dest='input_file', help='input file', required=True)
 parser.add_argument('-o', dest='output_file', help='output file', required=True)
 parser.add_argument('-e','--encoding', dest='enc', default='cp1252', help='source encoding')
 parser.add_argument('-w','--width', dest='width', default='999999', help='output PO wrapwith')
+parser.add_argument('--no-empty', dest='noempty', action='store_true', default=False, help='skip empty lines')
 args=parser.parse_args()
 
 #init vars
@@ -25,6 +26,7 @@ input_file=args.input_file
 output_file=args.output_file
 enc=args.enc
 width=int(args.width)
+noempty=args.noempty
 
 po = polib.POFile(wrapwidth=width)
 po.metadata = {
@@ -54,10 +56,10 @@ for e0 in found_entries:
     voice = None #used later for comapring e2.msgctxt
   value = unicode(e0[2])
 
-  # TODO: fix this. Due to a bug in polib 1.0.8, empty entries are not added to header entry. msgcat then errors out on a "duplicate entry"
-  if value == '': #skip empty entries
-    print 'WARN: {} - empty value found, skipping: {{{}}}{{}}{{}}'.format(input_file,index)
-    continue
+  if noempty:
+    if value == '': #skip empty entries
+      print 'WARN: {} - empty value found, skipping: {{{}}}{{}}{{}}'.format(input_file,index)
+      continue
 
   if index == '000': #skip invalid '000' entries
     print 'WARN: {} - invalid entry number found, skipping: {{000}}{{}}{{{}}}'.format(input_file,value)
