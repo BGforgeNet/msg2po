@@ -65,3 +65,4 @@ for re in resulting_entries:
 file = io.open(output_file, 'w', encoding=enc)
 for line in lines:
   file.write("%s" % unicode(line))
+file.close()
