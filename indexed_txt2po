@@ -68,7 +68,8 @@ for e0 in entries:
     entry = polib.POEntry(
       msgid=value,
       msgstr='',
-      occurrences=[(input_file, index),]
+      occurrences=[(input_file, index),],
+      comment='indexed_txt',
     )
     po.append(entry)
 
