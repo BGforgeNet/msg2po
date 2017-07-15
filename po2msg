@@ -29,7 +29,7 @@ if extract_file == None:
 
 po = polib.pofile(input_file)
 
-#check if extract fie is present in po, exit with error if no
+#check if extract fie is present in po, exit with error if not
 present_files = []
 for entry in po:
   for eo in entry.occurrences:
