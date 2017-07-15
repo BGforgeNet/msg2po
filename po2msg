@@ -29,11 +29,11 @@ if extract_file == None:
 
 po = polib.pofile(input_file)
 
-#check if extract fie is present in po, exit with error if not
-present_files = {}
+#check if extract fie is present in po, exit with error if no
+present_files = []
 for entry in po:
   for eo in entry.occurrences:
-    present_files[eo[0]] = 1
+    present_files.append(eo[0])
 if not extract_file in present_files:
   print "{} is not present in {}".format(extract_file,input_file)
   print "supply one of present files with --extract-file argument:"
