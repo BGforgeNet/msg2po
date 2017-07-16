@@ -1,0 +1,67 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+version='1.0.0'
+
+import io
+import os
+import argparse
+import sys
+import subprocess
+import polib
+import shutil
+import re
+import bgforge_po
+
+#parse args
+parser = argparse.ArgumentParser(description='Unpoify files into parent directory of selected PO dir',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('-d', dest='po_dir', default='.', help='directory with PO files')
+parser.add_argument('-e', dest='enc', default='cp1252', help='output encoding')
+args=parser.parse_args()
+
+#init vars
+po_dir = args.po_dir
+enc = args.enc
+
+
+#check dir existence
+if not os.path.isdir(po_dir):
+  print "directory {} does not exist".format(po_dir)
+  sys.exit(1)
+
+#find PO files
+po_files = []
+for dir_name, subdir_list, file_list in os.walk(po_dir):
+  for f in file_list:
+    if bgforge_po.get_ext(f) == 'po':
+      po_files.append(f)
+  break
+if po_files == []:
+  print "no PO files found in directory {}".format(po_dir)
+  sys.exit(1)
+
+#extract PO files
+extract_file_list = []
+for pf in po_files:
+  po_path = po_dir + '/' + pf
+  print "processing {}".format(po_path)
+  po = polib.pofile(po_path)
+  for e in po:
+    for eo in e.occurrences:
+      extract_file_list.append(eo[0])
+  extract_file_set = set(extract_file_list)
+
+  lang = bgforge_po.strip_ext(pf)
+  dst_dir = bgforge_po.parent_dir(po_dir) + '/' + lang
+
+  po = polib.pofile(po_path) #open once
+  for ef in extract_file_set:
+    po_tool = 'po2' + bgforge_po.get_ext(ef)
+    if bgforge_po.get_ext(ef) == 'txt':
+      po_tool = 'po2indexed_txt' #TODO: usual txt is skipped for now
+
+    ef_extract_path = dst_dir + '/' + ef
+    bgforge_po.create_dir(bgforge_po.get_dir(ef_extract_path))
+    print "{} -i {} -o {} --extract-file {} --encoding {}".format(po_tool,po_path,ef_extract_path,ef,enc)
+    bgforge_po.po2file(po,ef_extract_path,enc,ef)
+  print 'Extracted {} into {}'.format(po_path,dst_dir)

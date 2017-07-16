@@ -1,0 +1,129 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+version='1.0.0'
+
+import io
+import os
+import argparse
+import sys
+import subprocess
+import polib
+import shutil
+import re
+from contextlib import contextmanager
+import os
+import bgforge_po
+
+
+valid_extensions = [ 'msg', 'txt', 'sve', ]
+
+@contextmanager
+def cd(newdir):
+  prevdir = os.getcwd()
+  os.chdir(os.path.expanduser(newdir))
+  try:
+    yield
+  finally:
+    os.chdir(prevdir)
+
+#parse args
+parser = argparse.ArgumentParser(description='Poify files in selected directory',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('-d', dest='src_dir', default='.', help='directory to poify')
+parser.add_argument('-e', dest='enc', help='source encoding',default='cp1252')
+parser.add_argument('--no-lowercase', dest='nolowercase', default=False, action='store_true', help="don't lowercase filenames before poifying")
+parser.add_argument('-w','--width', dest='width', default='999999', help='output PO wrapwith')
+args=parser.parse_args()
+
+
+#init vars
+src_dir=args.src_dir
+enc=args.enc
+nolowercase=args.nolowercase
+width=int(args.width)
+
+devnull = open(os.devnull, 'w')
+
+#prepare po dir
+def prepare_po_dir(d):
+  if not os.path.isdir(d):
+    shutil.rmtree(d,ignore_errors=True)
+    os.makedirs(d)
+  tmp_dir = d + '/tmp'
+  if not os.path.isdir(tmp_dir):
+    shutil.rmtree(tmp_dir,ignore_errors=True)
+    os.makedirs(tmp_dir)
+
+def clean_po_dir(d):
+  tmp_dir = d + '/tmp'
+  shutil.rmtree(tmp_dir,ignore_errors=True)
+
+def poify(dir): #relative path
+  po_dir = bgforge_po.parent_dir(dir) + '/po'
+  tmp_dir = bgforge_po.parent_dir(dir) + '/po/tmp'
+  prepare_po_dir(po_dir)
+  #process with po_tool
+  with cd(dir):
+    for dir_name, subdir_list, file_list in os.walk('.',topdown=False):
+      for file_name in file_list:
+        full_name=os.path.join(dir_name, file_name)
+        ext=bgforge_po.get_ext(file_name)
+        if ext in valid_extensions:
+            po_tool=ext + '2po'
+        else:
+          continue
+
+        #checked txt is indexed and if it is, use corresponding tool
+        if ext == 'txt':
+          if bgforge_po.check_indexed(full_name):
+            print "{} is indexed TXT".format(full_name)
+            po_tool='indexed_txt2po'
+          else:
+            print "{} is TXT, but not indexed. Skipping!".format(full_name)
+            continue
+
+        print "processing {} with {}".format(full_name,po_tool)
+        po_name = tmp_dir + '/' + re.sub('^\./','',full_name).replace('/','.') + '.po' #replace '/' with '.' and remove trailing './'
+        subprocess.call([po_tool, '-i', full_name, '-o', po_name, '--encoding', enc])
+
+  #combine all po file paths into a single string
+  po_list = ''
+  for dir_name, subdir_list, file_list in os.walk(tmp_dir):
+    for f in file_list:
+      path = os.path.join(dir_name,f)
+      po_list = po_list + ' ' + path #full list of po files as a string
+  #concat po files
+  lang = bgforge_po.basename(dir)
+  dst_file = po_dir + '/' + lang + '.pot'
+  print 'msgcat po files > {}'.format(dst_file)
+  io.open(dst_file, 'w').close() #msgcat doesn't work otherwise
+  subprocess.call(['msgcat --no-wrap -i {} -o {}'.format(po_list,dst_file)],shell=True)
+
+  #set final metadata
+  po = polib.pofile(dst_file,wrapwidth=width)
+  po.metadata = {
+    'Project-Id-Version': 'PACKAGE VERSION',
+    'Report-Msgid-Bugs-To': '',
+    'POT-Creation-Date': '1970-1-01 00:00+0000',
+    'PO-Revision-Date': 'YEAR-MO-DA HO:MI+ZONE',
+    'Last-Translator': 'FULL NAME <EMAIL@ADDRESS',
+    'Language-Team': 'LANGUAGE <LL@li.org>',
+    'Language': '',
+    'MIME-Version': '1.0',
+    'Content-Type': 'text/plain; charset=UTF-8',
+    'Content-Transfer-Encoding': '8bit',
+    'X-Generator': 'poify v.{}'.format(version),
+  }
+  po.save()
+
+  clean_po_dir(po_dir)
+  print "Processed '{}' directory with encoding {}, the result is in {}/{}.pot".format(dir,enc,po_dir,lang)
+
+
+#lowercase if not disabled on cmd
+if nolowercase == False:
+  bgforge_po.lowercase_recursively(src_dir)
+
+src_dir=os.path.abspath(src_dir)
+with cd(bgforge_po.parent_dir(src_dir)):
+  poify(bgforge_po.basename(os.path.abspath(src_dir))) #keeping relative occurences in resulting po
