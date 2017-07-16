@@ -28,6 +28,7 @@ file_features = {
     'dotall':       False,
     'index':        0,
     'value':        1,
+    'line_format': '{}:{}\n',
   },
   'txt': {
     'pattern':     '(\d+):(.*)',
@@ -35,6 +36,7 @@ file_features = {
     'index':        0,
     'value':        1,
     'comment':     'indexed_txt',
+    'line_format': '{}:{}\n',
   },
 }
 
