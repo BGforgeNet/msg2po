@@ -5,17 +5,20 @@ version='1.0.0'
 
 import argparse
 import bgforge_po
+import polib
 
 parser = argparse.ArgumentParser(description='Extract Fallout MSG from gettext PO',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('-i', dest='input_file', help='input file', required=True)
-parser.add_argument('-o', dest='output_file', help='output file')
-parser.add_argument('-e', '--encoding', dest='encoding', help='MSG encoding',default='cp1252')
-parser.add_argument('--extract-file', dest='extract_file', help='file to extract, as recorded in PO')
+parser.add_argument('-i', dest='input_file', help='input PO file', required=True)
+parser.add_argument('-o', dest='output_file', help='output MSG file', required=True)
+parser.add_argument('-e', '--encoding', dest='encoding', help='output MSG encoding',default='cp1252')
+parser.add_argument('--path', dest='path', help='MSG occurrence in PO (relative path) - defaults to output MSG name')
 args=parser.parse_args()
 
-if args.extract_file == None:
-  extract_file = output_file
+if args.path == None:
+  path = output_file
 else:
-  extract_file = args.extract_file
+  path = args.path
 
-bgforge_po.po2file(args.input_file,args.output_file,args.encoding,extract_file)
+po = polib.pofile(args.input_file) #open once, it's a heavy op
+check_file_in_po(po,path)
+bgforge_po.po2file(po,args.output_file,args.encoding,path)

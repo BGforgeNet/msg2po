@@ -7,9 +7,9 @@ import argparse
 import bgforge_po
 
 parser = argparse.ArgumentParser(description='Load indexed TXT into gettext PO msgstr',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('-i', dest='input_file', help='input indexed TXT file', required=True)
+parser.add_argument('-i', dest='input_file', help='input TXT/SVE file', required=True)
 parser.add_argument('-o', dest='output_file', help='output PO file', required=True)
-parser.add_argument('--path', dest='path', help='load as filename (full PO occurence). If not specified, defaults to INPUT_FILE')
+parser.add_argument('--path', dest='path', help='load as filename (PO occurence). If not specified, defaults to input filename')
 parser.add_argument('-e','--encoding', dest='encoding', default='cp1252', help='source encoding')
 parser.add_argument('-w','--width', dest='width', default='999999', help='output PO wrapwith')
 args=parser.parse_args()

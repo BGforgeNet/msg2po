@@ -7,8 +7,8 @@ import argparse
 import bgforge_po
 
 parser = argparse.ArgumentParser(description='Convert Fallout MSG to gettext PO',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('-i', dest='input_file', help='input file', required=True)
-parser.add_argument('-o', dest='output_file', help='output file', required=True)
+parser.add_argument('-i', dest='input_file', help='input MSG file', required=True)
+parser.add_argument('-o', dest='output_file', help='output PO file', required=True)
 parser.add_argument('-e','--encoding', dest='enc', default='cp1252', help='source encoding')
 parser.add_argument('-w','--width', dest='width', default='999999', help='output PO wrapwith')
 parser.add_argument('--no-empty', dest='noempty', action='store_true', default=False, help='skip empty lines')
