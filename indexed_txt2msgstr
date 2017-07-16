@@ -5,6 +5,7 @@ version='1.0.0'
 
 import argparse
 import bgforge_po
+import sys
 
 parser = argparse.ArgumentParser(description='Load indexed TXT into gettext PO msgstr',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-i', dest='input_file', help='input TXT/SVE file', required=True)
@@ -18,5 +19,9 @@ if args.path == None:
   path = args.input_file
 else:
   path = args.path
+
+if not bgforge_po.check_indexed(args.input_file):
+  print "{} is NOT an indexed TXT. Can't process, exiting!".format(args.input_file)
+  sys.exit(1)
 
 bgforge_po.file2msgstr(args.input_file,args.output_file,path,args.encoding,int(args.width))
