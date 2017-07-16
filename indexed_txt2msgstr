@@ -17,6 +17,6 @@ args=parser.parse_args()
 if args.path == None:
   path = args.input_file
 else:
-  path - args.path
+  path = args.path
 
 bgforge_po.file2msgstr(args.input_file,args.output_file,path,args.encoding,int(args.width))
