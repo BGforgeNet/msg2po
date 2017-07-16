@@ -3,15 +3,11 @@
 
 version='1.0.0'
 
-import io
-import re
 import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
-import datetime
-import collections
 import argparse
-import polib
+import bgforge_po
 
 parser = argparse.ArgumentParser(description='Convert Fallout MSG to gettext PO',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-i', dest='input_file', help='input file', required=True)
@@ -21,76 +17,4 @@ parser.add_argument('-w','--width', dest='width', default='999999', help='output
 parser.add_argument('--no-empty', dest='noempty', action='store_true', default=False, help='skip empty lines')
 args=parser.parse_args()
 
-#init vars
-input_file=args.input_file
-output_file=args.output_file
-enc=args.enc
-width=int(args.width)
-noempty=args.noempty
-
-po = polib.POFile(wrapwidth=width)
-po.metadata = {
-  'Project-Id-Version': 'PACKAGE VERSION',
-  'Report-Msgid-Bugs-To': '',
-  'POT-Creation-Date': '1970-1-01 00:00+0000',
-  'PO-Revision-Date': 'YEAR-MO-DA HO:MI+ZONE',
-  'Last-Translator': 'FULL NAME <EMAIL@ADDRESS',
-  'Language-Team': 'LANGUAGE <LL@li.org>',
-  'Language': '',
-  'MIME-Version': '1.0',
-  'Content-Type': 'text/plain; charset=UTF-8',
-  'Content-Transfer-Encoding': '8bit',
-  'X-Generator': 'msg2po v.{}'.format(version),
-}
-
-pattern = '{(\d+)}{([^}]*)}{([^}]*)}'
-
-text = io.open(input_file, 'r', encoding=enc).read()
-found_entries = re.findall(pattern, text, re.DOTALL)
-
-entry_added = 0
-for e0 in found_entries:
-  index = e0[0]
-  voice = e0[1]
-  if voice == '':
-    voice = None #used later for comapring e2.msgctxt
-  value = unicode(e0[2])
-
-  if value == '': #handle empty lines
-    if noempty:
-      print 'WARN: {} - empty value found, skipping: {{{}}}{{}}{{}}'.format(input_file,index)
-      continue
-    else:
-      value = ' '
-
-  if index == '000': #skip invalid '000' entries
-    print 'WARN: {} - invalid entry number found, skipping: {{000}}{{}}{{{}}}'.format(input_file,value)
-    continue
-
-  #check for dupe, if found add to occurences
-  current_entries = [e1 for e1 in po]
-  for e2 in current_entries:
-    entry_added = 0
-    if e2.msgid == value and e2.msgctxt == voice:
-      e2.occurrences.append((input_file, index))
-      entry_added = 1
-      break
-
-  #not dupe, add new entry
-  if entry_added == 0:
-    if not voice == None: #only use context where it's necessary
-      entry = polib.POEntry(
-        msgid=value,
-        msgstr='',
-        occurrences=[(input_file, index),],
-        msgctxt = voice,
-      )
-    else:
-      entry = polib.POEntry(
-        msgid=value,
-        msgstr='',
-        occurrences=[(input_file, index),],
-      )
-    po.append(entry)
-
-po.save(output_file)
+bgforge_po.file2po(args.input_file,args.output_file,args.enc,int(args.width),args.noempty)

@@ -8,69 +8,16 @@ sys.setdefaultencoding('utf-8')
 import polib
 import io
 import argparse
+import bgforge_po
 
 version='1.0.0'
 
 parser = argparse.ArgumentParser(description='Convert indexed TXT files to gettext PO',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-i', dest='input_file', help='input file', required=True)
 parser.add_argument('-o', dest='output_file', help='output file', required=True)
-parser.add_argument('--encoding', dest='enc', default='cp1252', help='source encoding')
+parser.add_argument('-e','--encoding', dest='enc', default='cp1252', help='source encoding')
 parser.add_argument('-w','--width', dest='width', default='999999', help='output PO wrapwith')
 parser.add_argument('--no-empty', dest='noempty', action='store_true', default=False, help='skip empty lines')
 args=parser.parse_args()
 
-#init vars
-input_file=args.input_file
-output_file=args.output_file
-enc=args.enc
-width=int(args.width)
-noempty=args.noempty
-
-po = polib.POFile(wrapwidth=width)
-po.metadata = {
-  'Project-Id-Version': 'PACKAGE VERSION',
-  'Report-Msgid-Bugs-To': '',
-  'POT-Creation-Date': '1970-1-01 00:00+0000',
-  'PO-Revision-Date': 'YEAR-MO-DA HO:MI+ZONE',
-  'Last-Translator': 'FULL NAME <EMAIL@ADDRESS>',
-  'Language-Team': 'LANGUAGE <LL@li.org>',
-  'Language': '',
-  'MIME-Version': '1.0',
-  'Content-Type': 'text/plain; charset=UTF-8',
-  'Content-Transfer-Encoding': '8bit',
-  'X-Generator': 'indexed_txt2po v.{}'.format(version),
-}
-
-text = io.open(input_file, 'r', encoding=enc).read()
-pattern = "(\d+):(.*)"
-entries = re.findall(pattern, text)
-entry_added = 0
-
-for e0 in entries:
-  index = e0[0]
-  value = e0[1]
-
-  if value == '': #handle empty lines
-    if noempty:
-      print "WARN: {} - empty entry at {}. Skipping".format(input_file,index)
-      continue
-    else:
-      value = ' '
-
-  current_entries = [e1 for e1 in po]
-  for e2 in current_entries:
-    entry_added = 0
-    if e2.msgid == value:
-      e2.occurrences.append((input_file, index))
-      entry_added = 1
-      break
-  if entry_added == 0:
-    entry = polib.POEntry(
-      msgid=value,
-      msgstr='',
-      occurrences=[(input_file, index),],
-      comment='indexed_txt',
-    )
-    po.append(entry)
-
-po.save(output_file)
+bgforge_po.file2po(args.input_file,args.output_file,args.enc,int(args.width),args.noempty)

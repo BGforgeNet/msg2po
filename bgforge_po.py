@@ -19,8 +19,21 @@ file_features = {
     'dotall':   True,
     'index':    0,
     'value':    2,
-    'extra':    1,
-  }
+    'context':    1,
+  },
+  'sve': {
+    'pattern': '(\d+):(.*)',
+    'dotall':   False,
+    'index':    0,
+    'value':    1,
+  },
+  'txt': {
+    'pattern': '(\d+):(.*)',
+    'dotall':   False,
+    'index':    0,
+    'value':    1,
+    'comment':  'indexed_txt',
+  },
 }
 
 
@@ -65,10 +78,18 @@ def file2po(input_file,output_file,encoding='cp1252',width=999999,noempty=False)
   for e0 in found_entries:
     index = e0[ff['index']]
     value = unicode(e0[ff['value']])
-    if e0[ff['extra']] != None:
-      extra = e0[ff['extra']]
-    if extra == '':
-      extra = None #used later for comparing e2.comment
+
+    if 'context' in ff:
+      context = e0[ff['context']]
+    else:
+      context = None
+    if context == '': #don't need empty context
+      context = None
+
+    if 'comment' in ff:
+      comment = ff['comment']
+    else:
+      comment = None
 
     if value == '': #handle empty lines
       if noempty:
@@ -83,28 +104,39 @@ def file2po(input_file,output_file,encoding='cp1252',width=999999,noempty=False)
 
     #check for dupe, if found add to occurences
     current_entries = [e1 for e1 in po]
+    entry_added = 0
     for e2 in current_entries:
-      entry_added = 0
-      if e2.msgid == value and e2.comment == extra:
+#      print "id is {}, value is {}, context is '{}', context is '{}'".format(e2.msgid, value, e2.msgctxt, context)
+#      print 'context = {}'.format(context)
+#      print e2.msgctxt
+      if e2.msgid == value and e2.msgctxt == context:
+#        print 'dupe!'
         e2.occurrences.append((input_file, index))
         entry_added = 1
         break
 
     #not dupe, add new entry
     if entry_added == 0:
-      if not extra == None: #only use context where it's necessary
-        entry = polib.POEntry(
-          msgid=value,
-          msgstr='',
-          occurrences=[(input_file, index),],
-          comment = extra,
-        )
-      else:
-        entry = polib.POEntry(
-          msgid=value,
-          msgstr='',
-          occurrences=[(input_file, index),],
-        )
+      entry = polib.POEntry(
+        msgid=value,
+        msgstr='',
+        occurrences=[(input_file, index),],
+        msgctxt = context,
+        comment = comment,
+      )
+#      if context == None:
+#        entry = polib.POEntry(
+#          msgid=value,
+#          msgstr='',
+#          occurrences=[(input_file, index),],
+#        )
+#      else:
+#        entry = polib.POEntry(
+#          msgid=value,
+#          msgstr='',
+#          occurrences=[(input_file, index),],
+#          msgctxt = context,
+#        )
       po.append(entry)
 
   po.save(output_file)
