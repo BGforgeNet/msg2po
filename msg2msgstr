@@ -3,49 +3,20 @@
 
 version='1.0.0'
 
-import re
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
-import polib
-import io
 import argparse
+import bgforge_po
 
 parser = argparse.ArgumentParser(description='Load Fallout MSG into gettext PO msgstr',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-i', dest='input_file', help='input MSG file', required=True)
 parser.add_argument('-o', dest='output_file', help='output PO file', required=True)
 parser.add_argument('--path', dest='path', help='load as filename (full PO occurence). If not specified, defaults to INPUT_FILE')
-parser.add_argument('-e','--encoding', dest='enc', default='cp1252', help='source encoding')
+parser.add_argument('-e','--encoding', dest='encoding', default='cp1252', help='source encoding')
 parser.add_argument('-w','--width', dest='width', default='999999', help='output PO wrapwith')
-parser.add_argument('--context', dest='context', help='add context to loaded strings')
 args=parser.parse_args()
 
-#init vars
-input_file=args.input_file
-output_file=args.output_file
-enc=args.enc
-width=int(args.width)
-path=args.path
-context=args.context
+if args.path == None:
+  path = args.input_file
+else:
+  path = args.path
 
-po = polib.pofile(output_file,wrapwidth=width)
-po_entries = [e for e in po]
-
-text = io.open(input_file, 'r', encoding=enc).read()
-pattern = '{(\d+)}{([^}]*)}{([^}]*)}'
-entries = re.findall(pattern, text, re.DOTALL)
-
-for e in entries:
-  index = e[0]
-  value = unicode(e[2])
-  for pe in po_entries:
-    for eo in pe.occurrences:
-      if eo[0] == path and eo[1] == index:
-        pe.msgstr = value
-        if context:
-          pe.msgctxt = context
-          break
-        else:
-          break
-
-po.save(output_file)
+bgforge_po.file2msgstr(args.input_file,args.output_file,path,args.encoding,int(args.width))
