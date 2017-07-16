@@ -3,66 +3,19 @@
 
 version='1.0.0'
 
-import io
-import re
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
 import argparse
-import polib
-from operator import itemgetter
+import bgforge_po
 
 parser = argparse.ArgumentParser(description='Extract Fallout MSG from gettext PO',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-i', dest='input_file', help='input file', required=True)
 parser.add_argument('-o', dest='output_file', help='output file')
-parser.add_argument('-e', '--encoding', dest='enc', help='MSG encoding',default='cp1252')
+parser.add_argument('-e', '--encoding', dest='encoding', help='MSG encoding',default='cp1252')
 parser.add_argument('--extract-file', dest='extract_file', help='file to extract, as recorded in PO')
 args=parser.parse_args()
 
-#init vars
-input_file=args.input_file
-output_file=args.output_file
-extract_file=args.extract_file
-enc=args.enc
-if extract_file == None:
+if args.extract_file == None:
   extract_file = output_file
+else:
+  extract_file = args.extract_file
 
-po = polib.pofile(input_file)
-
-#check if extract fie is present in po, exit with error if not
-present_files = []
-for entry in po:
-  for eo in entry.occurrences:
-    present_files.append(eo[0])
-if not extract_file in present_files:
-  print "{} is not present in {}".format(extract_file,input_file)
-  print "supply one of present files with --extract-file argument:"
-  for pf in present_files:
-    print pf
-  sys.exit(1)
-
-voice = ''
-lines = []
-resulting_entries = []
-for entry in po:
-  for eo in entry.occurrences:
-    if eo[0] == extract_file:
-      index = eo[1]
-      if entry.msgstr == '':
-        value = entry.msgid
-      else:
-        value = entry.msgstr
-      if entry.msgctxt != None:
-        voice = entry.msgctxt
-      else:
-        voice = ''
-      resulting_entries.append([int(index),voice,value])
-
-resulting_entries.sort()
-for re in resulting_entries:
-  lines.append('{{{}}}{{{}}}{{{}}}\n'.format(re[0],re[1],re[2]))
-
-file = io.open(output_file, 'w', encoding=enc)
-for line in lines:
-  file.write("%s" % unicode(line))
-file.close()
+bgforge_po.po2file(args.input_file,args.output_file,args.encoding,extract_file)
