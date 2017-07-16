@@ -3,9 +3,6 @@
 
 version='1.0.0'
 
-import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
 import argparse
 import bgforge_po
 
