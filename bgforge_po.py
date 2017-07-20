@@ -17,7 +17,6 @@ import shutil
 import subprocess
 from contextlib import contextmanager
 import fileinput
-from collections import OrderedDict
 
 file_features = {
   'msg': {
@@ -316,11 +315,27 @@ def strip_msgcat_comments(filename):
       print line
 
 def po_make_unique(po,wrapwidth=default_width):
-  entries_dict = OrderedDict()
+  entries_dict = collections.OrderedDict()
   for e in po:
     if (e.msgid, e.msgctxt) in entries_dict:
+
       e0 = entries_dict[(e.msgid, e.msgctxt)]
       e0.occurrences.extend(e.occurrences)
+
+      if e.comment and not e.comment == e0.comment:
+        e0.comment = e0.comment + '; ' + e.comment
+      if e.tcomment and not e.tcomment == e0.tcomment:
+        e0.tcomment = e0.tcomment + '; ' + e.tcomment
+      for f in e.flags:
+        if not f in e0.flags:
+          e0.flags.append(f)
+      if e.previous_msgctxt and not e0.previous_msgctxt:
+        e0.previous_msgctxt = e.previous_msgctxt
+      if e.previous_msgid and not e0.previous_msgid:
+        e0.previous_msgid = e.previous_msgid
+      if e.previous_msgid_plural and not e0.previous_msgid_plural:
+        e0.previous_msgid_plural = e.previous_msgid_plural
+
     else:
       entries_dict[(e.msgid, e.msgctxt)] = e
   po2 = polib.POFile(wrapwidth=wrapwidth)
