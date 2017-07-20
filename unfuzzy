@@ -1,0 +1,27 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+version='1.0.0'
+
+import argparse
+import polib
+import sys
+
+parser = argparse.ArgumentParser(description='Unmark PO entries as fuzzy, if replacing string 1 with string2 in previous msgid results in current msgid',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('-i', dest='input_file', help='input PO file', required=True)
+parser.add_argument('-s1', dest='s1', help='string to replace', required=True)
+parser.add_argument('-s2', dest='s2', help='string which replaces', required=True)
+args=parser.parse_args()
+
+input_file = args.input_file
+s1 = args.s1.decode("utf-8")
+s2 = args.s2.decode("utf-8")
+
+po = polib.pofile(input_file)
+
+for e in po.fuzzy_entries():
+  if e.previous_msgid: #strange, shouldn't need this
+    if e.msgid == e.previous_msgid.replace(s1,s2):
+      e.flags.remove(u'fuzzy')
+      e.previous_msgid = None
+po.save(input_file)
