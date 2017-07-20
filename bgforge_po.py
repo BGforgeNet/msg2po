@@ -164,9 +164,14 @@ def file2po(filename,encoding=default_encoding,width=default_width,noempty=False
   po.metadata = metadata
 
   entry_added = 0
+  seen = []
   for e0 in found_entries:
     index = e0[ff['index']]
     value = unicode(e0[ff['value']])
+
+    if (filename, index) in seen and not index == '000':
+      print "WARN: duplicate string {}:{} '{}'".format(filename, index, value)
+    seen.append((filename, index))
 
     if 'context' in ff:
       context = e0[ff['context']]
@@ -292,7 +297,7 @@ def file2msgstr(input_file, po, path, encoding=default_encoding, width=default_w
   po_entries = [e for e in po]
   index_order = ff['index']
   value_order = ff['value']
-
+  '''
   for e in found_entries:
     index = e[index_order]
     value = unicode(e[value_order])
@@ -311,13 +316,14 @@ def file2msgstr(input_file, po, path, encoding=default_encoding, width=default_w
   for fe in found_entries:
     index = fe[index_order]
     value = unicode(fe[value_order])
-    if (value):
+    if value != None and value != '':
       if (path, index) in entries_dict:
         e2 = entries_dict[(path, index)]
         e2.msgstr = value
-        break
-  po.save(output_file)
-  '''
+    
+#  po.save(output_file)
+  return po
+
 
 #check if TXT file is indexed
 def check_indexed(txt_filename,encoding=default_encoding):
