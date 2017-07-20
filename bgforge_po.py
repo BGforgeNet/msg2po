@@ -133,6 +133,16 @@ def get_po_dir():
   else:
     print 'PO dir "{}" does not exist, cannot continue!'.format(po_dir)
     sys.exit(1)
+
+@contextmanager
+def cd(newdir):
+  prevdir = os.getcwd()
+  os.chdir(os.path.expanduser(newdir))
+  try:
+    yield
+  finally:
+    os.chdir(prevdir)
+
 ################################
 
 
@@ -263,7 +273,7 @@ def po2file(po,output_file,encoding,path): #po is po_file object
   file.close()
 
 
-def file2msgstr(input_file,output_file,path,encoding=default_encoding,width=default_width):
+def file2msgstr(input_file, po, path, encoding=default_encoding, width=default_width):
 
   #get file features
   ext = get_ext(input_file)
@@ -279,22 +289,21 @@ def file2msgstr(input_file,output_file,path,encoding=default_encoding,width=defa
     found_entries = re.findall(pattern, text)
 
   #find and add entries to po file
-  po = polib.pofile(output_file,wrapwidth=width)
   po_entries = [e for e in po]
   index_order = ff['index']
   value_order = ff['value']
 
-  '''
   for e in found_entries:
     index = e[index_order]
     value = unicode(e[value_order])
-    for pe in po_entries:
-      for eo in pe.occurrences:
-        if eo[0] == path and eo[1] == index:
-          pe.msgstr = value
-          break
+    if value:
+      for pe in po_entries:
+        for eo in pe.occurrences:
+          if eo[0] == path and eo[1] == index:
+            pe.msgstr = value
+            break
+  return po
   '''
-
   entries_dict = collections.OrderedDict()
   for e in po:
     for eo in e.occurrences:
@@ -308,6 +317,7 @@ def file2msgstr(input_file,output_file,path,encoding=default_encoding,width=defa
         e2.msgstr = value
         break
   po.save(output_file)
+  '''
 
 #check if TXT file is indexed
 def check_indexed(txt_filename,encoding=default_encoding):

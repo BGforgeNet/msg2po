@@ -7,24 +7,13 @@ import io
 import os
 import argparse
 import sys
-import subprocess
 import polib
 import shutil
 import re
-from contextlib import contextmanager
 import os
 import bgforge_po
 
 valid_extensions = [ 'msg', 'txt', 'sve', ]
-
-@contextmanager
-def cd(newdir):
-  prevdir = os.getcwd()
-  os.chdir(os.path.expanduser(newdir))
-  try:
-    yield
-  finally:
-    os.chdir(prevdir)
 
 #parse args
 parser = argparse.ArgumentParser(description='Poify files in selected directory',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -62,7 +51,7 @@ def poify(dir): #relative path
   tmp_dir = bgforge_po.parent_dir(dir) + '/po/tmp'
   prepare_po_dir(po_dir)
   #process with po_tool
-  with cd(dir):
+  with bgforge_po.cd(dir):
     #Final PO
     lang = bgforge_po.basename(dir)
     dst_file = po_dir + '/' + lang + '.pot'
@@ -102,5 +91,5 @@ if nolowercase == False:
   bgforge_po.lowercase_recursively(src_dir)
 
 src_dir=os.path.abspath(src_dir)
-with cd(bgforge_po.parent_dir(src_dir)):
+with bgforge_po.cd(bgforge_po.parent_dir(src_dir)):
   poify(bgforge_po.basename(os.path.abspath(src_dir))) #keeping relative occurences in resulting po
