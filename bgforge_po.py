@@ -17,7 +17,7 @@ import shutil
 import subprocess
 from contextlib import contextmanager
 import fileinput
-
+from collections import OrderedDict
 
 file_features = {
   'msg': {
@@ -46,13 +46,28 @@ file_features = {
 }
 
 default_encoding='cp1252'
-default_width=999999
+default_width=78
+
+metadata = {
+  'Project-Id-Version': 'PACKAGE VERSION',
+  'Report-Msgid-Bugs-To': '',
+  'POT-Creation-Date': '1970-1-01 00:00+0000',
+  'PO-Revision-Date': 'YEAR-MO-DA HO:MI+ZONE',
+  'Last-Translator': 'FULL NAME <EMAIL@ADDRESS',
+  'Language-Team': 'LANGUAGE <LL@li.org>',
+  'Language': '',
+  'MIME-Version': '1.0',
+  'Content-Type': 'text/plain; charset=UTF-8',
+  'Content-Transfer-Encoding': '8bit',
+  'X-Generator': 'bgforge_po v.{}'.format(version),
+}
+
 
 #file and dir manipulation
 #################################
 def get_ext(path):
   try:
-    ext = path.rsplit('.',1)[1]
+    ext = path.rsplit('.',1)[1].lower()
   except:
     ext = None
   return ext
@@ -92,12 +107,12 @@ def lowercase_recursively(dir): #this is the function that is actually used
 ################################
 
 
+#returns PO file object
+def file2po(filename,encoding=default_encoding,width=default_width,noempty=False):
+  text = io.open(filename, 'r', encoding=encoding).read()
 
-def file2po(input_file,output_file,encoding=default_encoding,width=default_width,noempty=False):
-  text = io.open(input_file, 'r', encoding=encoding).read()
-
-  ext = get_ext(input_file)
-  ff = file_features[ext.lower()]
+  ext = get_ext(filename)
+  ff = file_features[ext]
   pattern = ff['pattern']
   dotall = ff['dotall']
 
@@ -107,19 +122,7 @@ def file2po(input_file,output_file,encoding=default_encoding,width=default_width
     found_entries = re.findall(pattern, text)
 
   po = polib.POFile(wrapwidth=width)
-  po.metadata = {
-    'Project-Id-Version': 'PACKAGE VERSION',
-    'Report-Msgid-Bugs-To': '',
-    'POT-Creation-Date': '1970-1-01 00:00+0000',
-    'PO-Revision-Date': 'YEAR-MO-DA HO:MI+ZONE',
-    'Last-Translator': 'FULL NAME <EMAIL@ADDRESS',
-    'Language-Team': 'LANGUAGE <LL@li.org>',
-    'Language': '',
-    'MIME-Version': '1.0',
-    'Content-Type': 'text/plain; charset=UTF-8',
-    'Content-Transfer-Encoding': '8bit',
-    'X-Generator': 'bgforge_po v.{}'.format(version),
-  }
+  po.metadata = metadata
 
   entry_added = 0
   for e0 in found_entries:
@@ -140,13 +143,13 @@ def file2po(input_file,output_file,encoding=default_encoding,width=default_width
 
     if value == '': #handle empty lines
       if noempty:
-        print 'WARN: {} - empty value found, skipping: {{{}}}{{}}{{}}'.format(input_file,index)
+        print 'WARN: {} - empty value found, skipping: {{{}}}{{}}{{}}'.format(filename,index)
         continue
       else:
         value = ' '
 
     if index == '000': #skip invalid '000' entries
-      print 'WARN: {} - invalid entry number found, skipping: {{000}}{{}}{{{}}}'.format(input_file,value)
+      print 'WARN: {} - invalid entry number found, skipping: {{000}}{{}}{{{}}}'.format(filename,value)
       continue
 
     #check for dupe, if found add to occurences
@@ -154,7 +157,7 @@ def file2po(input_file,output_file,encoding=default_encoding,width=default_width
     entry_added = 0
     for e2 in current_entries:
       if e2.msgid == value and e2.msgctxt == context:
-        e2.occurrences.append((input_file, index))
+        e2.occurrences.append((filename, index))
         entry_added = 1
         break
 
@@ -163,13 +166,13 @@ def file2po(input_file,output_file,encoding=default_encoding,width=default_width
       entry = polib.POEntry(
         msgid=value,
         msgstr='',
-        occurrences=[(input_file, index),],
+        occurrences=[(filename, index),],
         msgctxt = context,
         comment = comment,
       )
       po.append(entry)
 
-  po.save(output_file)
+  return(po)
 
 
 #check if extract fie is present in po, exit with error if not
@@ -188,7 +191,7 @@ def check_path_in_po(po,path):
 
 def po2file(po,output_file,encoding,path): #po is po_file object
   ext = get_ext(output_file)
-  ff = file_features[ext.lower()]
+  ff = file_features[ext]
   line_format = ff['line_format']
 
   context = ''
@@ -235,7 +238,7 @@ def file2msgstr(input_file,output_file,path,encoding=default_encoding,width=defa
 
   #get file features
   ext = get_ext(input_file)
-  ff = file_features[ext.lower()]
+  ff = file_features[ext]
   pattern = ff['pattern']
   dotall = ff['dotall']
 
@@ -311,3 +314,17 @@ def strip_msgcat_comments(filename):
   for line in fileinput.input(filename, inplace = True):
     if not re.search('^#$',line) and not re.search('^# #-#-#-#-#.*',line):
       print line
+
+def po_make_unique(po,wrapwidth=default_width):
+  entries_dict = OrderedDict()
+  for e in po:
+    if (e.msgid, e.msgctxt) in entries_dict:
+      e0 = entries_dict[(e.msgid, e.msgctxt)]
+      e0.occurrences.extend(e.occurrences)
+    else:
+      entries_dict[(e.msgid, e.msgctxt)] = e
+  po2 = polib.POFile(wrapwidth=wrapwidth)
+  po2.metadata = metadata
+  for key, value in entries_dict.items():
+    po2.append(value)
+  return po2
