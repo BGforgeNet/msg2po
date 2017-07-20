@@ -17,6 +17,8 @@ import shutil
 import subprocess
 from contextlib import contextmanager
 import fileinput
+import ConfigParser
+
 
 file_features = {
   'msg': {
@@ -44,8 +46,12 @@ file_features = {
   },
 }
 
-default_encoding='cp1252'
-default_width=78
+default_encoding = 'cp1252'
+default_width = 78
+ini = 'bgforge.ini'
+main_ini_section = 'main'
+default_po_dirname = 'po'
+po_dir_key = 'po_dir'
 
 metadata = {
   'Project-Id-Version': 'PACKAGE VERSION',
@@ -103,6 +109,30 @@ def lowercase_recursively(dir): #this is the function that is actually used
   for dir_name, subdir_list, file_list in os.walk(dir,topdown=False):
     lowercase_rename(dir_name,file_list)
     lowercase_rename(dir_name,subdir_list)
+
+
+def get_ini_value(filename,section,key):
+  parser = ConfigParser.SafeConfigParser()
+  try:
+    parser.read(filename)
+    try:
+      v = parser.get(section, key)
+    except:
+      v = None
+  except:
+    v = None
+  return v
+
+def get_po_dir():
+  po_dir = get_ini_value(filename,main_ini_section,po_dir_key)
+  if po_dir == None:
+    po_dir = dirname
+  if os.path.isdir(po_dir):
+    print 'Found PO dir "{}"'.format(po_dir)
+    return po_dir
+  else:
+    print 'PO dir "{}" does not exist, cannot continue!'.format(po_dir)
+    sys.exit(1)
 ################################
 
 
@@ -151,7 +181,7 @@ def file2po(filename,encoding=default_encoding,width=default_width,noempty=False
       print 'WARN: {} - invalid entry number found, skipping: {{000}}{{}}{{{}}}'.format(filename,value)
       continue
 
-    #check for dupe, if found add to occurences
+    #check for dupe, if found add to occurrences
     current_entries = [e1 for e1 in po]
     entry_added = 0
     for e2 in current_entries:
@@ -253,6 +283,8 @@ def file2msgstr(input_file,output_file,path,encoding=default_encoding,width=defa
   po_entries = [e for e in po]
   index_order = ff['index']
   value_order = ff['value']
+
+  '''
   for e in found_entries:
     index = e[index_order]
     value = unicode(e[value_order])
@@ -260,9 +292,22 @@ def file2msgstr(input_file,output_file,path,encoding=default_encoding,width=defa
       for eo in pe.occurrences:
         if eo[0] == path and eo[1] == index:
           pe.msgstr = value
+          break
+  '''
 
+  entries_dict = collections.OrderedDict()
+  for e in po:
+    for eo in e.occurrences:
+      entries_dict[(eo[0], eo[1])] = e
+  for fe in found_entries:
+    index = fe[index_order]
+    value = unicode(fe[value_order])
+    if (value):
+      if (path, index) in entries_dict:
+        e2 = entries_dict[(path, index)]
+        e2.msgstr = value
+        break
   po.save(output_file)
-
 
 #check if TXT file is indexed
 def check_indexed(txt_filename,encoding=default_encoding):

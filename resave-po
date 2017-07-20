@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+version='1.0.0'
+
+import argparse
+import polib
+
+parser = argparse.ArgumentParser(description='Resave PO file using polib functions, to correct formatting',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('-i', dest='input_file', help='input PO file', required=True)
+parser.add_argument('-w','--width', dest='width', default='78', help='output PO wrapwith')
+args=parser.parse_args()
+
+po = polib.pofile(args.input_file,wrapwidth=int(args.width))
+po.save(args.input_file)
