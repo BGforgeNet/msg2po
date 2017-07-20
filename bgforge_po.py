@@ -322,13 +322,22 @@ def po_make_unique(po,wrapwidth=default_width):
       e0 = entries_dict[(e.msgid, e.msgctxt)]
       e0.occurrences.extend(e.occurrences)
 
-      if e.comment and not e.comment == e0.comment:
-        e0.comment = e0.comment + '; ' + e.comment
-      if e.tcomment and not e.tcomment == e0.tcomment:
-        e0.tcomment = e0.tcomment + '; ' + e.tcomment
+      if e.comment != None:
+        if e0.comment == None:
+          e0.comment = e.comment
+        elif e0.comment != e.comment:
+          e0.comment = e0.comment + '; ' + e.comment
+
+      if e.tcomment != None:
+        if e0.tcomment == None:
+          e0.tcomment = e.tcomment
+        elif e0.tcomment != e.tcomment:
+          e0.tcomment = e0.tcomment + '; ' + e.tcomment
+
       for f in e.flags:
         if not f in e0.flags:
           e0.flags.append(f)
+
       if e.previous_msgctxt and not e0.previous_msgctxt:
         e0.previous_msgctxt = e.previous_msgctxt
       if e.previous_msgid and not e0.previous_msgid:
