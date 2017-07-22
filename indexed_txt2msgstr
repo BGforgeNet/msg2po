@@ -8,17 +8,17 @@ import bgforge_po
 import polib
 
 parser = argparse.ArgumentParser(description='Load indexed TXT into gettext PO msgstr',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('-i', dest='input_file', help='input TXT/SVE file', required=True)
-parser.add_argument('-o', dest='output_file', help='output PO file', required=True)
+parser.add_argument('INPUT_FILE', help='input TXT/SVE file')
+parser.add_argument('OUTPUT_FILE', help='output PO file')
 parser.add_argument('--path', dest='path', help='load as filename (PO occurence). If not specified, defaults to input filename')
-parser.add_argument('-e','--encoding', dest='encoding', default='cp1252', help='source encoding')
-parser.add_argument('-w','--width', dest='width', default='78', help='output PO wrapwith')
+parser.add_argument('-e', dest='encoding', default='cp1252', help='source encoding')
+parser.add_argument('-w', dest='width', default='78', help='output PO wrapwith')
 args=parser.parse_args()
 
-input_file = args.input_file
-output_file = args.output_file
+input_file = args.INPUT_FILE
+output_file = args.OUTPUT_FILE
 if args.path == None:
-  path = args.input_file
+  path = input_file
 else:
   path = args.path
 encoding = args.encoding

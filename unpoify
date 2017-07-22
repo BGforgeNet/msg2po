@@ -15,12 +15,12 @@ import bgforge_po
 
 #parse args
 parser = argparse.ArgumentParser(description='Unpoify files into parent directory of selected PO dir',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('-d', dest='po_dir', default='.', help='directory with PO files')
+parser.add_argument('DIR', default='.', help='directory with PO files')
 parser.add_argument('-e', dest='enc', default='cp1252', help='output encoding')
 args=parser.parse_args()
 
 #init vars
-po_dir = args.po_dir
+po_dir = args.DIR
 enc = args.enc
 
 
