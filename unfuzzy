@@ -24,4 +24,6 @@ for e in po.fuzzy_entries():
     if e.msgid == e.previous_msgid.replace(s1,s2):
       e.flags.remove(u'fuzzy')
       e.previous_msgid = None
+      e.previous_msgid_plural = None
+      e.previous_msgctxt = None
 po.save(input_file)
