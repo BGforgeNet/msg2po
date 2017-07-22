@@ -58,7 +58,9 @@ def poify(dir): #relative path
     po = polib.POFile(wrapwidth=width)
     po.metadata = bgforge_po.metadata
 
-    for dir_name, subdir_list, file_list in os.walk('.',topdown=False):
+    for dir_name, subdir_list, file_list in sorted(os.walk('.',topdown=False)):
+      subdir_list.sort()
+      file_list.sort()
       for file_name in file_list:
         full_name=os.path.join(dir_name, file_name)
         full_name=re.sub('^\./','',full_name)  #remove trailing './'
