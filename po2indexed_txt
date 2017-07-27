@@ -18,4 +18,5 @@ if args.path == None:
 else:
   path = args.path
 
+bgforge_po.check_path_in_po(po, path)
 bgforge_po.po2file(args.INPUT_FILE, args.OUTPUT_FILE, args.encoding,path)

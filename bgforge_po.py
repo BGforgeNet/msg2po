@@ -271,16 +271,16 @@ def file2po(filename, encoding = defaults['encoding'], width = defaults['width']
 
   return(po)
 
-#check if extract fie is present in po, exit with error if not
-def check_path_in_po(po,path):
+#check if extract file is present in po, exit with error if not
+def check_path_in_po(po, path):
   present_files = []
   for entry in po:
     for eo in entry.occurrences:
       present_files.append(eo[0])
   present_files_list = sorted(set(present_files))
   if not path in present_files_list:
-    print "{} is not present in {}".format(path,po_file)
-    print "supply one of present files with --extract-file argument:"
+    print "{} is not present in selected PO file".format(path)
+    print "supply one of present files with --path argument:"
     for pf in present_files_list:
       print pf
     sys.exit(1)
