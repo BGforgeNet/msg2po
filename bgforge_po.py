@@ -285,7 +285,7 @@ def check_path_in_po(po, path):
       print pf
     sys.exit(1)
 
-def po2file(po,output_file,encoding,path): #po is po_file object
+def po2file(po, output_file, encoding, path): #po is po_file object
   ext = get_ext(output_file)
   ff = file_features[ext]
   line_format = ff['line_format']
