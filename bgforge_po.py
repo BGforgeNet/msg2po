@@ -107,12 +107,13 @@ def get_ext(path):
 
 def basename(path):
   if path.endswith('/'):
-    s = s[:-1]
+    path = path[:-1]
   return os.path.abspath(path).rsplit('/',1)[1]
 
 def parent_dir(path):
+  print path
   if path.endswith('/'):
-    s = s[:-1]
+    path = path[:-1]
   return os.path.abspath(path).rsplit('/',1)[0]
 
 def strip_ext(filename):
