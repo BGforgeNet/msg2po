@@ -13,22 +13,25 @@ import re
 import os
 import bgforge_po
 
-valid_extensions = [ 'msg', 'txt', 'sve', ]
+valid_extensions = bgforge_po.valid_extensions
+default_poify_dir = bgforge_po.get_poify_dir()
+
+print default_poify_dir
 
 #parse args
 parser = argparse.ArgumentParser(description='Poify files in selected directory',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('DIR', default='.', help='directory to poify')
-parser.add_argument('-e', dest='enc', help='source encoding',default='cp1252')
+parser.add_argument('DIR', nargs = '?', default = default_poify_dir, help='source language directory (default: ./english)')
+parser.add_argument('-e', dest='enc', help='source encoding', default='cp1252')
 parser.add_argument('--no-lowercase', dest='nolowercase', default=False, action='store_true', help="don't lowercase filenames before poifying")
 parser.add_argument('-w', dest='width', default='78', help='output PO wrapwith')
 args=parser.parse_args()
 
 
 #init vars
-src_dir=args.DIR
-enc=args.enc
-nolowercase=args.nolowercase
-width=int(args.width)
+poify_dir = args.DIR
+enc = args.enc
+nolowercase = args.nolowercase
+width = int(args.width)
 
 devnull = open(os.devnull, 'w')
 
@@ -90,8 +93,8 @@ def poify(dir): #relative path
 
 #lowercase if not disabled on cmd
 if nolowercase == False:
-  bgforge_po.lowercase_recursively(src_dir)
+  bgforge_po.lowercase_recursively(poify_dir)
 
-src_dir=os.path.abspath(src_dir)
-with bgforge_po.cd(bgforge_po.parent_dir(src_dir)):
-  poify(bgforge_po.basename(os.path.abspath(src_dir))) #keeping relative occurences in resulting po
+poify_dir=os.path.abspath(poify_dir)
+with bgforge_po.cd(bgforge_po.parent_dir(poify_dir)):
+  poify(bgforge_po.basename(os.path.abspath(poify_dir))) #keeping relative occurences in resulting po

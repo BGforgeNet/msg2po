@@ -13,9 +13,12 @@ import shutil
 import re
 import bgforge_po
 
+
+default_po_dir = bgforge_po.get_po_dir()
+
 #parse args
 parser = argparse.ArgumentParser(description='Unpoify files into parent directory of selected PO dir',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('DIR', default='.', help='directory with PO files')
+parser.add_argument('DIR', nargs = '?', default = default_po_dir, help='directory with PO files')
 parser.add_argument('-e', dest='enc', default='cp1252', help='output encoding')
 args=parser.parse_args()
 
@@ -23,11 +26,6 @@ args=parser.parse_args()
 po_dir = args.DIR
 enc = args.enc
 
-
-#check dir existence
-if not os.path.isdir(po_dir):
-  print "directory {} does not exist".format(po_dir)
-  sys.exit(1)
 
 #find PO files
 po_files = []

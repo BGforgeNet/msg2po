@@ -13,8 +13,6 @@ import re
 import os
 import bgforge_po
 
-valid_extensions = [ 'msg', 'txt', 'sve', ]
-
 #parse args
 parser = argparse.ArgumentParser(description='Load strings from files in selected dir into PO',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-s', dest='src_dir', default='.', help='directory to load', required=True)

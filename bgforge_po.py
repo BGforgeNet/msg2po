@@ -19,6 +19,7 @@ from contextlib import contextmanager
 import fileinput
 import ConfigParser
 
+valid_extensions = [ 'msg', 'txt', 'sve', ]
 
 file_features = {
   'msg': {
@@ -50,8 +51,17 @@ default_encoding = 'cp1252'
 default_width = 78
 ini = 'bgforge.ini'
 main_ini_section = 'main'
-default_po_dirname = 'po'
+po_dirname = 'po'
 po_dir_key = 'po_dir'
+tra_dir_key = 'tra_dir'
+src_lang_key = 'src_lang'
+
+defaults = {
+  'encoding': 'cp1252',
+  'width': '78',
+  'tra_dir': '.',
+  'src_lang': 'english'
+}
 
 metadata = {
   'Project-Id-Version': 'PACKAGE VERSION',
@@ -110,28 +120,36 @@ def lowercase_recursively(dir): #this is the function that is actually used
     lowercase_rename(dir_name,file_list)
     lowercase_rename(dir_name,subdir_list)
 
-
-def get_ini_value(filename,section,key):
+def get_value(key, filename = ini, ini_section = main_ini_section):
   parser = ConfigParser.SafeConfigParser()
   try:
     parser.read(filename)
     try:
-      v = parser.get(section, key)
+      v = parser.get(ini_section, key)
     except:
-      v = None
+      v = defaults[key]
   except:
-    v = None
+    v = defaults[key]
   return v
 
-def get_po_dir():
-  po_dir = get_ini_value(filename,main_ini_section,po_dir_key)
-  if po_dir == None:
-    po_dir = dirname
-  if os.path.isdir(po_dir):
-    print 'Found PO dir "{}"'.format(po_dir)
-    return po_dir
+def get_po_dir(d):
+  tra_dir = get_value(tra_dir_key)
+  po_dir = tra_dir + '/' + po_dirname
+  dir_or_exit(po_dir)
+  return po_dir
+
+def get_poify_dir():
+  tra_dir = get_value(tra_dir_key)
+  src_lang = get_value(src_lang_key)
+  poify_dir = tra_dir + '/' + src_lang
+  dir_or_exit(poify_dir)
+  return poify_dir
+
+def dir_or_exit(d):
+  if os.path.isdir(d):
+    print 'Found directory {}'.format(d)
   else:
-    print 'PO dir "{}" does not exist, cannot continue!'.format(po_dir)
+    print 'Directory {} does not exist, cannot continue!'.format(d)
     sys.exit(1)
 
 @contextmanager

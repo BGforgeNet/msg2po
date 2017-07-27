@@ -14,5 +14,5 @@ parser.add_argument('-w', dest='width', default='78', help='output PO wrapwith')
 parser.add_argument('--no-empty', dest='noempty', action='store_true', default=False, help='skip empty lines')
 args=parser.parse_args()
 
-po = bgforge_po.file2po(args.INPUT_FILE,args.enc,int(args.width),args.noempty)
+po = bgforge_po.file2po(args.INPUT_FILE, args.enc, int(args.width), args.noempty)
 po.save(args.OUTPUT_FILE)
