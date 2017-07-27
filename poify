@@ -27,7 +27,8 @@ args=parser.parse_args()
 
 #init vars
 poify_dir = args.DIR
-enc = args.enc
+bgforge_po.dir_or_exit(poify_dir)
+enc = bgforge_po.get_enc(args.DIR)
 nolowercase = args.nolowercase
 width = int(args.width)
 

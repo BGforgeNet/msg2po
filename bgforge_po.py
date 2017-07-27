@@ -60,7 +60,23 @@ defaults = {
   'encoding': 'cp1252',
   'width': '78',
   'tra_dir': '.',
-  'src_lang': 'english'
+  'src_lang': 'english',
+}
+
+encodings = {
+  'schinese': 'cp936',
+  'tchinese': 'cp950',
+
+  'czech': 'cp1250',
+
+  'japanese': 'cp932',
+
+  'korean': 'cp949',
+
+  'polish': 'cp1250',
+  'polski': 'cp1250',
+
+  'russian': 'cp1251',
 }
 
 metadata = {
@@ -132,17 +148,15 @@ def get_value(key, filename = ini, ini_section = main_ini_section):
     v = defaults[key]
   return v
 
-def get_po_dir(d):
+def get_po_dir():
   tra_dir = get_value(tra_dir_key)
   po_dir = tra_dir + '/' + po_dirname
-  dir_or_exit(po_dir)
   return po_dir
 
 def get_poify_dir():
   tra_dir = get_value(tra_dir_key)
   src_lang = get_value(src_lang_key)
   poify_dir = tra_dir + '/' + src_lang
-  dir_or_exit(poify_dir)
   return poify_dir
 
 def dir_or_exit(d):
@@ -160,6 +174,14 @@ def cd(newdir):
     yield
   finally:
     os.chdir(prevdir)
+
+def get_enc(dir, encoding_list = encodings):
+  encoding = defaults['encoding']
+  for lang, enc in encoding_list.items():
+    if lang in dir:
+      encoding = enc
+      break
+  return encoding
 
 ################################
 
