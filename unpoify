@@ -22,7 +22,7 @@ parser.add_argument('DIR', nargs = '?', default = default_po_dir, help='director
 args=parser.parse_args()
 
 #init vars
-po_dir = args.DIR
+po_dir = bgforge_po.basename(args.DIR)
 bgforge_po.dir_or_exit(po_dir)
 
 #find PO files
@@ -48,13 +48,14 @@ for pf in po_files:
   extract_file_set = set(extract_file_list)
 
   lang = bgforge_po.strip_ext(pf)
-  dst_dir = bgforge_po.parent_dir(po_dir) + '/' + lang
+#  dst_dir = bgforge_po.parent_dir(po_dir) + '/' + lang
+  dst_dir = lang
   enc = bgforge_po.get_enc(po_path)
 
   po = polib.pofile(po_path) #open once
   for ef in sorted(extract_file_set):
     ef_extract_path = dst_dir + '/' + ef
     bgforge_po.create_dir(bgforge_po.get_dir(ef_extract_path))
-    print "Extracting {} from {} into {} with encoding {}".format(ef_extract_path, po_path, ef, enc)
+    print "Extracting {} from {} into {}".format(ef, po_path, ef_extract_path)
     bgforge_po.po2file(po, ef_extract_path, enc, ef)
-  print 'Extracted {} into {}'.format(po_path,dst_dir)
+  print 'Extracted {} into {} with encoding {}'.format(po_path, dst_dir, enc)
