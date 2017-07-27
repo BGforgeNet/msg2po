@@ -93,6 +93,8 @@ metadata = {
   'X-Generator': 'bgforge_po v.{}'.format(version),
 }
 
+empty_comment = 'LEAVE empty space in translation'
+
 
 #file and dir manipulation
 #################################
@@ -231,6 +233,7 @@ def file2po(filename,encoding=default_encoding,width=default_width,noempty=False
         continue
       else:
         value = ' '
+        comment = empty_comment
 
     if index == '000': #skip invalid '000' entries
       print 'WARN: {} - invalid entry number found, skipping: {{000}}{{}}{{{}}}'.format(filename,value)
@@ -290,6 +293,10 @@ def po2file(po,output_file,encoding,path): #po is po_file object
           value = entry.msgid
         else:
           value = entry.msgstr
+
+        #empty lines detected by context
+        if entry.msgid == ' ' and entry.comment == empty_comment:
+          value = ''
 
         if 'context' in ff: #only add context when defined in file format
           if entry.msgctxt != None:
