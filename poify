@@ -49,8 +49,7 @@ def clean_po_dir(d):
   shutil.rmtree(tmp_dir,ignore_errors=True)
 
 def poify(dir): #relative path
-  po_dir = bgforge_po.parent_dir(dir) + '/po'
-  tmp_dir = bgforge_po.parent_dir(dir) + '/po/tmp'
+  po_dir = bgforge_po.po_dirname
   prepare_po_dir(po_dir)
   #process with po_tool
   with bgforge_po.cd(dir):
@@ -84,8 +83,8 @@ def poify(dir): #relative path
         po2 = bgforge_po.file2po(full_name)
         for e2 in po2:
           po.append(e2)
-    po = bgforge_po.po_make_unique(po)
-    po.save(dst_file)
+  po = bgforge_po.po_make_unique(po)
+  po.save(dst_file)
 
   clean_po_dir(po_dir)
   print "Processed '{}' directory with encoding {}, the result is in {}/{}.pot".format(dir,enc,po_dir,lang)
@@ -94,6 +93,5 @@ def poify(dir): #relative path
 if nolowercase == False:
   bgforge_po.lowercase_recursively(poify_dir)
 
-poify_dir=os.path.abspath(poify_dir)
-with bgforge_po.cd(bgforge_po.parent_dir(poify_dir)):
-  poify(bgforge_po.basename(os.path.abspath(poify_dir))) #keeping relative occurences in resulting po
+with bgforge_po.cd(bgforge_po.parent_dir(os.path.abspath(poify_dir))):
+  poify(bgforge_po.basename(poify_dir)) #keeping relative occurences in resulting po
