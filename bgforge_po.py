@@ -19,7 +19,7 @@ from contextlib import contextmanager
 import fileinput
 import ConfigParser
 
-valid_extensions = [ 'msg', 'txt', 'sve', ]
+valid_extensions = [ 'msg', 'txt', 'sve', 'tra']
 
 file_features = {
   'msg': {
@@ -45,10 +45,15 @@ file_features = {
     'comment':     'indexed_txt',
     'line_format': '{}:{}\n',
   },
+  'tra': {
+    'pattern':     '[^\/\/]@(\d+)\s*?=\s*?~([^~]*?)~',
+    'dotall':       True,
+    'index':        0,
+    'value':        1,
+    'line_format': '@{}=~{}~\n',
+  },
 }
 
-default_encoding = 'cp1252'
-default_width = 78
 ini = 'bgforge.ini'
 main_ini_section = 'main'
 po_dirname = 'po'
@@ -58,7 +63,7 @@ src_lang_key = 'src_lang'
 
 defaults = {
   'encoding': 'cp1252',
-  'width': '78',
+  'width': 78,
   'tra_dir': '.',
   'src_lang': 'english',
 }
@@ -84,7 +89,7 @@ metadata = {
   'Report-Msgid-Bugs-To': '',
   'POT-Creation-Date': '1970-1-01 00:00+0000',
   'PO-Revision-Date': 'YEAR-MO-DA HO:MI+ZONE',
-  'Last-Translator': 'FULL NAME <EMAIL@ADDRESS',
+  'Last-Translator': 'FULL NAME <EMAIL@ADDRESS>',
   'Language-Team': 'LANGUAGE <LL@li.org>',
   'Language': '',
   'MIME-Version': '1.0',
@@ -111,7 +116,6 @@ def basename(path):
   return os.path.abspath(path).rsplit('/',1)[1]
 
 def parent_dir(path):
-  print path
   if path.endswith('/'):
     path = path[:-1]
   return os.path.abspath(path).rsplit('/',1)[0]
@@ -190,8 +194,8 @@ def get_enc(dir, encoding_list = encodings):
 
 
 #returns PO file object
-def file2po(filename,encoding=default_encoding,width=default_width,noempty=False):
-  text = io.open(filename, 'r', encoding=encoding).read()
+def file2po(filename, encoding = defaults['encoding'], width = defaults['width'], noempty = False):
+  text = io.open(filename, 'r', encoding = encoding).read()
 
   ext = get_ext(filename)
   ff = file_features[ext]
@@ -212,7 +216,16 @@ def file2po(filename,encoding=default_encoding,width=default_width,noempty=False
     index = e0[ff['index']]
     value = unicode(e0[ff['value']])
 
-    if (filename, index) in seen and not index == '000':
+    if index == '000' and ext == 'msg' : #skip invalid '000' entries in MSG files
+      print 'WARN: {} - invalid entry number found, skipping: {{000}}{{}}{{{}}}'.format(filename,value)
+      continue
+
+    index = index.lstrip("0") #handle "0.." entries in tra
+    if index == '':
+      print index
+      index = '0'
+
+    if (filename, index) in seen:
       print "WARN: duplicate string {}:{} '{}'".format(filename, index, value)
     seen.append((filename, index))
 
@@ -236,10 +249,6 @@ def file2po(filename,encoding=default_encoding,width=default_width,noempty=False
         value = ' '
         comment = empty_comment
 
-    if index == '000': #skip invalid '000' entries
-      print 'WARN: {} - invalid entry number found, skipping: {{000}}{{}}{{{}}}'.format(filename,value)
-      continue
-
     #check for dupe, if found add to occurrences
     current_entries = [e1 for e1 in po]
     entry_added = 0
@@ -261,7 +270,6 @@ def file2po(filename,encoding=default_encoding,width=default_width,noempty=False
       po.append(entry)
 
   return(po)
-
 
 #check if extract fie is present in po, exit with error if not
 def check_path_in_po(po,path):
@@ -326,7 +334,7 @@ def po2file(po,output_file,encoding,path): #po is po_file object
   file.close()
 
 
-def file2msgstr(input_file, po, path, encoding=default_encoding, width=default_width):
+def file2msgstr(input_file, po, path, encoding = defaults['encoding'], width = defaults['width']):
 
   #get file features
   ext = get_ext(input_file)
@@ -374,15 +382,15 @@ def file2msgstr(input_file, po, path, encoding=default_encoding, width=default_w
 
 
 #check if TXT file is indexed
-def check_indexed(txt_filename,encoding=default_encoding):
-  f = io.open(txt_filename, 'r', encoding=encoding)
+def check_indexed(txt_filename, encoding = defaults['encoding']):
+  f = io.open(txt_filename, 'r', encoding = encoding)
   #count non-empty lines
   num_lines = sum(1 for line in f if line.rstrip())
   f.close()
 
   #count lines that are indexed
   pattern = file_features['txt']['pattern']
-  f = io.open(txt_filename, 'r', encoding=encoding)
+  f = io.open(txt_filename, 'r', encoding = encoding)
   text = f.read()
   indexed_lines = re.findall(pattern, text)
   num_indexed_lines = len(indexed_lines)
@@ -423,7 +431,7 @@ def strip_msgcat_comments(filename):
     if not re.search('^#$',line) and not re.search('^# #-#-#-#-#.*',line):
       print line
 
-def po_make_unique(po,wrapwidth=default_width):
+def po_make_unique(po, wrapwidth = defaults['width']):
   entries_dict = collections.OrderedDict()
   for e in po:
     if (e.msgid, e.msgctxt) in entries_dict:
