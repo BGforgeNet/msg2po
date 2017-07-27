@@ -16,8 +16,6 @@ import bgforge_po
 valid_extensions = bgforge_po.valid_extensions
 default_poify_dir = bgforge_po.get_poify_dir()
 
-print default_poify_dir
-
 #parse args
 parser = argparse.ArgumentParser(description='Poify files in selected directory',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('DIR', nargs = '?', default = default_poify_dir, help='source language directory (default: ./english)')
