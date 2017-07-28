@@ -22,40 +22,41 @@ parser.add_argument('DIR', nargs = '?', default = default_po_dir, help='director
 args=parser.parse_args()
 
 #init vars
-po_dir = bgforge_po.basename(args.DIR)
+po_dir = args.DIR
 bgforge_po.dir_or_exit(po_dir)
+tra_dir = bgforge_po.parent_dir(po_dir)
 
-#find PO files
-po_files = []
-for dir_name, subdir_list, file_list in os.walk(po_dir):
-  for f in file_list:
-    if bgforge_po.get_ext(f) == 'po':
-      po_files.append(f)
-  break
-if po_files == []:
-  print "no PO files found in directory {}".format(po_dir)
-  sys.exit(1)
+with bgforge_po.cd(tra_dir):
+  po_dir = bgforge_po.po_dirname # "po"
 
-#extract PO files
-extract_file_list = []
-for pf in po_files:
-  po_path = po_dir + '/' + pf
-  print "processing {}".format(po_path)
-  po = polib.pofile(po_path)
-  for e in po:
-    for eo in e.occurrences:
-      extract_file_list.append(eo[0])
-  extract_file_set = set(extract_file_list)
+  #find PO files
+  po_files = []
+  for dir_name, subdir_list, file_list in os.walk(po_dir):
+    for f in file_list:
+      if bgforge_po.get_ext(f) == 'po':
+        po_files.append(f)
+  if po_files == []:
+    print "no PO files found in directory {}".format(po_dir)
+    sys.exit(1)
 
-  lang = bgforge_po.strip_ext(pf)
-#  dst_dir = bgforge_po.parent_dir(po_dir) + '/' + lang
-  dst_dir = lang
-  enc = bgforge_po.get_enc(po_path)
+  #extract PO files
+  extract_file_list = []
+  for pf in po_files:
+    po_path = po_dir + '/' + pf
+    print "processing {}".format(po_path)
+    po = polib.pofile(po_path)
+    for e in po:
+      for eo in e.occurrences:
+        extract_file_list.append(eo[0])
+    extract_file_set = set(extract_file_list)
 
-  po = polib.pofile(po_path) #open once
-  for ef in sorted(extract_file_set):
-    ef_extract_path = dst_dir + '/' + ef
-    bgforge_po.create_dir(bgforge_po.get_dir(ef_extract_path))
-    print "Extracting {} from {} into {}".format(ef, po_path, ef_extract_path)
-    bgforge_po.po2file(po, ef_extract_path, enc, ef)
-  print 'Extracted {} into {} with encoding {}'.format(po_path, dst_dir, enc)
+    dst_dir = bgforge_po.strip_ext(pf) # lang
+
+    po = polib.pofile(po_path) #open once
+    for ef in sorted(extract_file_set):
+      enc = bgforge_po.get_enc(po_path, ef)
+      ef_extract_path = dst_dir + '/' + ef
+      bgforge_po.create_dir(bgforge_po.get_dir(ef_extract_path))
+      print "Extracting {} from {} into {} with encoding {}".format(ef, po_path, ef_extract_path, enc)
+      bgforge_po.po2file(po, ef_extract_path, enc, ef)
+    print 'Extracted {} into {}'.format(po_path, dst_dir, enc)
