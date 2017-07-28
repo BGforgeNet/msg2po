@@ -84,6 +84,33 @@ encodings = {
   'russian': 'cp1251',
 }
 
+dos_encodings = {
+#  'czech': 'cp852',
+
+#  'polish': 'cp852',
+#  'polski': 'cp852',
+
+  'russian': 'cp866',
+
+#  'french': 'cp850',
+#  'francais': 'cp850',
+
+#  'german': 'cp850',
+#  'deutsch': 'cp850',
+
+#  'italian': 'cp850',
+#  'italiano': 'cp850',
+
+#  'spanish': 'cp850',
+#  'espanol': 'cp850',
+#  'castilian': 'cp850',
+#  'castellano': 'cp850',
+}
+
+dos_filenames = [
+  'setup.tra',
+]
+
 metadata = {
   'Project-Id-Version': 'PACKAGE VERSION',
   'Report-Msgid-Bugs-To': '',
@@ -182,12 +209,19 @@ def cd(newdir):
   finally:
     os.chdir(prevdir)
 
-def get_enc(dir, encoding_list = encodings):
+def get_enc(po_name, po_occurence_name = '', encoding_dict = encodings, dos_encoding_dict = dos_encodings, dos_filename_list = dos_filenames):
   encoding = defaults['encoding']
-  for lang, enc in encoding_list.items():
-    if lang in dir:
-      encoding = enc
-      break
+  lang = strip_ext(basename(po_name))
+  filename = basename(po_occurence_name)
+
+  if lang in encoding_dict:
+    try: encoding = encoding_dict[lang]
+    except: pass
+
+  if filename in dos_filenames:
+    try: encoding = dos_encoding_dict[lang]
+    except: pass
+
   return encoding
 
 ################################
@@ -353,18 +387,6 @@ def file2msgstr(input_file, po, path, encoding = defaults['encoding'], width = d
   po_entries = [e for e in po]
   index_order = ff['index']
   value_order = ff['value']
-  '''
-  for e in found_entries:
-    index = e[index_order]
-    value = unicode(e[value_order])
-    if value:
-      for pe in po_entries:
-        for eo in pe.occurrences:
-          if eo[0] == path and eo[1] == index:
-            pe.msgstr = value
-            break
-  return po
-  '''
   entries_dict = collections.OrderedDict()
   for e in po:
     for eo in e.occurrences:
@@ -376,8 +398,6 @@ def file2msgstr(input_file, po, path, encoding = defaults['encoding'], width = d
       if (path, index) in entries_dict:
         e2 = entries_dict[(path, index)]
         e2.msgstr = value
-    
-#  po.save(output_file)
   return po
 
 
