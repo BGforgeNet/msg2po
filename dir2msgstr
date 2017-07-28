@@ -19,14 +19,12 @@ parser.add_argument('-s', dest='src_dir', default='.', help='directory to load',
 parser.add_argument('-o', dest='output_file', help='existing PO file', required=True)
 parser.add_argument('--ext', dest='file_ext', help='only load files with this extension', required=True)
 parser.add_argument('-e', dest='enc', default='cp1252', help='source encoding')
-parser.add_argument('-w', dest='width', default='78', help='output PO wrapwith')
 args=parser.parse_args()
 
 
 #init vars
 src_dir = args.src_dir
 enc = args.enc
-width = int(args.width)
 ext = args.file_ext
 output_file = os.path.abspath(args.output_file)
 
@@ -45,12 +43,12 @@ def dir2msgstr(src_dir, po): #relative path, pofile object
           continue
 
         print "processing {}".format(full_name)
-        po = bgforge_po.file2msgstr(full_name, po, full_name)
+        po = bgforge_po.file2msgstr(full_name, po, full_name, enc)
 
   po = bgforge_po.po_make_unique(po)
   return po
 
-po = polib.pofile(output_file, wrapwidth=width)
+po = polib.pofile(output_file)
 po.metadata = bgforge_po.metadata
 po = dir2msgstr(src_dir, po)
 po.save(output_file)
