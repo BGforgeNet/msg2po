@@ -109,6 +109,7 @@ dos_encodings = {
 
 dos_filenames = [
   'setup.tra',
+  'install.tra',
 ]
 
 metadata = {
