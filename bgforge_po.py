@@ -398,7 +398,11 @@ def file2msgstr(input_file, po, path, encoding = defaults['encoding'], width = d
     if value != None and value != '':
       if (path, index) in entries_dict:
         e2 = entries_dict[(path, index)]
+        if e2.msgstr != None and e2.msgstr != '' and e2.msgstr != value:
+          print "WARN: differing msgstr values found for {}\nOverwriting first string with second:\n\"{}\"\n\"{}\"".format(e2.occurrences, e2.msgstr, value)
         e2.msgstr = value
+      else:
+        print "WARN: no msgid found for {}:{}, skipping string {}".format(path, index, value)
   return po
 
 
