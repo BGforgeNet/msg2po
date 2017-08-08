@@ -247,7 +247,9 @@ def file2po(filename, encoding = defaults['encoding'], width = defaults['width']
 
   entry_added = 0
   seen = []
+  dupe = 0
   for e0 in found_entries:
+    dupe = 0
     index = e0[ff['index']]
     value = unicode(e0[ff['value']])
 
@@ -261,7 +263,8 @@ def file2po(filename, encoding = defaults['encoding'], width = defaults['width']
       index = '0'
 
     if (filename, index) in seen:
-      print "WARN: duplicate string {}:{} '{}'".format(filename, index, value)
+      print "WARN: duplicate string {}:{}, using new value '{}'".format(filename, index, value)
+      dupe = 1
     seen.append((filename, index))
 
     if 'context' in ff:
@@ -284,25 +287,32 @@ def file2po(filename, encoding = defaults['encoding'], width = defaults['width']
         value = ' '
         comment = empty_comment
 
-    #check for dupe, if found add to occurrences
-    current_entries = [e1 for e1 in po]
+    #remove dupe from occurrences
+    if dupe == 1:
+      for e2 in po:
+        if (filename, index) in e2.occurrences:
+          if len(e2.occurrences) == 1:
+            po[:] = [e3 for e3 in po if not e3 == e2]
+          else:
+            e2.occurrences.remove((filename, index))
+          dupe = 0
     entry_added = 0
-    for e2 in current_entries:
+    for e2 in po:
       if e2.msgid == value and e2.msgctxt == context:
         e2.occurrences.append((filename, index))
         entry_added = 1
         break
 
-    #not dupe, add new entry
+    #no matching msgid, add new entry
     if entry_added == 0:
-      entry = polib.POEntry(
-        msgid=value,
-        msgstr='',
-        occurrences=[(filename, index),],
-        msgctxt = context,
-        comment = comment,
-      )
-      po.append(entry)
+        entry = polib.POEntry(
+            msgid=value,
+            msgstr='',
+            occurrences=[(filename, index),],
+            msgctxt = context,
+            comment = comment,
+        )
+        po.append(entry)
 
   return(po)
 
