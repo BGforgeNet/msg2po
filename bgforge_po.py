@@ -46,7 +46,7 @@ file_features = {
     'line_format': '{}:{}\n',
   },
   'tra': {
-    'pattern':     '[^\/\/]@(\d+)\s*?=\s*?~([^~]*?)~',
+    'pattern':     '@(\d+)\s*?=\s*?~([^~]*?)~',
     'dotall':       True,
     'index':        0,
     'value':        1,
