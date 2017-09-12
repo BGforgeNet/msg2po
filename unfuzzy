@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# coding: utf-8
+# -*- coding: utf-8 -*-
 
 version='1.0.0'
 
@@ -9,21 +9,61 @@ import sys
 
 parser = argparse.ArgumentParser(description='Unmark PO entries as fuzzy, if replacing string 1 with string2 in previous msgid results in current msgid',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('INPUT_FILE', help='input PO file')
-parser.add_argument('-s1', dest='string_to_replace', help='string to replace', required=True)
-parser.add_argument('-s2', dest='replacement_string', help='string which replaces', required=True)
+parser.add_argument('-w', default=False, dest='WRITE', action='store_true', help='save PO file?')
 args=parser.parse_args()
 
 input_file = args.INPUT_FILE
-s1 = args.string_to_replace.decode("utf-8")
-s2 = args.replacement_string.decode("utf-8")
-
+write = args.WRITE
 po = polib.pofile(input_file)
 
+i = 0
 for e in po.fuzzy_entries():
   if e.previous_msgid: #strange, shouldn't need this
-    if e.msgid == e.previous_msgid.replace(s1,s2):
-      e.flags.remove(u'fuzzy')
-      e.previous_msgid = None
-      e.previous_msgid_plural = None
-      e.previous_msgctxt = None
-po.save(input_file)
+    e.msgid = e.msgid
+    e2 =  e.previous_msgid
+
+    e2 = e.previous_msgid.replace(" . . .","...")
+    e2 = e2.replace("\n","")
+    e2 = e2.replace("\n"," ")
+    e2 = e2.replace("  "," ")
+    e2 = e2.replace("Good bye","Goodbye")
+    e2 = e2.replace("Good Bye","Goodbye")
+    e2 = e2.replace("All right","Alright")
+    e2 = e2.replace("all right","alright")
+    e2 = e2.replace("OK","okay")
+    e2 = e2.replace("OK","Okay")
+    e2 = e2.replace("Ok","Okay")
+    e2 = e2.replace("`","'")
+    e2 = e2.replace("Death Claw","Deathclaw")
+    e2 = e2.replace("Death claw","Deathclaw")
+    e2 = e2.replace("All-In-One","All-N-One")
+    e2 = e2.replace("script","cap")
+    e2 = e2.replace("the Boneyard","L.A. Boneyard")
+    e2 = e2.replace("The Boneyard","L.A. Boneyard")
+    e2 = e2.replace(",","")
+    e2 = e2.replace("the","")
+    e2 = e2.replace("The","")
+    e2 = e2.replace("Hell","hell")
+    e2 = e2.replace("Rad Scorpion","radscorpion")
+    e2 = e2.replace("Rad Scorpion","Radscorpion")
+    e2 = e2.replace(" a "," 1 ")
+    e2 = e2.replace(u"’","'")
+    e2 = e2.replace(u"‘","'")
+    e2 = e2.replace("Hell","hell")
+    e2 = e2.replace("buck","cap")
+    e2 = e2.replace("Buck","Cap")
+
+    if e.msgid == e2:
+      i = i + 1
+      print e.previous_msgid
+      print e.msgid
+      print e.msgstr
+      if write == True:
+        e.flags.remove(u'fuzzy')
+        e.previous_msgid = None
+        e.previous_msgid_plural = None
+        e.previous_msgctxt = None
+print i
+
+if write == True:
+  po.save(input_file)
