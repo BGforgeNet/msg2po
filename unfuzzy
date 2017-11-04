@@ -6,6 +6,8 @@ version='1.0.0'
 import argparse
 import polib
 import sys
+reload(sys)
+sys.setdefaultencoding('utf8')
 
 parser = argparse.ArgumentParser(description='Unmark PO entries as fuzzy, if replacing string 1 with string2 in previous msgid results in current msgid',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('INPUT_FILE', help='input PO file')
@@ -16,47 +18,64 @@ input_file = args.INPUT_FILE
 write = args.WRITE
 po = polib.pofile(input_file)
 
+def make_replaces(g):
+  g = g.replace(" . . .","...")
+  g = g.replace("…","...")
+  g = g.replace("\\n","")
+  #  g = g.replace("\\n"," ")
+  g = g.replace("\r","")
+  g = g.replace("\n","")
+  #  g = g.replace("\n"," ")
+  g = g.replace("  "," ")
+  g = g.replace("`","'")
+  g = g.replace("Good bye","Goodbye")
+  g = g.replace("Good Bye","Goodbye")
+  g = g.replace("All right","Alright")
+  g = g.replace("all right","alright")
+  g = g.replace("OK","okay")
+  g = g.replace("OK","Okay")
+  g = g.replace("Ok","Okay")
+  g = g.replace("Death Claw","Deathclaw")
+  g = g.replace("Death claw","Deathclaw")
+  g = g.replace("All-In-One","All-N-One")
+  g = g.replace("script","cap")
+  g = g.replace("the Boneyard","L.A. Boneyard")
+  g = g.replace("The Boneyard","L.A. Boneyard")
+  g = g.replace(",","")
+  g = g.replace("the "," ")
+  g = g.replace("The "," ")
+  g = g.replace("Hell","hell")
+  g = g.replace("Rad Scorpion","radscorpion")
+  g = g.replace("Rad Scorpion","Radscorpion")
+  g = g.replace(" a "," 1 ")
+  g = g.replace(u"’","'")
+  g = g.replace(u"‘","'")
+  g = g.replace("Hell","hell")
+  g = g.replace("buck","cap")
+  g = g.replace("Buck","Cap")
+  g = g.replace("water chip","Water Chip")
+  g = g.replace("master","Master")
+  g = g.replace("super mutant","Super Mutant")
+  return g
+
+
+def compare_msgids(g1, g2):
+  g1 = make_replaces(g1)
+  g2 = make_replaces(g2)
+  if g1 == g2:
+    return 0
+  else:
+    return 1
+
 i = 0
 for e in po.fuzzy_entries():
   if e.previous_msgid: #strange, shouldn't need this
-    e.msgid = e.msgid
-    e2 =  e.previous_msgid
-
-    e2 = e.previous_msgid.replace(" . . .","...")
-    e2 = e2.replace("\n","")
-    e2 = e2.replace("\n"," ")
-    e2 = e2.replace("  "," ")
-    e2 = e2.replace("Good bye","Goodbye")
-    e2 = e2.replace("Good Bye","Goodbye")
-    e2 = e2.replace("All right","Alright")
-    e2 = e2.replace("all right","alright")
-    e2 = e2.replace("OK","okay")
-    e2 = e2.replace("OK","Okay")
-    e2 = e2.replace("Ok","Okay")
-    e2 = e2.replace("`","'")
-    e2 = e2.replace("Death Claw","Deathclaw")
-    e2 = e2.replace("Death claw","Deathclaw")
-    e2 = e2.replace("All-In-One","All-N-One")
-    e2 = e2.replace("script","cap")
-    e2 = e2.replace("the Boneyard","L.A. Boneyard")
-    e2 = e2.replace("The Boneyard","L.A. Boneyard")
-    e2 = e2.replace(",","")
-    e2 = e2.replace("the","")
-    e2 = e2.replace("The","")
-    e2 = e2.replace("Hell","hell")
-    e2 = e2.replace("Rad Scorpion","radscorpion")
-    e2 = e2.replace("Rad Scorpion","Radscorpion")
-    e2 = e2.replace(" a "," 1 ")
-    e2 = e2.replace(u"’","'")
-    e2 = e2.replace(u"‘","'")
-    e2 = e2.replace("Hell","hell")
-    e2 = e2.replace("buck","cap")
-    e2 = e2.replace("Buck","Cap")
-
-    if e.msgid == e2:
+    e1 = e.msgid
+    e2 = e.previous_msgid
+    if compare_msgids(e1, e2) == 0:
       i = i + 1
-      print e.previous_msgid
-      print e.msgid
+      print e1
+      print e2
       print e.msgstr
       if write == True:
         e.flags.remove(u'fuzzy')
