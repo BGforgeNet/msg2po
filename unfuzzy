@@ -35,6 +35,7 @@ def make_replaces(g):
   g = g.replace("OK","okay")
   g = g.replace("OK","Okay")
   g = g.replace("Ok","Okay")
+  g = g.replace("ok","okay")
   g = g.replace("Death Claw","Deathclaw")
   g = g.replace("Death claw","Deathclaw")
   g = g.replace("All-In-One","All-N-One")
@@ -55,7 +56,8 @@ def make_replaces(g):
   g = g.replace("Buck","Cap")
   g = g.replace("water chip","Water Chip")
   g = g.replace("master","Master")
-  g = g.replace("super mutant","Super Mutant")
+  g = g.replace("supermutant","Super Mutant")
+  g = g.replace("Good-bye","Goodbye")
   return g
 
 
