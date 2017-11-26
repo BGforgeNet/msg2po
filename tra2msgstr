@@ -1,0 +1,30 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+version='1.0.0'
+
+import argparse
+import bgforge_po
+import polib
+
+parser = argparse.ArgumentParser(description='WeiDU TRA into gettext PO msgstr',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('INPUT_FILE', help='input TRA file')
+parser.add_argument('OUTPUT_FILE', help='output PO file')
+parser.add_argument('--path', dest='path', help='load as filename (PO occurence). If not specified, defaults to input filename')
+parser.add_argument('-e', dest='encoding', default='cp1252', help='source encoding')
+parser.add_argument('-w', dest='width', default='78', help='output PO wrapwith')
+args=parser.parse_args()
+
+input_file = args.INPUT_FILE
+output_file = args.OUTPUT_FILE
+if args.path == None:
+  path = input_file
+else:
+  path = args.path
+encoding = args.encoding
+width = int(args.width)
+
+po = polib.pofile(output_file, wrapwidth=width)
+po.metadata = bgforge_po.metadata
+po = bgforge_po.file2msgstr(input_file, po, path, encoding=encoding, width=width)
+po.save(output_file)
