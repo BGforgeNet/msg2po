@@ -47,13 +47,13 @@ file_features = {
     'line_format': '{}:{}\n',
   },
   'tra': {
-    'pattern':     '@(\d+)\s*?=\s*?~([^~]*?)~(\s)?(\[[^][]*\])?',
+    'pattern':     '@(\d+)\s*?=\s*?~([^~]*?)~(\s)?(\[([^]]*)\])?',
     'dotall':       True,
     'index':        0,
     'value':        1,
-    'context':      3,
+    'context':      4,
     'line_format': '@{}=~{}~\n',
-    'line_format_context': '@{}=~{}~ {}\n',
+    'line_format_context': '@{}=~{}~ [{}]\n',
   },
 }
 
