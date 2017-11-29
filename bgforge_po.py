@@ -18,6 +18,7 @@ import subprocess
 from contextlib import contextmanager
 import fileinput
 import ConfigParser
+import trans
 
 valid_extensions = [ 'msg', 'txt', 'sve', 'tra']
 
@@ -29,6 +30,7 @@ file_features = {
     'value':        2,
     'context':      1,
     'line_format': '{{{}}}{{{}}}{{{}}}\n',
+    'line_format_context': '{{{}}}{{{}}}{{{}}}\n',
   },
   'sve': {
     'pattern':     '(\d+):(.*)',
@@ -46,11 +48,13 @@ file_features = {
     'line_format': '{}:{}\n',
   },
   'tra': {
-    'pattern':     '@(\d+)\s*?=\s*?~([^~]*?)~',
+    'pattern':     '@(\d+)\s*?=\s*?~([^~]*?)~(\s)?(\[[^][]*\])?',
     'dotall':       True,
     'index':        0,
     'value':        1,
+    'context':      3,
     'line_format': '@{}=~{}~\n',
+    'line_format_context': '@{}=~{}~ {}\n',
   },
 }
 
@@ -352,6 +356,11 @@ def po2file(po, output_file, encoding, path): #po is po_file object
   ext = get_ext(output_file)
   ff = file_features[ext]
   line_format = ff['line_format']
+  try: #if context is present in file format
+    line_format_context = ff['line_format_context']
+    context_order = ff['context']
+  except:
+    pass
 
   context = ''
   resulting_entries = []
@@ -366,15 +375,12 @@ def po2file(po, output_file, encoding, path): #po is po_file object
         else:
           value = entry.msgstr
 
-        #empty lines detected by context
+        #empty lines detected by comment
         if entry.msgid == ' ' and entry.comment == empty_comment:
           value = ''
 
-        if 'context' in ff: #only add context when defined in file format
-          if entry.msgctxt != None:
-            context = entry.msgctxt
-          else:
-            context = ''
+        if entry.msgctxt != None:
+          context = entry.msgctxt
           resulting_entries.append([index,value,context])
         else:
           resulting_entries.append([index,value])
@@ -384,16 +390,16 @@ def po2file(po, output_file, encoding, path): #po is po_file object
   value_order = ff['value']
 
   lines = []
-  if 'context' in ff: #context again
-    context_order = ff['context']
-    for re in resulting_entries:
-      lines.append(line_format.format(re[index_order],re[value_order],re[context_order]))
-  else:
-    for re in resulting_entries:
-      lines.append(line_format.format(re[index_order],re[value_order]))
+
+  for re in resulting_entries:
+    try: #if context exists
+      lines.append(line_format_context.format(re[0],re[1],re[2]))
+    except: #no context
+      lines.append(line_format.format(re[0],re[1]))
+
   file = io.open(output_file, 'w', encoding=encoding)
   for line in lines:
-    file.write("%s" % unicode(line))
+    file.write(unicode(line).encode('trans'))
   file.close()
 
 
