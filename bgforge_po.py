@@ -112,6 +112,10 @@ dos_filenames = [
   'install.tra',
 ]
 
+utf_filenames = [
+  'ee.tra',
+]
+
 metadata = {
   'Project-Id-Version': 'PACKAGE VERSION',
   'Report-Msgid-Bugs-To': '',
@@ -210,7 +214,12 @@ def cd(newdir):
   finally:
     os.chdir(prevdir)
 
-def get_enc(po_name, po_occurence_name = '', encoding_dict = encodings, dos_encoding_dict = dos_encodings, dos_filename_list = dos_filenames):
+def get_enc(po_name,
+            po_occurence_name = '',
+            encoding_dict = encodings,
+            dos_encoding_dict = dos_encodings,
+            dos_filename_list = dos_filenames,
+            utf_filename_list = utf_filenames):
   encoding = defaults['encoding']
   lang = strip_ext(basename(po_name))
   filename = basename(po_occurence_name)
@@ -221,6 +230,15 @@ def get_enc(po_name, po_occurence_name = '', encoding_dict = encodings, dos_enco
 
   if filename in dos_filenames:
     try: encoding = dos_encoding_dict[lang]
+    except: pass
+
+  if filename in utf_filenames:
+    try: encoding = 'utf-8'
+    except: pass
+
+  utf_name = re.compile('.*_ee.tra$')
+  if utf_name.match(filename):
+    try: encoding = 'utf-8'
     except: pass
 
   return encoding
