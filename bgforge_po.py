@@ -52,8 +52,8 @@ file_features = {
     'index':        0,
     'value':        1,
     'context':      4,
-    'line_format': '@{}=~{}~\n',
-    'line_format_context': '@{}=~{}~ [{}]\n',
+    'line_format': '@{} = ~{}~\n',
+    'line_format_context': '@{} = ~{}~ [{}]\n',
   },
 }
 
