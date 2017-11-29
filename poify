@@ -87,11 +87,13 @@ def poify(dir): #relative path
   po.save(dst_file)
 
   clean_po_dir(po_dir)
-  print "Processed '{}' directory with encoding {}, the result is in {}/{}.pot".format(dir,enc,po_dir,lang)
+  print "Processed directory {} with encoding {}, the result is in {}/{}/{}.pot".format(poify_dir,enc,tra_dir,po_dir,lang)
+
+tra_dir = os.path.relpath(bgforge_po.parent_dir(poify_dir))
 
 #lowercase if not disabled on cmd
 if nolowercase == False:
-  bgforge_po.lowercase_recursively(poify_dir)
+  bgforge_po.lowercase_recursively(tra_dir)
 
 with bgforge_po.cd(bgforge_po.parent_dir(os.path.abspath(poify_dir))):
   poify(bgforge_po.basename(poify_dir)) #keeping relative occurences in resulting po
