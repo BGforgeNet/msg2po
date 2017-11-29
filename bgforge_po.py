@@ -18,7 +18,6 @@ import subprocess
 from contextlib import contextmanager
 import fileinput
 import ConfigParser
-import trans
 
 valid_extensions = [ 'msg', 'txt', 'sve', 'tra']
 
@@ -399,7 +398,7 @@ def po2file(po, output_file, encoding, path): #po is po_file object
 
   file = io.open(output_file, 'w', encoding=encoding)
   for line in lines:
-    file.write(unicode(line).encode('trans'))
+    file.write(line.encode(encoding,'replace').decode(encoding).decode('utf-8'))
   file.close()
 
 
