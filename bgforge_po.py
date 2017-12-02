@@ -28,7 +28,7 @@ file_features = {
     'index':        0,
     'value':        2,
     'context':      1,
-    'line_format': '{{{}}}{{{}}}{{{}}}\n',
+    'line_format': '{{{}}}{{}}{{{}}}\n',
     'line_format_context': '{{{}}}{{{}}}{{{}}}\n',
   },
   'sve': {
@@ -47,11 +47,11 @@ file_features = {
     'line_format': '{}:{}\n',
   },
   'tra': {
-    'pattern':     '@(\d+)\s*?=\s*?~([^~]*?)~(\s)?(\[([^]]*)\])?',
+    'pattern':     '@(\d+)\s*?=\s*?~([^~]*?)~(?:\s)?(?:\[([^]]*)\])?',
     'dotall':       True,
     'index':        0,
     'value':        1,
-    'context':      4,
+    'context':      2,
     'line_format': '@{} = ~{}~\n',
     'line_format_context': '@{} = ~{}~ [{}]\n',
   },
@@ -392,7 +392,7 @@ def po2file(po, output_file, encoding, path): #po is po_file object
 
   for re in resulting_entries:
     try: #if context exists
-      lines.append(line_format_context.format(re[0],re[1],re[2]))
+      lines.append(line_format_context.format(re[index_order],re[value_order],re[context_order]))
     except: #no context
       lines.append(line_format.format(re[0],re[1]))
 
