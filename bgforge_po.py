@@ -49,10 +49,7 @@ file_format = {
     'line_format': '{}:{}\n',
   },
   'tra': {
-#    'pattern':     '@(\d+)\s*?=\s*?~([^~]*?)~(?:\s)?(?:\[([^]]*)\])?',
     'pattern':     '@(\d+)\s*?=\s*?~([^~]*?)~(?:\s)?(?:\[([^]]*)\])?(?:~([^~]*)~)?',
-    # @1 = ~aaa~ ?[bbb]
-    # @2 = ~aaa~ ?~ccc~
     'dotall':       True,
     'index':        0,
     'value':        1,
@@ -61,7 +58,6 @@ file_format = {
     'female':       3,
     'line_format': '@{} = ~{}~\n',
     'line_format_context': '@{} = ~{}~ [{}]\n',
-#    'line_format_female': '@{} = ~{}~ ~{}~\n',
   },
 }
 
@@ -75,7 +71,6 @@ female_postfix = '_female.csv'
 
 defaults = {
   'encoding': 'cp1252',
-  'width': 78,
   'tra_dir': '.',
   'src_lang': 'english',
 }
@@ -259,7 +254,7 @@ def get_enc(po_name,
 
 
 #returns PO file object
-def file2po(filepath, encoding = defaults['encoding'], width = defaults['width'], noempty = False):
+def file2po(filepath, encoding = defaults['encoding'], noempty = False):
 
   text = io.open(filepath, 'r', encoding = encoding).read()
 
@@ -273,7 +268,7 @@ def file2po(filepath, encoding = defaults['encoding'], width = defaults['width']
   else:
     found_entries = re.findall(pattern, text)
 
-  po = polib.POFile(wrapwidth=width)
+  po = polib.POFile()
   po.metadata = metadata
 
   entry_added = 0
@@ -350,11 +345,11 @@ def file2po(filepath, encoding = defaults['encoding'], width = defaults['width']
 
 
 #returns PO file object
-def file2po2(filepath, encoding = defaults['encoding'], width = defaults['width'], noempty = False):
+def file2po2(filepath, encoding = defaults['encoding'], noempty = False):
 
   trans = TRANSFile(filepath=filepath, is_source=True) #load translations
 
-  po = polib.POFile(wrapwidth=width)
+  po = polib.POFile()
   po.metadata = metadata
 
   entry_added = 0
@@ -465,7 +460,7 @@ def po2file(po, output_file, encoding, path): #po is po_file object
   file.close()
 
 
-def file2msgstr(input_file, po, path, encoding = defaults['encoding'], width = defaults['width']):
+def file2msgstr(input_file, po, path, encoding = defaults['encoding']):
   '''
   #get file features
   ext = get_ext(input_file)
@@ -574,7 +569,7 @@ def strip_msgcat_comments(filename):
     if not re.search('^#$',line) and not re.search('^# #-#-#-#-#.*',line):
       print line
 
-def po_make_unique(po, wrapwidth = defaults['width']):
+def po_make_unique(po):
   entries_dict = collections.OrderedDict()
   for e in po:
     if (e.msgid, e.msgctxt) in entries_dict:
@@ -607,7 +602,7 @@ def po_make_unique(po, wrapwidth = defaults['width']):
 
     else:
       entries_dict[(e.msgid, e.msgctxt)] = e
-  po2 = polib.POFile(wrapwidth=wrapwidth)
+  po2 = polib.POFile()
   po2.metadata = metadata
   for key, value in entries_dict.items():
     po2.append(value)

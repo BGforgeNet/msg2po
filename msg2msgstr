@@ -12,7 +12,6 @@ parser.add_argument('INPUT_FILE', help='input MSG file')
 parser.add_argument('OUTPUT_FILE', help='output PO file')
 parser.add_argument('--path', dest='path', help='load as filename (PO occurence). If not specified, defaults to input filename')
 parser.add_argument('-e', dest='encoding', default='cp1252', help='source encoding')
-parser.add_argument('-w', dest='width', default='78', help='output PO wrapwith')
 args=parser.parse_args()
 
 input_file = args.INPUT_FILE
@@ -22,9 +21,8 @@ if args.path == None:
 else:
   path = args.path
 encoding = args.encoding
-width = int(args.width)
 
-po = polib.pofile(output_file, wrapwidth=width)
+po = polib.pofile(output_file)
 po.metadata = bgforge_po.metadata
-po = bgforge_po.file2msgstr(input_file, po, path, encoding=encoding, width=width)
+po = bgforge_po.file2msgstr(input_file, po, path, encoding=encoding)
 po.save(output_file)

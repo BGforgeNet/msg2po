@@ -21,7 +21,6 @@ parser = argparse.ArgumentParser(description='Poify files in selected directory'
 parser.add_argument('DIR', nargs = '?', default = default_poify_dir, help='source language directory (default: ./english)')
 parser.add_argument('-e', dest='enc', help='source encoding', default='cp1252')
 parser.add_argument('--no-lowercase', dest='nolowercase', default=False, action='store_true', help="don't lowercase filenames before poifying")
-parser.add_argument('-w', dest='width', default='78', help='output PO wrapwith')
 args=parser.parse_args()
 
 
@@ -30,7 +29,6 @@ poify_dir = args.DIR
 bgforge_po.dir_or_exit(poify_dir)
 enc = bgforge_po.get_enc(args.DIR)
 nolowercase = args.nolowercase
-width = int(args.width)
 
 devnull = open(os.devnull, 'w')
 
@@ -56,7 +54,7 @@ def poify(dir): #relative path
     #Final PO
     lang = bgforge_po.basename(dir)
     dst_file = po_dir + '/' + lang + '.pot'
-    po = polib.POFile(wrapwidth=width)
+    po = polib.POFile()
     po.metadata = bgforge_po.metadata
 
     for dir_name, subdir_list, file_list in sorted(os.walk('.',topdown=False)):
