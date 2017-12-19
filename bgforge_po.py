@@ -359,12 +359,12 @@ def po2file(po, output_file, encoding, occurence_path, newline='\r\n'):
 
 
 #returns PO file object
-def file2msgstr(input_file, po, path, encoding = defaults['encoding']):
+def file2msgstr(input_file, epo, path, encoding = defaults['encoding']):
   trans = TRANSFile(filepath=input_file, encoding=encoding) #load translations
-  female_strings = []
 
   # map entries to occurences for faster access, part 1
   entries_dict = collections.OrderedDict()
+  po = epo.po
   for e in po:
     for eo in e.occurrences:
       entries_dict[(eo[0], eo[1])] = e
@@ -388,14 +388,9 @@ def file2msgstr(input_file, po, path, encoding = defaults['encoding']):
 
         e2.msgctxt = audio
 
-        if female != None:
-          female_strings.append([e2.msgid, female])
-
       else:
         print "WARN: no msgid found for {}:{}, skipping string {}".format(path, index, value)
-#  for f in female_strings:
-#    print f
-  return po
+  return epo
 
 
 #check if TXT file is indexed
@@ -580,3 +575,24 @@ class TRANSFile(list):
       # produce the final list of strings
       if entry['value'] != None and entry['value'] != '':
         self.append(entry)
+
+class EPOFile(polib.POFile):
+  '''
+  Extended PO file class, reading from and writing to _female.csv
+  '''
+  def __init__(self, *args):
+    po = args[0]
+    if po:
+      self.po = polib.pofile(po)
+    else:
+      self.po = polib.POFile()
+    self.female_strings = []
+  def save(self, output_file):
+    self.po.save(output_file)
+
+def epofile(f):
+  '''
+  Returns EPOFile object
+  '''
+  epo = EPOFile(f)
+  return epo

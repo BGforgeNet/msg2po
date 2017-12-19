@@ -29,7 +29,7 @@ output_file = args.output_file
 devnull = open(os.devnull, 'w')
 
 
-def dir2msgstr(src_dir, po): #relative path, pofile object
+def dir2msgstr(src_dir, epo): #relative path, epofile object
   with bgforge_po.cd(src_dir):
 
     for dir_name, subdir_list, file_list in os.walk('.',topdown=False):
@@ -42,13 +42,13 @@ def dir2msgstr(src_dir, po): #relative path, pofile object
 
         enc = bgforge_po.get_enc(src_dir, file_name)
         print "processing {} with encoding {}".format(full_name, enc)
-        po = bgforge_po.file2msgstr(full_name, po, full_name, enc)
+        epo = bgforge_po.file2msgstr(full_name, epo, full_name, enc)
+  epo.po = bgforge_po.po_make_unique(epo.po)
+  return epo
 
-  po = bgforge_po.po_make_unique(po)
-  return po
+epo = bgforge_po.epofile(output_file)
+epo.po.metadata = bgforge_po.metadata
+epo = dir2msgstr(src_dir, epo)
 
-po = polib.pofile(output_file)
-po.metadata = bgforge_po.metadata
-po = dir2msgstr(src_dir, po)
-po.save(output_file)
+epo.save(output_file)
 print "Processed directory {}, the result is in {}".format(src_dir, output_file)
