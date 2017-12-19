@@ -256,97 +256,6 @@ def get_enc(po_name,
 #returns PO file object
 def file2po(filepath, encoding = defaults['encoding'], noempty = False):
 
-  text = io.open(filepath, 'r', encoding = encoding).read()
-
-  ext = get_ext(filepath)
-  ff = file_format[ext]
-  pattern = ff['pattern']
-  dotall = ff['dotall']
-
-  if dotall == True:
-    found_entries = re.findall(pattern, text, re.DOTALL)
-  else:
-    found_entries = re.findall(pattern, text)
-
-  po = polib.POFile()
-  po.metadata = metadata
-
-  entry_added = 0
-  seen = []
-  dupe = 0
-  for e0 in found_entries:
-    dupe = 0
-    index = e0[ff['index']]
-    value = unicode(e0[ff['value']])
-
-    if index == '000' and ext == 'msg' : #skip invalid '000' entries in MSG files
-      print 'WARN: {} - invalid entry number found, skipping: {{000}}{{}}{{{}}}'.format(filepath,value)
-      continue
-
-    index = index.lstrip("0") #handle "0.." entries in tra
-    if index == '':
-      print index
-      index = '0'
-
-    if (filepath, index) in seen:
-      print "WARN: duplicate string {}:{}, using new value '{}'".format(filepath, index, value)
-      dupe = 1
-    seen.append((filepath, index))
-
-    if 'context' in ff:
-      context = e0[ff['context']]
-    else:
-      context = None
-    if context == '': #don't need empty context
-      context = None
-
-    if 'comment' in ff:
-      comment = ff['comment']
-    else:
-      comment = None
-
-    if value == '': #handle empty lines
-      if noempty:
-        print 'WARN: {} - empty value found, skipping: {{{}}}{{}}{{}}'.format(filepath,index)
-        continue
-      else:
-        value = ' '
-        comment = empty_comment
-
-    #remove dupe from occurrences
-    if dupe == 1:
-      for e2 in po:
-        if (filepath, index) in e2.occurrences:
-          if len(e2.occurrences) == 1:
-            po[:] = [e3 for e3 in po if not e3 == e2]
-          else:
-            e2.occurrences.remove((filepath, index))
-          dupe = 0
-    entry_added = 0
-    for e2 in po:
-      if e2.msgid == value and e2.msgctxt == context:
-        e2.occurrences.append((filepath, index))
-        entry_added = 1
-        break
-
-    #no matching msgid, add new entry
-    if entry_added == 0:
-        entry = polib.POEntry(
-            msgid=value,
-            msgstr='',
-            occurrences=[(filepath, index),],
-            msgctxt = context,
-            comment = comment,
-        )
-        po.append(entry)
-
-  return(po)
-
-
-
-#returns PO file object
-def file2po2(filepath, encoding = defaults['encoding'], noempty = False):
-
   trans = TRANSFile(filepath=filepath, is_source=True) #load translations
 
   po = polib.POFile()
@@ -356,19 +265,8 @@ def file2po2(filepath, encoding = defaults['encoding'], noempty = False):
   for t in trans:
     index = t['index']
     value = t['value']
-    try:
-      audio = t['audio']
-    except:
-      audio = None
-
-    try: # file format common comment
-      comment = trans.comment
-    except:
-      comment = None
-    try: # entry specific comment
-      comment = t['comment']
-    except:
-      pass
+    audio = t['audio']
+    comment = t['comment']
 
     # try to find a matching entry first
     dupe = 0
@@ -409,7 +307,8 @@ def check_path_in_po(po, path):
       print pf
     sys.exit(1)
 
-def po2file(po, output_file, encoding, path): #po is po_file object
+#extract and write to disk a single file from PO object
+def po2file(po, output_file, encoding, occurence_path):
   ext = get_ext(output_file)
   ff = file_format[ext]
   line_format = ff['line_format']
@@ -423,7 +322,7 @@ def po2file(po, output_file, encoding, path): #po is po_file object
   resulting_entries = []
   for entry in po:
     for eo in entry.occurrences:
-      if eo[0] == path:
+      if eo[0] == occurence_path:
 
         index = int(eo[1]) #need int because later will sort
 
@@ -433,7 +332,7 @@ def po2file(po, output_file, encoding, path): #po is po_file object
           value = entry.msgstr
 
         #empty lines detected by comment
-        if entry.msgid == ' ' and entry.comment == empty_comment:
+        if entry.comment == empty_comment:
           value = ''
 
         if entry.msgctxt != None:
@@ -447,7 +346,6 @@ def po2file(po, output_file, encoding, path): #po is po_file object
   value_order = ff['value']
 
   lines = []
-
   for re in resulting_entries:
     try: #if context exists
       lines.append(line_format_context.format(re[index_order],re[value_order],re[context_order]))
@@ -460,63 +358,44 @@ def po2file(po, output_file, encoding, path): #po is po_file object
   file.close()
 
 
+#returns PO file object
 def file2msgstr(input_file, po, path, encoding = defaults['encoding']):
-  '''
-  #get file features
-  ext = get_ext(input_file)
-  ff = file_format[ext]
-  pattern = ff['pattern']
-  dotall = ff['dotall']
-#  female_csv = po + female_postfix
-#  print female_csv
-  #find entries
-  text = io.open(input_file, 'r', encoding=encoding).read()
-  if dotall == True:
-    found_entries = re.findall(pattern, text, re.DOTALL)
-  else:
-    found_entries = re.findall(pattern, text)
-  '''
   trans = TRANSFile(filepath=input_file, encoding=encoding) #load translations
-  print trans
-
-
-  #find and add entries to po file
-  po_entries = [e for e in po]
-  index_order = ff['index']
-  value_order = ff['value']
-  try:
-    female_order = ff['female']
-  except:
-    pass
   female_strings = []
 
-
+  # map entries to occurences for faster access, part 1
   entries_dict = collections.OrderedDict()
   for e in po:
     for eo in e.occurrences:
       entries_dict[(eo[0], eo[1])] = e
-  for fe in found_entries:
-    index = fe[index_order]
-    value = unicode(fe[value_order])
-    try: #tra only
-      female_value = unicode(fe[female_order])
-    except:
-      pass
+
+  for t in trans:
+    index = t['index']
+    value = t['value']
+    audio = t['audio']
+    female = t['female']
+
     if value != None and value != '':
       if (path, index) in entries_dict:
+        # map entries to occurences for faster access, part 2
         e2 = entries_dict[(path, index)]
         if e2.msgstr != None and e2.msgstr != '' and e2.msgstr != value:
           print "WARN: differing msgstr values found for {}\nOverwriting first string with second:\n\"{}\"\n\"{}\"".format(e2.occurrences, e2.msgstr, value)
-        e2.msgstr = value
-        try:
-          if female_value != '':
-            female_strings.append([e2.msgid, female_value])
-        except:
-          pass
+
+#        e2.msgstr = value # temp if
+        if e2.msgid != value:
+          e2.msgstr = value
+
+        e2.msgctxt = audio
+
+        if female != None:
+          female_strings.append([e2.msgid, female])
+
       else:
         print "WARN: no msgid found for {}:{}, skipping string {}".format(path, index, value)
-#  print female_strings
-  return [po,female_strings]
+#  for f in female_strings:
+#    print f
+  return po
 
 
 #check if TXT file is indexed
@@ -623,11 +502,11 @@ class TRANSFile(list):
 
     text = io.open(filepath, 'r', encoding = encoding).read()
 
-    ff = file_format[fext]
-    pattern = ff['pattern']
-    dotall = ff['dotall']
+    self.fformat = file_format[fext]
+    pattern = self.fformat['pattern']
+    dotall = self.fformat['dotall']
     try: # comment for all entries in file
-      self.comment = ff['comment']
+      self.comment = self.fformat['comment']
     except:
       pass
 
@@ -643,17 +522,23 @@ class TRANSFile(list):
       entry = {}
 
       # index and value
-      index = line[ff['index']]
-      entry['value'] = unicode(line[ff['value']])
+      index = line[self.fformat['index']]
+      entry['value'] = unicode(line[self.fformat['value']])
 
       # skip invalid '000' entries in MSG files
       if fext == 'msg' and index == '000':
         print 'WARN: {} - invalid entry number found, skipping: {{000}}{{}}{{{}}}'.format(filepath,entry['value'])
         continue
 
-      entry['index'] = line[ff['index']]
+      entry['index'] = line[self.fformat['index']]
 
-      # handle empty lines in source files
+      # comment
+      # 1. generic comment for all entries in file
+      try:
+        entry['comment'] = self.fformat['comment']
+      except:
+        entry['comment'] = None
+      # 2. handle empty lines in source files
       if entry['value'] == '':
         if is_source == True:
           entry['value'] = ' '
@@ -661,24 +546,23 @@ class TRANSFile(list):
 
       # audio
       try:
-        audio = line[ff['audio']]
-        if audio != '':
-          entry['audio'] = audio
+        entry['audio'] = line[self.fformat['audio']]
       except:
-        pass
+        entry['audio'] = None
+      if entry['audio'] == '':
+        entry['audio'] = None
 
       # female
       if fext == 'tra': # TRA file specific
         try:
-          female = unicode(line[ff['female']])
-          if female != '':
-            entry['female'] = female
+          entry['female'] = unicode(line[self.fformat['female']])
         except:
-          pass
+          entry['female'] = None
+        if entry['female'] == '':
+          entry['female'] = None
 
       # protection again duplicate indexes, part 2
       if (entry['index']) in seen:
-        print entry
         print "WARN: duplicate string {}:{}, using new value '{}'".format(filepath, entry['index'], entry['value'])
         self[:] = [entry if x['index'] == entry['index'] else x for x in self]
         continue

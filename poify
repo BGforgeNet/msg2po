@@ -78,7 +78,7 @@ def poify(dir): #relative path
             continue
 
         print "processing {}".format(full_name)
-        po2 = bgforge_po.file2po2(full_name)
+        po2 = bgforge_po.file2po(full_name)
         for e2 in po2:
           po.append(e2)
   po = bgforge_po.po_make_unique(po)
