@@ -52,11 +52,11 @@ with bgforge_po.cd(tra_dir):
 
     dst_dir = bgforge_po.strip_ext(pf) # lang
 
-    po = polib.pofile(po_path) #open once
+    epo = bgforge_po.epofile(po_path) #open once
     for ef in sorted(extract_file_set):
       enc = bgforge_po.get_enc(po_path, ef)
       ef_extract_path = dst_dir + '/' + ef
       bgforge_po.create_dir(bgforge_po.get_dir(ef_extract_path))
       print "Extracting {} from {} into {} with encoding {}".format(ef, po_path, ef_extract_path, enc)
-      bgforge_po.po2file(po, ef_extract_path, enc, ef)
+      bgforge_po.po2file(epo, ef_extract_path, enc, ef)
     print 'Extracted {} into {}'.format(po_path, dst_dir, enc)
