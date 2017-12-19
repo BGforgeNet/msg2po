@@ -502,7 +502,7 @@ class TRANSFile(list):
     list.__init__(self)
     # the opened file handle
     filepath = kwargs.get('filepath', None)
-    is_source = kwargs.get('is_source', False)
+    is_source = kwargs.get('is_source', False) #distinguish source TRAs to allow empty comment to be set on empty strings
     # the file encoding
     encoding = kwargs.get('encoding', defaults['encoding'])
     fext = get_ext(filepath)
