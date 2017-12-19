@@ -19,6 +19,6 @@ if args.path == None:
 else:
   path = args.path
 
-po = polib.pofile(args.INPUT_FILE) #open once, it's a heavy op
-bgforge_po.check_path_in_po(po, path)
-bgforge_po.po2file(po, args.OUTPUT_FILE, args.encoding,path)
+epo = bgforge_po.epofile(args.INPUT_FILE) #open once, it's a heavy op
+bgforge_po.check_path_in_po(epo.po, path)
+bgforge_po.po2file(epo, args.OUTPUT_FILE, args.encoding,path)

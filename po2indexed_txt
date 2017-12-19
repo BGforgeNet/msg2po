@@ -9,7 +9,7 @@ import bgforge_po
 parser = argparse.ArgumentParser(description='Extract indexed TXT from gettext PO',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('INPUT_FILE', help='input PO file')
 parser.add_argument('OUTPUT_FILE', help='output SVE file')
-parser.add_argument('-e', dest='encoding', help='output encoding',default='cp1252')
+parser.add_argument('-e', dest='encoding', help='output encoding', default='cp1252')
 parser.add_argument('--path', dest='path', help='occurrence in PO (relative path) - defaults to output TXT/SVE name')
 args=parser.parse_args()
 
@@ -18,5 +18,6 @@ if args.path == None:
 else:
   path = args.path
 
-bgforge_po.check_path_in_po(po, path)
-bgforge_po.po2file(args.INPUT_FILE, args.OUTPUT_FILE, args.encoding,path)
+epo = bgforge_po.epofile(args.INPUT_FILE) #open once, it's a heavy op
+bgforge_po.check_path_in_po(epo.po, path)
+bgforge_po.po2file(epo, args.OUTPUT_FILE, args.encoding, path)

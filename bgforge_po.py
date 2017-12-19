@@ -307,8 +307,8 @@ def check_path_in_po(po, path):
       print pf
     sys.exit(1)
 
-#extract and write to disk a single file from PO object
-def po2file(po, output_file, encoding, occurence_path, newline='\r\n'):
+#extract and write to disk a single file from EPO object
+def po2file(epo, output_file, encoding, occurence_path, newline='\r\n'):
   ext = get_ext(output_file)
   ff = file_format[ext]
   line_format = ff['line_format']
@@ -317,6 +317,7 @@ def po2file(po, output_file, encoding, occurence_path, newline='\r\n'):
     context_order = ff['context']
   except:
     pass
+  po = epo.po
 
   context = ''
   resulting_entries = []
@@ -578,7 +579,7 @@ class TRANSFile(list):
 
 class EPOFile(polib.POFile):
   '''
-  Extended PO file class, reading from and writing to _female.csv
+  Extended PO file class, also reading from and writing to _female.csv
   '''
   def __init__(self, *args):
     po = args[0]
