@@ -308,7 +308,7 @@ def check_path_in_po(po, path):
     sys.exit(1)
 
 #extract and write to disk a single file from PO object
-def po2file(po, output_file, encoding, occurence_path):
+def po2file(po, output_file, encoding, occurence_path, newline='\r\n'):
   ext = get_ext(output_file)
   ff = file_format[ext]
   line_format = ff['line_format']
@@ -352,7 +352,7 @@ def po2file(po, output_file, encoding, occurence_path):
     except: #no context
       lines.append(line_format.format(re[0],re[1]))
 
-  file = io.open(output_file, 'w', encoding=encoding)
+  file = io.open(output_file, 'w', encoding=encoding, newline=newline)
   for line in lines:
     file.write(line.encode(encoding,'replace').decode(encoding).decode('utf-8'))
   file.close()
