@@ -490,6 +490,13 @@ def po_make_unique(po):
 class TRANSFile(list):
   '''
   Common translation class, holding translation entries as a list of dictionaries
+  entry format:
+    index
+    value
+    audio
+    female
+    comment
+  All set to None if not present
   '''
   def __init__(self, *args, **kwargs):
     list.__init__(self)
@@ -553,15 +560,16 @@ class TRANSFile(list):
         entry['audio'] = None
 
       # female
+      entry['female'] = None #default
       if fext == 'tra': # TRA file specific
         try:
           entry['female'] = unicode(line[self.fformat['female']])
         except:
-          entry['female'] = None
+          pass
         if entry['female'] == '':
           entry['female'] = None
 
-      # protection again duplicate indexes, part 2
+      # protection against duplicate indexes, part 2
       if (entry['index']) in seen:
         print "WARN: duplicate string {}:{}, using new value '{}'".format(filepath, entry['index'], entry['value'])
         self[:] = [entry if x['index'] == entry['index'] else x for x in self]
