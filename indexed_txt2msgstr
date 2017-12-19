@@ -26,7 +26,7 @@ if not bgforge_po.check_indexed(input_file):
   print "{} is NOT an indexed TXT. Can't process, exiting!".format(input_file)
   sys.exit(1)
 
-po = polib.pofile(output_file)
-po.metadata = bgforge_po.metadata
-po = bgforge_po.file2msgstr(input_file, po, path, encoding=encoding)
-po.save(output_file)
+epo = bgforge_po.epofile(output_file)
+epo.po.metadata = bgforge_po.metadata
+epo = bgforge_po.file2msgstr(input_file, epo, path, encoding=encoding)
+epo.save(output_file)
