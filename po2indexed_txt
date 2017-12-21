@@ -13,7 +13,7 @@ parser.add_argument('-e', dest='encoding', help='output encoding', default='cp12
 parser.add_argument('--path', dest='path', help='occurrence in PO (relative path) - defaults to output TXT/SVE name')
 args=parser.parse_args()
 
-if args.path == None:
+if args.path is None:
   path = args.OUTPUT_FILE
 else:
   path = args.path

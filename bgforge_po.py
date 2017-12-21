@@ -426,11 +426,11 @@ def file2msgstr(input_file, epo, path, encoding = defaults['encoding']):
     context = t['context']
     female = t['female']
 
-    if value != None and value != '':
+    if value is not None and value != '':
       if (path, index) in entries_dict:
         # map entries to occurences for faster access, part 2
         e2 = entries_dict[(path, index)]
-        if e2.msgstr != None and e2.msgstr != '' and e2.msgstr != value:
+        if e2.msgstr is not None and e2.msgstr != '' and e2.msgstr != value:
           print "WARN: different translations found for {}. Replacing first string with second:\n      {}\n      {}".format(e2.occurrences, e2.msgstr, value)
 
         if e2.msgid == value:
@@ -439,7 +439,7 @@ def file2msgstr(input_file, epo, path, encoding = defaults['encoding']):
 
         e2.msgctxt = context
 
-        if female != None:
+        if female is not None:
           epo.female_strings[e2.msgid] = female
 
       else:
@@ -472,7 +472,7 @@ def find_valid_extenstions(dir):
   for dir_name, subdir_list, file_list in os.walk(dir,topdown=False):
     for file_name in file_list:
       ext=bgforge_po.get_ext(file_name)
-      if not ext == None:
+      if ext is not None:
         ext_list[ext] = 1
   for ext, value in ext_list.items():
     #skip po and pot
@@ -505,14 +505,14 @@ def po_make_unique(po):
       e0 = entries_dict[(e.msgid, e.msgctxt)]
       e0.occurrences.extend(e.occurrences)
 
-      if e.comment != None:
-        if e0.comment == None:
+      if e.comment is not None:
+        if e0.comment is None:
           e0.comment = e.comment
         elif e0.comment != e.comment:
           e0.comment = e0.comment + '; ' + e.comment
 
-      if e.tcomment != None:
-        if e0.tcomment == None:
+      if e.tcomment is not None:
+        if e0.tcomment is None:
           e0.tcomment = e.tcomment
         elif e0.tcomment != e.tcomment:
           e0.tcomment = e0.tcomment + '; ' + e.tcomment
@@ -627,7 +627,7 @@ class TRANSFile(list):
         seen.append(index)
 
       # produce the final list of strings
-      if entry['value'] != None and entry['value'] != '':
+      if entry['value'] is not None and entry['value'] != '':
         self.append(entry)
 
 class EPOFile(polib.POFile):

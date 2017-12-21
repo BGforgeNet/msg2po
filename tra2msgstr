@@ -16,7 +16,7 @@ args=parser.parse_args()
 
 input_file = args.INPUT_FILE
 output_file = args.OUTPUT_FILE
-if args.path == None:
+if args.path is None:
   path = input_file
 else:
   path = args.path
