@@ -323,6 +323,9 @@ def check_path_in_po(po, path):
 
 
 #extract and write to disk a single file from EPO object
+#epo is EPO object
+#output_file is path relative to dst_dir
+#dst_dir is actually dst language. Used only in unpoify
 def po2file(epo, output_file, encoding, occurence_path, dst_dir = None, newline='\r\n'):
   #check if file is present in po, exit if not
   check_path_in_po(epo.po, occurence_path)
@@ -390,7 +393,7 @@ def po2file(epo, output_file, encoding, occurence_path, dst_dir = None, newline=
 
   #separate female translation bundle if needed
   if 'female' in line_format and line_format['female'] == 'separate' and dst_dir is not None:
-    female_file = output_file.replace(dst_dir, dst_dir + female_dir_postfix)
+    female_file = output_file.replace(dst_dir + os.sep, dst_dir + female_dir_postfix + os.sep)
     create_dir(get_dir(female_file)) #create dir if not exists
     print 'Also extracting female counterpart into {}'.format(female_file)
     file2 = io.open(female_file, 'w', encoding=encoding, newline=newline)
