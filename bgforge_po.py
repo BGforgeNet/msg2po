@@ -655,7 +655,7 @@ class EPOFile(polib.POFile):
       writer.writerows(self.female_strings.items())
 
   def load_csv(self):
-    with io.open(self.csv, 'rb') as csvfile:
+    with io.open(self.csv, 'r', encoding = 'utf-8') as csvfile:
       reader = csv.reader(csvfile)
       for row in reader:
         self.female_strings[row[0]] = row[1]
