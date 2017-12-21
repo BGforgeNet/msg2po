@@ -431,10 +431,10 @@ def file2msgstr(input_file, epo, path, encoding = defaults['encoding']):
         # map entries to occurences for faster access, part 2
         e2 = entries_dict[(path, index)]
         if e2.msgstr != None and e2.msgstr != '' and e2.msgstr != value:
-          print "WARN: differing msgstr values found for {}\nOverwriting first string with second:\n\"{}\"\n\"{}\"".format(e2.occurrences, e2.msgstr, value)
+          print "WARN: different translations found for {}. Replacing first string with second:\n      {}\n      {}".format(e2.occurrences, e2.msgstr, value)
 
         if e2.msgid == value:
-          print "WARN: differing msgid and msgstr are the same for {}\nUsing it regardless\n\"{}\"\n\"{}\"".format(e2.occurrences, e2.msgid)
+          print "WARN: string and translation are the same for {}. Using it regardless:\n      {}".format(e2.occurrences, e2.msgid)
         e2.msgstr = value
 
         e2.msgctxt = context
