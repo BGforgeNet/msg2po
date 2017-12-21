@@ -443,7 +443,7 @@ def file2msgstr(input_file, epo, path, encoding = defaults['encoding']):
           epo.female_strings[e2.msgid] = female
 
       else:
-        print "WARN: no msgid found for {}:{}, skipping string {}".format(path, index, value)
+        print "WARN: no msgid found for {}:{}, skipping string\n      {}".format(path, index, value)
   return epo
 
 
@@ -583,7 +583,7 @@ class TRANSFile(list):
 
       # skip invalid '000' entries in MSG files
       if fext == 'msg' and index == '000':
-        print 'WARN: {} - invalid entry number found, skipping: {{000}}{{}}{{{}}}'.format(filepath,entry['value'])
+        print 'WARN: {} - invalid entry number found, skipping:\n     {{000}}{{}}{{{}}}'.format(filepath,entry['value'])
         continue
 
       entry['index'] = line[self.fformat['index']]
@@ -620,7 +620,7 @@ class TRANSFile(list):
 
       # protection against duplicate indexes, part 2
       if (entry['index']) in seen:
-        print "WARN: duplicate string {}:{}, using new value '{}'".format(filepath, entry['index'], entry['value'])
+        print "WARN: duplicate string definition found {}:{}, using new value:\n      {}'".format(filepath, entry['index'], entry['value'])
         self[:] = [entry if x['index'] == entry['index'] else x for x in self]
         continue
       else:
