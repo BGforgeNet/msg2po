@@ -326,6 +326,9 @@ def check_path_in_po(po, path):
 def po2file(epo, output_file, encoding, occurence_path, dst_dir = None, newline='\r\n'):
   #check if file is present in po, exit if not
   check_path_in_po(epo.po, occurence_path)
+  #create parent directory
+  create_dir(get_dir(output_file))
+
   ext = get_ext(output_file)
   ff = file_format[ext]
   line_format = ff['line_format']
