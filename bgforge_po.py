@@ -389,7 +389,7 @@ def po2file(epo, output_file, encoding, occurence_path, dst_dir = None, newline=
   if 'female' in line_format and line_format['female'] == 'separate' and dst_dir is not None:
     female_file = output_file.replace(dst_dir, dst_dir + female_dir_postfix)
     create_dir(get_dir(female_file)) #create dir if not exists
-    print female_file
+    print 'Also extracting female counterpart into {}'.format(female_file)
     file2 = io.open(female_file, 'w', encoding=encoding, newline=newline)
     for line in lines_female:
       file2.write(line.encode(encoding,'replace').decode(encoding).decode('utf-8'))
