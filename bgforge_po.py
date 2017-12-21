@@ -20,8 +20,15 @@ import fileinput
 import ConfigParser
 import csv
 
+# extensions recognized by file2po, etc
 valid_extensions = [ 'msg', 'txt', 'sve', 'tra']
 
+
+# supported file formats
+# pattern is used to parse original files
+# line_format to write to translated files
+# index, value, context, female - order of these tokens in pattern
+# dotall - whether file entries are multiline
 file_format = {
   'msg': {
     'pattern':     '{(\d+)}{([^}]*)}{([^}]*)}',
@@ -29,16 +36,20 @@ file_format = {
     'index':        0,
     'value':        2,
     'context':      1,
-    'audio':        1,
-    'line_format': '{{{}}}{{}}{{{}}}\n',
-    'line_format_context': '{{{}}}{{{}}}{{{}}}\n',
+    'line_format':  {
+      'default': '{{{index}}}{{}}{{{value}}}\n',
+      'context': '{{{index}}}{{{context}}}{{{value}}}\n',
+      'female':  'separate',
+    },
   },
   'sve': {
     'pattern':     '(\d+):(.*)',
     'dotall':       False,
     'index':        0,
     'value':        1,
-    'line_format': '{}:{}\n',
+    'line_format': {
+      'default': '{index}:{value}\n',
+    },
   },
   'txt': {
     'pattern':     '(\d+):(.*)',
@@ -46,7 +57,9 @@ file_format = {
     'index':        0,
     'value':        1,
     'comment':     'indexed_txt',
-    'line_format': '{}:{}\n',
+    'line_format': {
+      'default': '{index}:{value}\n',
+    },
   },
   'tra': {
     'pattern':     '@(\d+)\s*?=\s*?~([^~]*?)~(?:\s)?(?:\[([^]]*)\])?(?:~([^~]*)~)?',
@@ -54,10 +67,12 @@ file_format = {
     'index':        0,
     'value':        1,
     'context':      2,
-    'audio':        2,
     'female':       3,
-    'line_format': '@{} = ~{}~\n',
-    'line_format_context': '@{} = ~{}~ [{}]\n',
+    'line_format':  {
+      'default': '@{index} = ~{value}~\n',
+      'context': '@{index} = ~{value}~ [{context}]\n',
+      'female':  '@{index} = ~{value}~ ~{female}~\n',
+    },
   },
 }
 
@@ -68,6 +83,7 @@ po_dir_key = 'po_dir'
 tra_dir_key = 'tra_dir'
 src_lang_key = 'src_lang'
 female_postfix = '_female.csv'
+female_dir_postfix = '_female'
 
 defaults = {
   'encoding': 'cp1252',
@@ -265,13 +281,13 @@ def file2po(filepath, encoding = defaults['encoding'], noempty = False):
   for t in trans:
     index = t['index']
     value = t['value']
-    audio = t['audio']
+    context = t['context']
     comment = t['comment']
 
     # try to find a matching entry first
     dupe = 0
     for e in po:
-      if e.msgid == value and e.msgctxt == audio:
+      if e.msgid == value and e.msgctxt == context:
         e.occurrences.append((filepath, index))
         dupe = 1
     if dupe == 1:
@@ -283,14 +299,12 @@ def file2po(filepath, encoding = defaults['encoding'], noempty = False):
         msgid=value,
         msgstr='',
         occurrences=[(filepath, index),],
-        msgctxt = audio,
+        msgctxt = context,
         comment = comment,
     )
     po.append(entry)
 
   return(po)
-
-
 
 
 #check if extract file is present in po, exit with error if not
@@ -307,16 +321,15 @@ def check_path_in_po(po, path):
       print pf
     sys.exit(1)
 
+
 #extract and write to disk a single file from EPO object
-def po2file(epo, output_file, encoding, occurence_path, newline='\r\n'):
+def po2file(epo, output_file, encoding, occurence_path, dst_dir = None, newline='\r\n'):
+  #check if file is present in po, exit if not
+  check_path_in_po(epo.po, occurence_path)
   ext = get_ext(output_file)
   ff = file_format[ext]
   line_format = ff['line_format']
-  try: #if context is present in file format
-    line_format_context = ff['line_format_context']
-    context_order = ff['context']
-  except:
-    pass
+
   po = epo.po
 
   context = ''
@@ -336,28 +349,65 @@ def po2file(epo, output_file, encoding, occurence_path, newline='\r\n'):
         if entry.comment == empty_comment:
           value = ''
 
-        if entry.msgctxt != None:
-          context = entry.msgctxt
-          resulting_entries.append([index,value,context])
+        #context
+        context = entry.msgctxt
+        #female strings
+        if entry.msgid in epo.female_strings:
+          female = epo.female_strings[entry.msgid]
         else:
-          resulting_entries.append([index,value])
+          female = None
 
-  resulting_entries.sort() #because duplicate entries may mess up order
-  index_order = ff['index']
-  value_order = ff['value']
+        resulting_entries.append({'index': index, 'value': value, 'female': female, 'context': context})
+
+  # combined occurences may mess up order, restoring
+  resulting_entries = sorted(resulting_entries, key=lambda k: k['index'])
 
   lines = []
-  for re in resulting_entries:
-    try: #if context exists
-      lines.append(line_format_context.format(re[index_order],re[value_order],re[context_order]))
-    except: #no context
-      lines.append(line_format.format(re[0],re[1]))
+  lines_female = []
 
+  for re in resulting_entries:
+    #get line format
+    lfrm = get_line_format(re, ext)
+
+    #add line to common/male package
+    lines.append(lfrm.format(index=re['index'], value=re['value'], context=re['context'], female=re['female']))
+
+    # add string to female package if needed
+    if 'female' in line_format and line_format['female'] == 'separate':
+      if re['female'] is not None:
+        lines_female.append(lfrm.format(index=re['index'], value=re['female'], context=re['context']))
+      else:
+        lines_female.append(lfrm.format(index=re['index'], value=re['value'], context=re['context']))
+
+  #write main package
   file = io.open(output_file, 'w', encoding=encoding, newline=newline)
   for line in lines:
     file.write(line.encode(encoding,'replace').decode(encoding).decode('utf-8'))
   file.close()
 
+  #separate female translation bundle if needed
+  if 'female' in line_format and line_format['female'] == 'separate' and dst_dir is not None:
+    female_file = output_file.replace(dst_dir, dst_dir + female_dir_postfix)
+    create_dir(get_dir(female_file)) #create dir if not exists
+    print female_file
+    file2 = io.open(female_file, 'w', encoding=encoding, newline=newline)
+    for line in lines_female:
+      file2.write(line.encode(encoding,'replace').decode(encoding).decode('utf-8'))
+    file2.close()
+
+#takes translation entry in format {'index': index, 'value': value, 'female': female, 'context': context}
+#and file extension
+#returns corresponding string with placeholders from line_format
+def get_line_format(e, ext):
+  ff = file_format[ext]
+  line_format = ff['line_format']
+  if e['context'] is not None: #entry with context
+    lfrm = line_format['context']
+  elif 'female' in e and e['female'] is not None and 'female' in line_format and line_format['female'] != 'separate': #format with native support for female strings
+    lfrm = line_format['female']
+  else: #no context and no female, or format without native support for female strings
+    lfrm = line_format['default']
+  return lfrm
 
 #returns PO file object
 def file2msgstr(input_file, epo, path, encoding = defaults['encoding']):
@@ -373,7 +423,7 @@ def file2msgstr(input_file, epo, path, encoding = defaults['encoding']):
   for t in trans:
     index = t['index']
     value = t['value']
-    audio = t['audio']
+    context = t['context']
     female = t['female']
 
     if value != None and value != '':
@@ -383,11 +433,14 @@ def file2msgstr(input_file, epo, path, encoding = defaults['encoding']):
         if e2.msgstr != None and e2.msgstr != '' and e2.msgstr != value:
           print "WARN: differing msgstr values found for {}\nOverwriting first string with second:\n\"{}\"\n\"{}\"".format(e2.occurrences, e2.msgstr, value)
 
-#        e2.msgstr = value # temp if
-        if e2.msgid != value:
-          e2.msgstr = value
+        if e2.msgid == value:
+          print "WARN: differing msgid and msgstr are the same for {}\nUsing it regardless\n\"{}\"\n\"{}\"".format(e2.occurrences, e2.msgid)
+        e2.msgstr = value
 
-        e2.msgctxt = audio
+        e2.msgctxt = context
+
+        if female != None:
+          epo.female_strings[e2.msgid] = female
 
       else:
         print "WARN: no msgid found for {}:{}, skipping string {}".format(path, index, value)
@@ -489,7 +542,7 @@ class TRANSFile(list):
   entry format:
     index
     value
-    audio
+    context
     female
     comment
   All set to None if not present
@@ -547,13 +600,13 @@ class TRANSFile(list):
           entry['value'] = ' '
           entry['comment'] = empty_comment
 
-      # audio
+      # context
       try:
-        entry['audio'] = line[self.fformat['audio']]
+        entry['context'] = line[self.fformat['context']]
       except:
-        entry['audio'] = None
-      if entry['audio'] == '':
-        entry['audio'] = None
+        entry['context'] = None
+      if entry['context'] == '':
+        entry['context'] = None
 
       # female
       entry['female'] = None #default
@@ -583,13 +636,29 @@ class EPOFile(polib.POFile):
   '''
   def __init__(self, *args):
     po = args[0]
+    self.csv = po + female_postfix
+    self.female_strings = {}
     if po:
       self.po = polib.pofile(po)
+      if os.path.isfile(self.csv):
+        self.load_csv()
     else:
       self.po = polib.POFile()
-    self.female_strings = []
+
   def save(self, output_file):
     self.po.save(output_file)
+    self.save_csv()
+
+  def save_csv(self):
+    with io.open(self.csv, 'wb') as csvfile:
+      writer = csv.writer(csvfile)
+      writer.writerows(self.female_strings.items())
+
+  def load_csv(self):
+    with io.open(self.csv, 'rb') as csvfile:
+      reader = csv.reader(csvfile)
+      for row in reader:
+        self.female_strings[row[0]] = row[1]
 
 def epofile(f):
   '''

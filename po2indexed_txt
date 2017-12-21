@@ -19,5 +19,4 @@ else:
   path = args.path
 
 epo = bgforge_po.epofile(args.INPUT_FILE) #open once, it's a heavy op
-bgforge_po.check_path_in_po(epo.po, path)
 bgforge_po.po2file(epo, args.OUTPUT_FILE, args.encoding, path)

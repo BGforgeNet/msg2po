@@ -58,5 +58,5 @@ with bgforge_po.cd(tra_dir):
       ef_extract_path = dst_dir + '/' + ef
       bgforge_po.create_dir(bgforge_po.get_dir(ef_extract_path))
       print "Extracting {} from {} into {} with encoding {}".format(ef, po_path, ef_extract_path, enc)
-      bgforge_po.po2file(epo, ef_extract_path, enc, ef)
+      bgforge_po.po2file(epo, ef_extract_path, enc, ef, dst_dir)
     print 'Extracted {} into {}'.format(po_path, dst_dir, enc)
