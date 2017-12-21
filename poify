@@ -37,13 +37,13 @@ def prepare_po_dir(d):
   if not os.path.isdir(d):
     shutil.rmtree(d,ignore_errors=True)
     os.makedirs(d)
-  tmp_dir = d + '/tmp'
+  tmp_dir = os.path.join(d, 'tmp')
   if not os.path.isdir(tmp_dir):
     shutil.rmtree(tmp_dir,ignore_errors=True)
     os.makedirs(tmp_dir)
 
 def clean_po_dir(d):
-  tmp_dir = d + '/tmp'
+  tmp_dir = os.path.join(d, 'tmp')
   shutil.rmtree(tmp_dir,ignore_errors=True)
 
 def poify(dir): #relative path
@@ -53,7 +53,7 @@ def poify(dir): #relative path
   with bgforge_po.cd(dir):
     #Final PO
     lang = bgforge_po.basename(dir)
-    dst_file = po_dir + '/' + lang + '.pot'
+    dst_file = os.path.join(po_dir, lang + '.pot')
     po = polib.POFile()
     po.metadata = bgforge_po.metadata
 

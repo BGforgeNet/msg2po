@@ -166,20 +166,20 @@ def get_ext(path):
   return ext
 
 def basename(path):
-  if path.endswith('/'):
+  if path.endswith(os.sep):
     path = path[:-1]
-  return os.path.abspath(path).rsplit('/',1)[1]
+  return os.path.abspath(path).rsplit(os.sep,1)[1]
 
 def parent_dir(path):
-  if path.endswith('/'):
+  if path.endswith(os.sep):
     path = path[:-1]
-  return os.path.abspath(path).rsplit('/',1)[0]
+  return os.path.abspath(path).rsplit(os.sep,1)[0]
 
 def strip_ext(filename):
   return filename.rsplit('.',1)[0]
 
 def get_dir(path):
-  return path.rsplit('/',1)[0]
+  return path.rsplit(os.sep,1)[0]
 
 def create_dir(path):
   if not os.path.isdir(path):
@@ -212,13 +212,13 @@ def get_value(key, filename = ini, ini_section = main_ini_section):
 
 def get_po_dir():
   tra_dir = get_value(tra_dir_key)
-  po_dir = tra_dir + '/' + po_dirname
+  po_dir = os.path.join(tra_dir, po_dirname)
   return po_dir
 
 def get_poify_dir():
   tra_dir = get_value(tra_dir_key)
   src_lang = get_value(src_lang_key)
-  poify_dir = tra_dir + '/' + src_lang
+  poify_dir = os.path.join(tra_dir, src_lang)
   return poify_dir
 
 def dir_or_exit(d):
@@ -620,7 +620,7 @@ class TRANSFile(list):
 
       # protection against duplicate indexes, part 2
       if (entry['index']) in seen:
-        print "WARN: duplicate string definition found {}:{}, using new value:\n      {}'".format(filepath, entry['index'], entry['value'])
+        print "WARN: duplicate string definition found {}:{}, using new value:\n      {}".format(filepath, entry['index'], entry['value'])
         self[:] = [entry if x['index'] == entry['index'] else x for x in self]
         continue
       else:
