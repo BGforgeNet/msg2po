@@ -672,3 +672,33 @@ def epofile(f):
   '''
   epo = EPOFile(f)
   return epo
+
+
+def clean_female_csv(po_path):
+  '''
+  Removes strings not present in PO file from corresponding female csv
+  '''
+  csv_path = po_path + female_postfix
+
+  if os.path.isfile(csv_path):
+
+    print "Found female CSV {}, cleaning stale strings".format(csv_path)
+    po = polib.pofile(po_path)
+    msgid_list = []
+    for e in po:
+      msgid_list.append(e.msgid)
+
+    female_strings = {}
+    with io.open(csv_path, 'r', encoding = 'utf-8') as csvfile:
+      reader = csv.reader(csvfile)
+      for row in reader:
+        female_strings[row[0]] = row[1]
+
+    new_female_strings = {}
+    for f in female_strings:
+      if f in msgid_list:
+        new_female_strings[f] = female_strings[f]
+
+    with io.open(csv_path, 'wb') as csvfile:
+      writer = csv.writer(csvfile)
+      writer.writerows(new_female_strings.items())
