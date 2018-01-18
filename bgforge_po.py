@@ -346,7 +346,7 @@ def po2file(epo, output_file, encoding, occurence_path, dst_dir = None, newline=
 
         index = int(eo[1]) #need int because later will sort
 
-        if entry.msgstr == '' or 'fuzzy' in entry.flags: #if not translated or translation is outdated, keep msgid
+        if entry.msgstr == '': #if not translated, keep msgid
           value = entry.msgid
         else:
           value = entry.msgstr
