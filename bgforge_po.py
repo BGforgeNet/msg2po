@@ -684,19 +684,22 @@ def clean_female_csv(po_path):
 
     print "Found female CSV {}, cleaning stale strings".format(csv_path)
     po = polib.pofile(po_path)
-    msgid_list = []
+    msgid_dict = {}
     for e in po:
-      msgid_list.append(e.msgid)
+      msgid_dict[e.msgid] = e.msgstr
 
-    female_strings = {}
+    female_strings = collections.OrderedDict()
     with io.open(csv_path, 'r', encoding = 'utf-8') as csvfile:
       reader = csv.reader(csvfile)
       for row in reader:
-        female_strings[row[0]] = row[1]
+        if row[0] in female_strings and row[1] != female_strings[row[0]]:
+          print "Dupe", row[0], '+', row[1], '+', female_strings[row[0]]
+        else:
+          female_strings[row[0]] = row[1]
 
-    new_female_strings = {}
+    new_female_strings = collections.OrderedDict()
     for f in female_strings:
-      if f in msgid_list:
+      if f in msgid_dict and female_strings[f] != msgid_dict[f]:
         new_female_strings[f] = female_strings[f]
 
     with io.open(csv_path, 'wb') as csvfile:
