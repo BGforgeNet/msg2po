@@ -156,6 +156,8 @@ metadata = {
 #used for determining empty strings, which are invalid by PO spec
 empty_comment = 'LEAVE empty space in translation'
 
+lowercase_exclude = ['.git', '.svn', '.hg']
+
 #file and dir manipulation
 #################################
 def get_ext(path):
@@ -193,10 +195,20 @@ def lowercase_rename(root_dir,items):
     if new_name != old_name:
       print "renaming {} to {}".format(old_name, new_name)
       os.rename(old_name, new_name)
+
 def lowercase_recursively(dir): #this is the function that is actually used
-  for dir_name, subdir_list, file_list in os.walk(dir,topdown=False):
-    lowercase_rename(dir_name,file_list)
-    lowercase_rename(dir_name,subdir_list)
+  for dir_name, subdir_list, file_list in os.walk(dir, topdown = False):
+    subdir_list[:] = [d for d in subdir_list if d not in lowercase_exclude]
+    for sd in subdir_list:
+      for dname, sdir_list, file_list in os.walk(sd, topdown = False):
+        lowercase_rename(dir_name,file_list)
+        lowercase_rename(dir_name,sdir_list)
+  children = os.listdir(dir)
+  for c in children:
+    new_c = c.lower()
+    if c != new_c:
+      print "renaming {} to {}".format(c, new_c)
+      os.rename(c, new_c)
 
 def get_value(key, filename = ini, ini_section = main_ini_section):
   parser = ConfigParser.SafeConfigParser()
