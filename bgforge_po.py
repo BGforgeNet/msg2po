@@ -156,7 +156,7 @@ metadata = {
 #used for determining empty strings, which are invalid by PO spec
 empty_comment = 'LEAVE empty space in translation'
 
-lowercase_exclude = ['.git', '.svn', '.hg']
+lowercase_exclude = ['.git', '.svn', '.hg', 'README.md']
 
 #file and dir manipulation
 #################################
@@ -204,6 +204,7 @@ def lowercase_recursively(dir): #this is the function that is actually used
         lowercase_rename(dir_name,file_list)
         lowercase_rename(dir_name,sdir_list)
   children = os.listdir(dir)
+  children[:] = [c for c in children if c not in lowercase_exclude]
   for c in children:
     new_c = c.lower()
     if c != new_c:
