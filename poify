@@ -77,15 +77,17 @@ def poify(dir): #relative path
             print "{} is TXT, but not indexed. Skipping!".format(full_name)
             continue
 
-        print "processing {}".format(full_name)
-        po2 = bgforge_po.file2po(full_name)
+        bname = bgforge_po.basename(full_name)
+        enc = bgforge_po.get_enc('', po_occurence_name = bname)
+        print "processing {} with encoding {}".format(full_name, enc)
+        po2 = bgforge_po.file2po(full_name, encoding = enc)
         for e2 in po2:
           po.append(e2)
   po = bgforge_po.po_make_unique(po)
   po.save(dst_file)
 
   clean_po_dir(po_dir)
-  print "Processed directory {} with encoding {}, the result is in {}/{}/{}.pot".format(poify_dir,enc,tra_dir,po_dir,lang)
+  print "Processed directory {}, the result is in {}/{}/{}.pot".format(poify_dir, tra_dir, po_dir, lang)
 
 tra_dir = os.path.relpath(bgforge_po.parent_dir(poify_dir))
 

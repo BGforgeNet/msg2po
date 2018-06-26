@@ -153,8 +153,8 @@ metadata = {
   'X-Generator': 'bgforge_po v.{}'.format(version),
 }
 
+#used for determining empty strings, which are invalid by PO spec
 empty_comment = 'LEAVE empty space in translation'
-
 
 #file and dir manipulation
 #################################
@@ -272,7 +272,7 @@ def get_enc(po_name,
 #returns PO file object
 def file2po(filepath, encoding = defaults['encoding'], noempty = False):
 
-  trans = TRANSFile(filepath=filepath, is_source=True) #load translations
+  trans = TRANSFile(filepath=filepath, is_source=True, encoding = encoding) #load translations
 
   po = polib.POFile()
   po.metadata = metadata
