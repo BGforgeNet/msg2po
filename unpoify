@@ -60,11 +60,11 @@ with bgforge_po.cd(tra_dir):
       enc = bgforge_po.get_enc(po_path, ef)
       ef_extract_path = os.path.join(dst_dir, ef)
       print "Extracting {} from {} into {} with encoding {}".format(ef, po_path, ef_extract_path, enc)
-      bgforge_po.po2file(epo, ef_extract_path, enc, ef, dst_dir)
+      female_done = bgforge_po.po2file(epo, ef_extract_path, enc, ef, dst_dir)
 
-      female_file = os.path.join(female_dir, ef)
-      if need_female and not os.path.exists(female_file):
-        print "Female strings are the same, copying to {}".format(female_file)
+      if need_female and not female_done:
+        female_file = os.path.join(female_dir, ef)
+        print "Female strings are same, copying to {}".format(female_file)
         bgforge_po.copycreate(ef_extract_path, female_file)
 
     print 'Extracted {} into {}'.format(po_path, dst_dir, enc)

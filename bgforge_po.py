@@ -31,47 +31,49 @@ valid_extensions = [ 'msg', 'txt', 'sve', 'tra']
 # dotall - whether file entries are multiline
 file_format = {
   'msg': {
-    'pattern':     '{(\d+)}{([^}]*)}{([^}]*)}',
+    'pattern':      '{(\d+)}{([^}]*)}{([^}]*)}',
     'dotall':       True,
     'index':        0,
     'value':        2,
     'context':      1,
     'line_format':  {
-      'default': '{{{index}}}{{}}{{{value}}}\n',
-      'context': '{{{index}}}{{{context}}}{{{value}}}\n',
-      'female':  'separate',
+      'default':      '{{{index}}}{{}}{{{value}}}\n',
+      'context':      '{{{index}}}{{{context}}}{{{value}}}\n',
+      'female':       'separate',
     },
   },
   'sve': {
-    'pattern':     '(\d+):(.*)',
+    'pattern':      '(\d+):(.*)',
     'dotall':       False,
     'index':        0,
     'value':        1,
-    'line_format': {
-      'default': '{index}:{value}\n',
+    'line_format':  {
+      'default':    '{index}:{value}\n',
+      'female':     'separate',
     },
   },
   'txt': {
-    'pattern':     '(\d+):(.*)',
+    'pattern':      '(\d+):(.*)',
     'dotall':       False,
     'index':        0,
     'value':        1,
-    'comment':     'indexed_txt',
-    'line_format': {
-      'default': '{index}:{value}\n',
+    'comment':      'indexed_txt',
+    'line_format':  {
+      'default':      '{index}:{value}\n',
+      'female':       'separate',
     },
   },
   'tra': {
-    'pattern':     '@(\d+)\s*?=\s*?~([^~]*?)~(?:\s)?(?:\[([^]]*)\])?(?:~([^~]*)~)?',
+    'pattern':      '@(\d+)\s*?=\s*?~([^~]*?)~(?:\s)?(?:\[([^]]*)\])?(?:~([^~]*)~)?',
     'dotall':       True,
     'index':        0,
     'value':        1,
     'context':      2,
     'female':       3,
     'line_format':  {
-      'default': '@{index} = ~{value}~\n',
-      'context': '@{index} = ~{value}~ [{context}]\n',
-      'female':  '@{index} = ~{value}~ ~{female}~\n',
+      'default':      '@{index} = ~{value}~\n',
+      'context':      '@{index} = ~{value}~ [{context}]\n',
+      'female':       '@{index} = ~{value}~ ~{female}~\n',
     },
   },
 }
@@ -425,7 +427,9 @@ def po2file(epo, output_file, encoding, occurence_path, dst_dir = None, newline=
   file.close()
 
   #separate female translation bundle if needed
-  if 'female' in line_format and line_format['female'] == 'separate' and dst_dir is not None:
+  female_done = False
+  if ('female' in line_format and line_format['female'] == 'separate' 
+    and dst_dir is not None and lines_female != lines):
     female_file = output_file.replace(dst_dir + os.sep, dst_dir + female_dir_suffix + os.sep)
     create_dir(get_dir(female_file)) #create dir if not exists
     print 'Also extracting female counterpart into {}'.format(female_file)
@@ -433,6 +437,9 @@ def po2file(epo, output_file, encoding, occurence_path, dst_dir = None, newline=
     for line in lines_female:
       file2.write(line.encode(encoding,'replace').decode(encoding).decode('utf-8'))
     file2.close()
+    female_done = True
+
+  return female_done
 
 #takes translation entry in format {'index': index, 'value': value, 'female': female, 'context': context}
 #and file extension
