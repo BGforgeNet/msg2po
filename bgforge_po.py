@@ -82,8 +82,8 @@ po_dirname = 'po'
 po_dir_key = 'po_dir'
 tra_dir_key = 'tra_dir'
 src_lang_key = 'src_lang'
-female_postfix = '_female.csv'
-female_dir_postfix = '_female'
+female_suffix = '_female.csv'
+female_dir_suffix = '_female'
 
 defaults = {
   'encoding': 'cp1252',
@@ -240,6 +240,26 @@ def dir_or_exit(d):
   else:
     print 'Directory {} does not exist, cannot continue!'.format(d)
     sys.exit(1)
+
+#returns list of extensions for which a separate female package should be prepared
+def separate_file_formats():
+  extensions = []
+  for ff in file_format:
+    if ("female" in file_format[ff]["line_format"]
+      and file_format[ff]["line_format"]["female"] == "separate"):
+      extensions.append(ff)
+  return extensions
+
+# check if need to make female package
+def need_female_package(file_list):
+  need_female = False
+  ext_list = separate_file_formats()
+  for f in file_list:
+    ext=get_ext(f)
+    if ext in ext_list:
+      need_female = True
+      break
+  return need_female
 
 @contextmanager
 def cd(newdir):
@@ -406,7 +426,7 @@ def po2file(epo, output_file, encoding, occurence_path, dst_dir = None, newline=
 
   #separate female translation bundle if needed
   if 'female' in line_format and line_format['female'] == 'separate' and dst_dir is not None:
-    female_file = output_file.replace(dst_dir + os.sep, dst_dir + female_dir_postfix + os.sep)
+    female_file = output_file.replace(dst_dir + os.sep, dst_dir + female_dir_suffix + os.sep)
     create_dir(get_dir(female_file)) #create dir if not exists
     print 'Also extracting female counterpart into {}'.format(female_file)
     file2 = io.open(female_file, 'w', encoding=encoding, newline=newline)
@@ -427,6 +447,14 @@ def get_line_format(e, ext):
   else: #no context and no female, or format without native support for female strings
     lfrm = line_format['default']
   return lfrm
+
+
+def copycreate(src_file, dst_file):
+  dirname = os.path.dirname(dst_file)
+  if not os.path.exists(dirname):
+    os.makedirs(dirname)
+  shutil.copyfile(src_file, dst_file)
+
 
 #returns PO file object
 def file2msgstr(input_file, epo, path, encoding = defaults['encoding']):
@@ -655,7 +683,7 @@ class EPOFile(polib.POFile):
   '''
   def __init__(self, *args):
     po = args[0]
-    self.csv = po + female_postfix
+    self.csv = po + female_suffix
     self.female_strings = {}
     if po:
       self.po = polib.pofile(po)
@@ -691,7 +719,7 @@ def clean_female_csv(po_path):
   '''
   Removes strings not present in PO file from corresponding female csv
   '''
-  csv_path = po_path + female_postfix
+  csv_path = po_path + female_suffix
 
   if os.path.isfile(csv_path):
 
