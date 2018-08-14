@@ -12,6 +12,7 @@ import polib
 import shutil
 import re
 import bgforge_po
+from multiprocessing import Pool as ThreadPool
 
 
 default_po_dir = bgforge_po.get_po_dir()
@@ -25,6 +26,33 @@ args=parser.parse_args()
 po_dir = args.DIR
 bgforge_po.dir_or_exit(po_dir)
 tra_dir = bgforge_po.parent_dir(po_dir)
+
+# pf is po file basename
+def extract_po(pf):
+  po_path = os.path.join(po_dir, pf)
+  print("processing {}".format(po_path))
+
+  epo = bgforge_po.epofile(po_path) #open once
+  occurrence_map = bgforge_po.get_po_occurrence_map(epo.po)
+
+  dst_dir = bgforge_po.strip_ext(pf) # lang
+
+  need_female = bgforge_po.need_female_package(occurrence_map)
+  female_dir = dst_dir + bgforge_po.female_dir_suffix
+
+  for ef in sorted(occurrence_map):
+    enc = bgforge_po.get_enc(po_path, ef)
+    ef_extract_path = os.path.join(dst_dir, ef)
+    print("Extracting {} from {} into {} with encoding {}".format(ef, po_path, ef_extract_path, enc))
+    female_done = bgforge_po.po2file(epo, ef_extract_path, enc, ef, dst_dir=dst_dir, occurrence_map=occurrence_map)
+
+    if need_female and not female_done:
+      female_file = os.path.join(female_dir, ef)
+      print("Female strings are same, copying to {}".format(female_file))
+      bgforge_po.copycreate(ef_extract_path, female_file)
+
+  print('Extracted {} into {}'.format(po_path, dst_dir, enc))
+
 
 with bgforge_po.cd(tra_dir):
   po_dir = bgforge_po.po_dirname # "po"
@@ -40,28 +68,13 @@ with bgforge_po.cd(tra_dir):
     sys.exit(1)
 
   #extract PO files
-  extract_file_list = []
-  for pf in po_files:
-    po_path = os.path.join(po_dir, pf)
-    print("processing {}".format(po_path))
-
-    epo = bgforge_po.epofile(po_path) #open once
-    occurrence_map = bgforge_po.get_po_occurrence_map(epo.po)
-
-    dst_dir = bgforge_po.strip_ext(pf) # lang
-
-    need_female = bgforge_po.need_female_package(occurrence_map)
-    female_dir = dst_dir + bgforge_po.female_dir_suffix
-
-    for ef in sorted(occurrence_map):
-      enc = bgforge_po.get_enc(po_path, ef)
-      ef_extract_path = os.path.join(dst_dir, ef)
-      print("Extracting {} from {} into {} with encoding {}".format(ef, po_path, ef_extract_path, enc))
-      female_done = bgforge_po.po2file(epo, ef_extract_path, enc, ef, dst_dir=dst_dir, occurrence_map=occurrence_map)
-
-      if need_female and not female_done:
-        female_file = os.path.join(female_dir, ef)
-        print("Female strings are same, copying to {}".format(female_file))
-        bgforge_po.copycreate(ef_extract_path, female_file)
-
-    print('Extracted {} into {}'.format(po_path, dst_dir, enc))
+  threads_number = bgforge_po.threads_number()
+  print("Processing files with {} threads".format(threads_number))
+  pool = ThreadPool(threads_number)
+  try:
+    pool.map(extract_po, po_files)
+    pool.close()
+  except KeyboardInterrupt:
+    pool.terminate()
+  finally:
+    pool.join()

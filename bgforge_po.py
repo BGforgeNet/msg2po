@@ -17,6 +17,7 @@ from contextlib import contextmanager
 import fileinput
 import configparser
 import csv
+from multiprocessing import cpu_count
 
 # extensions recognized by file2po, etc
 valid_extensions = [ 'msg', 'txt', 'sve', 'tra']
@@ -269,6 +270,12 @@ def cd(newdir):
     yield
   finally:
     os.chdir(prevdir)
+
+def threads_number():
+  tnum = cpu_count() - 2
+  if tnum < 1:
+    tnum = 1
+  return tnum
 
 def get_enc(po_name,
             po_occurrence_name = '',
