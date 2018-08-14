@@ -273,14 +273,14 @@ def cd(newdir):
     os.chdir(prevdir)
 
 def get_enc(po_name,
-            po_occurence_name = '',
+            po_occurrence_name = '',
             encoding_dict = encodings,
             dos_encoding_dict = dos_encodings,
             dos_filename_list = dos_filenames,
             utf_filename_list = utf_filenames):
   encoding = defaults['encoding']
   lang = strip_ext(basename(po_name))
-  filename = basename(po_occurence_name)
+  filename = basename(po_occurrence_name)
 
   if lang in encoding_dict:
     try: encoding = encoding_dict[lang]
@@ -344,10 +344,10 @@ def file2po(filepath, encoding = defaults['encoding'], noempty = False):
 
 #check if extract file is present in po, exit with error if not
 def check_path_in_po(po, path):
-  present_files = []
+  present_files = set()
   for entry in po:
     for eo in entry.occurrences:
-      present_files.append(eo[0])
+      present_files.add(eo[0])
   present_files_list = sorted(set(present_files))
   if not path in present_files_list:
     print "{} is not present in selected PO file".format(path)
@@ -356,14 +356,31 @@ def check_path_in_po(po, path):
       print pf
     sys.exit(1)
 
+# return dict of dicts mapping filepaths to entries/occurrences where they are present
+# {} file_path: {unit_index: entry_index, unit2_index: entry2_index, ...},  }
+# entry_index is index in PO file (list)
+def get_po_occurrence_map(po):
+  ocmap = {}
+  i = 0
+  for entry in po:
+    for eo in entry.occurrences:
+      if eo[0] in ocmap:
+        ocmap[eo[0]][int(eo[1])]= i
+      else:
+        ocmap[eo[0]] = {int(eo[1]): i}
+    i = i + 1
+  return ocmap
 
 #extract and write to disk a single file from EPO object
 #epo is EPO object
 #output_file is path relative to dst_dir
 #dst_dir is actually dst language. Used only in unpoify
-def po2file(epo, output_file, encoding, occurence_path, dst_dir = None, newline='\r\n'):
-  #check if file is present in po, exit if not
-  check_path_in_po(epo.po, occurence_path)
+def po2file(epo, output_file, encoding, occurrence_path, dst_dir = None, newline='\r\n', occurrence_map=None):
+  if occurrence_map is None: #when extracting single file with po2tra/po2msg, etc
+    #check if file is present in po, exit if not
+    check_path_in_po(epo.po, occurrence_path)
+    occurrence_map = get_po_occurrence_map(epo.po)
+
   #create parent directory
   create_dir(get_dir(output_file))
 
@@ -375,32 +392,29 @@ def po2file(epo, output_file, encoding, occurence_path, dst_dir = None, newline=
 
   context = ''
   resulting_entries = []
-  for entry in po:
-    for eo in entry.occurrences:
-      if eo[0] == occurence_path:
+  for i in occurrence_map[occurrence_path]:
+    entry = po[occurrence_map[occurrence_path][i]]
+    index = i
+    if entry.msgstr == '': #if not translated, keep msgid
+      value = entry.msgid
+    else:
+      value = entry.msgstr
 
-        index = int(eo[1]) #need int because later will sort
+    #empty lines detected by comment
+    if entry.comment == empty_comment:
+      value = ''
 
-        if entry.msgstr == '': #if not translated, keep msgid
-          value = entry.msgid
-        else:
-          value = entry.msgstr
+    #context
+    context = entry.msgctxt
+    #female strings
+    if entry.msgid in epo.female_strings:
+      female = epo.female_strings[entry.msgid]
+    else:
+      female = None
 
-        #empty lines detected by comment
-        if entry.comment == empty_comment:
-          value = ''
+    resulting_entries.append({'index': index, 'value': value, 'female': female, 'context': context})
 
-        #context
-        context = entry.msgctxt
-        #female strings
-        if entry.msgid in epo.female_strings:
-          female = epo.female_strings[entry.msgid]
-        else:
-          female = None
-
-        resulting_entries.append({'index': index, 'value': value, 'female': female, 'context': context})
-
-  # combined occurences may mess up order, restoring
+  # combined occurrences may mess up order, restoring
   resulting_entries = sorted(resulting_entries, key=lambda k: k['index'])
 
   lines = []
@@ -467,7 +481,7 @@ def copycreate(src_file, dst_file):
 def file2msgstr(input_file, epo, path, encoding = defaults['encoding']):
   trans = TRANSFile(filepath=input_file, encoding=encoding) #load translations
 
-  # map entries to occurences for faster access, part 1
+  # map entries to occurrences for faster access, part 1
   entries_dict = collections.OrderedDict()
   po = epo.po
   for e in po:
@@ -482,7 +496,7 @@ def file2msgstr(input_file, epo, path, encoding = defaults['encoding']):
 
     if value is not None and value != '':
       if (path, index) in entries_dict:
-        # map entries to occurences for faster access, part 2
+        # map entries to occurrences for faster access, part 2
         e2 = entries_dict[(path, index)]
         if e2.msgstr is not None and e2.msgstr != '' and e2.msgstr != value:
           print "WARN: different translations found for {}. Replacing first string with second:\n      {}\n      {}".format(e2.occurrences, e2.msgstr, value)

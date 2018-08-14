@@ -10,7 +10,7 @@ import polib
 parser = argparse.ArgumentParser(description='Load indexed TXT into gettext PO msgstr',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('INPUT_FILE', help='input TXT/SVE file')
 parser.add_argument('OUTPUT_FILE', help='output PO file')
-parser.add_argument('--path', dest='path', help='load as filename (PO occurence). If not specified, defaults to input filename')
+parser.add_argument('--path', dest='path', help='load as filename (PO occurrence). If not specified, defaults to input filename')
 parser.add_argument('-e', dest='encoding', default='cp1252', help='source encoding')
 args=parser.parse_args()
 

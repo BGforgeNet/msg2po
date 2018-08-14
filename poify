@@ -78,7 +78,7 @@ def poify(dir): #relative path
             continue
 
         bname = bgforge_po.basename(full_name)
-        enc = bgforge_po.get_enc('', po_occurence_name = bname)
+        enc = bgforge_po.get_enc('', po_occurrence_name = bname)
         print "processing {} with encoding {}".format(full_name, enc)
         po2 = bgforge_po.file2po(full_name, encoding = enc)
         for e2 in po2:
@@ -96,4 +96,4 @@ if nolowercase == False:
   bgforge_po.lowercase_recursively(tra_dir)
 
 with bgforge_po.cd(bgforge_po.parent_dir(os.path.abspath(poify_dir))):
-  poify(bgforge_po.basename(poify_dir)) #keeping relative occurences in resulting po
+  poify(bgforge_po.basename(poify_dir)) #keeping relative occurrences in resulting po

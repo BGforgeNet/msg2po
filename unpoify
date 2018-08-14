@@ -45,22 +45,19 @@ with bgforge_po.cd(tra_dir):
     po_path = os.path.join(po_dir, pf)
     print "processing {}".format(po_path)
     po = polib.pofile(po_path)
-    for e in po:
-      for eo in e.occurrences:
-        extract_file_list.append(eo[0])
-    extract_file_set = set(extract_file_list)
+    occurrence_map = bgforge_po.get_po_occurrence_map(po)
 
     dst_dir = bgforge_po.strip_ext(pf) # lang
 
-    need_female = bgforge_po.need_female_package(extract_file_set)
+    need_female = bgforge_po.need_female_package(occurrence_map)
     female_dir = dst_dir + bgforge_po.female_dir_suffix
 
     epo = bgforge_po.epofile(po_path) #open once
-    for ef in sorted(extract_file_set):
+    for ef in sorted(occurrence_map):
       enc = bgforge_po.get_enc(po_path, ef)
       ef_extract_path = os.path.join(dst_dir, ef)
       print "Extracting {} from {} into {} with encoding {}".format(ef, po_path, ef_extract_path, enc)
-      female_done = bgforge_po.po2file(epo, ef_extract_path, enc, ef, dst_dir)
+      female_done = bgforge_po.po2file(epo, ef_extract_path, enc, ef, dst_dir=dst_dir, occurrence_map=occurrence_map)
 
       if need_female and not female_done:
         female_file = os.path.join(female_dir, ef)
