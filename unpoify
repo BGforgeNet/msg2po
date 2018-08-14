@@ -44,15 +44,15 @@ with bgforge_po.cd(tra_dir):
   for pf in po_files:
     po_path = os.path.join(po_dir, pf)
     print "processing {}".format(po_path)
-    po = polib.pofile(po_path)
-    occurrence_map = bgforge_po.get_po_occurrence_map(po)
+
+    epo = bgforge_po.epofile(po_path) #open once
+    occurrence_map = bgforge_po.get_po_occurrence_map(epo.po)
 
     dst_dir = bgforge_po.strip_ext(pf) # lang
 
     need_female = bgforge_po.need_female_package(occurrence_map)
     female_dir = dst_dir + bgforge_po.female_dir_suffix
 
-    epo = bgforge_po.epofile(po_path) #open once
     for ef in sorted(occurrence_map):
       enc = bgforge_po.get_enc(po_path, ef)
       ef_extract_path = os.path.join(dst_dir, ef)
