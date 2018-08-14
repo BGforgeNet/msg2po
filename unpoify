@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 version='1.0.0'
@@ -17,7 +17,7 @@ import bgforge_po
 default_po_dir = bgforge_po.get_po_dir()
 
 #parse args
-parser = argparse.ArgumentParser(description='Unpoify files into parent directory of selected PO dir',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Unpoify files into parent directory of selected PO dir', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('DIR', nargs = '?', default = default_po_dir, help='directory with PO files')
 args=parser.parse_args()
 
@@ -36,14 +36,14 @@ with bgforge_po.cd(tra_dir):
       if bgforge_po.get_ext(f) == 'po':
         po_files.append(f)
   if po_files == []:
-    print "no PO files found in directory {}".format(po_dir)
+    print("no PO files found in directory {}".format(po_dir))
     sys.exit(1)
 
   #extract PO files
   extract_file_list = []
   for pf in po_files:
     po_path = os.path.join(po_dir, pf)
-    print "processing {}".format(po_path)
+    print("processing {}".format(po_path))
 
     epo = bgforge_po.epofile(po_path) #open once
     occurrence_map = bgforge_po.get_po_occurrence_map(epo.po)
@@ -56,12 +56,12 @@ with bgforge_po.cd(tra_dir):
     for ef in sorted(occurrence_map):
       enc = bgforge_po.get_enc(po_path, ef)
       ef_extract_path = os.path.join(dst_dir, ef)
-      print "Extracting {} from {} into {} with encoding {}".format(ef, po_path, ef_extract_path, enc)
+      print("Extracting {} from {} into {} with encoding {}".format(ef, po_path, ef_extract_path, enc))
       female_done = bgforge_po.po2file(epo, ef_extract_path, enc, ef, dst_dir=dst_dir, occurrence_map=occurrence_map)
 
       if need_female and not female_done:
         female_file = os.path.join(female_dir, ef)
-        print "Female strings are same, copying to {}".format(female_file)
+        print("Female strings are same, copying to {}".format(female_file))
         bgforge_po.copycreate(ef_extract_path, female_file)
 
-    print 'Extracted {} into {}'.format(po_path, dst_dir, enc)
+    print('Extracted {} into {}'.format(po_path, dst_dir, enc))

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 version='1.0.0'
@@ -17,7 +17,7 @@ valid_extensions = bgforge_po.valid_extensions
 default_poify_dir = bgforge_po.get_poify_dir()
 
 #parse args
-parser = argparse.ArgumentParser(description='Poify files in selected directory',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Poify files in selected directory', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('DIR', nargs = '?', default = default_poify_dir, help='source language directory (default: ./english)')
 parser.add_argument('-e', dest='enc', help='source encoding', default='cp1252')
 parser.add_argument('--no-lowercase', dest='nolowercase', default=False, action='store_true', help="don't lowercase filenames before poifying")
@@ -35,16 +35,16 @@ devnull = open(os.devnull, 'w')
 #prepare po dir
 def prepare_po_dir(d):
   if not os.path.isdir(d):
-    shutil.rmtree(d,ignore_errors=True)
+    shutil.rmtree(d, ignore_errors=True)
     os.makedirs(d)
   tmp_dir = os.path.join(d, 'tmp')
   if not os.path.isdir(tmp_dir):
-    shutil.rmtree(tmp_dir,ignore_errors=True)
+    shutil.rmtree(tmp_dir, ignore_errors=True)
     os.makedirs(tmp_dir)
 
 def clean_po_dir(d):
   tmp_dir = os.path.join(d, 'tmp')
-  shutil.rmtree(tmp_dir,ignore_errors=True)
+  shutil.rmtree(tmp_dir, ignore_errors=True)
 
 def poify(dir): #relative path
   po_dir = bgforge_po.po_dirname
@@ -57,12 +57,12 @@ def poify(dir): #relative path
     po = polib.POFile()
     po.metadata = bgforge_po.metadata
 
-    for dir_name, subdir_list, file_list in sorted(os.walk('.',topdown=False)):
+    for dir_name, subdir_list, file_list in sorted(os.walk('.', topdown=False)):
       subdir_list.sort()
       file_list.sort()
       for file_name in file_list:
         full_name=os.path.join(dir_name, file_name)
-        full_name=re.sub('^\./','',full_name)  #remove trailing './'
+        full_name=re.sub('^\./', '', full_name)  #remove trailing './'
         ext=bgforge_po.get_ext(file_name)
         if ext in valid_extensions:
             po_tool=ext + '2po'
@@ -72,14 +72,14 @@ def poify(dir): #relative path
         #checked txt is indexed and if it is, process it
         if ext == 'txt':
           if bgforge_po.check_indexed(full_name):
-            print "{} is indexed TXT".format(full_name)
+            print("{} is indexed TXT".format(full_name))
           else:
-            print "{} is TXT, but not indexed. Skipping!".format(full_name)
+            print("{} is TXT, but not indexed. Skipping!".format(full_name))
             continue
 
         bname = bgforge_po.basename(full_name)
         enc = bgforge_po.get_enc('', po_occurrence_name = bname)
-        print "processing {} with encoding {}".format(full_name, enc)
+        print("processing {} with encoding {}".format(full_name, enc))
         po2 = bgforge_po.file2po(full_name, encoding = enc)
         for e2 in po2:
           po.append(e2)
@@ -87,7 +87,7 @@ def poify(dir): #relative path
   po.save(dst_file)
 
   clean_po_dir(po_dir)
-  print "Processed directory {}, the result is in {}/{}/{}.pot".format(poify_dir, tra_dir, po_dir, lang)
+  print("Processed directory {}, the result is in {}/{}/{}.pot".format(poify_dir, tra_dir, po_dir, lang))
 
 tra_dir = os.path.relpath(bgforge_po.parent_dir(poify_dir))
 

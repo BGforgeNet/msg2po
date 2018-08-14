@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 version='1.0.0'
@@ -6,8 +6,6 @@ version='1.0.0'
 import io
 import re
 import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
 import datetime
 import collections
 import polib
@@ -17,7 +15,7 @@ import shutil
 import subprocess
 from contextlib import contextmanager
 import fileinput
-import ConfigParser
+import configparser
 import csv
 
 # extensions recognized by file2po, etc
@@ -164,7 +162,7 @@ lowercase_exclude = ['.git', '.svn', '.hg', 'README.md']
 #################################
 def get_ext(path):
   try:
-    ext = path.rsplit('.',1)[1].lower()
+    ext = path.rsplit('.', 1)[1].lower()
   except:
     ext = None
   return ext
@@ -172,30 +170,30 @@ def get_ext(path):
 def basename(path):
   if path.endswith(os.sep):
     path = path[:-1]
-  return os.path.abspath(path).rsplit(os.sep,1)[1]
+  return os.path.abspath(path).rsplit(os.sep, 1)[1]
 
 def parent_dir(path):
   if path.endswith(os.sep):
     path = path[:-1]
-  return os.path.abspath(path).rsplit(os.sep,1)[0]
+  return os.path.abspath(path).rsplit(os.sep, 1)[0]
 
 def strip_ext(filename):
-  return filename.rsplit('.',1)[0]
+  return filename.rsplit('.', 1)[0]
 
 def get_dir(path):
-  return path.rsplit(os.sep,1)[0]
+  return path.rsplit(os.sep, 1)[0]
 
 def create_dir(path):
   if not os.path.isdir(path):
     os.makedirs(path)
 
 #lowercase directory
-def lowercase_rename(root_dir,items):
+def lowercase_rename(root_dir, items):
   for item in items:
     old_name=os.path.join(root_dir, item)
     new_name=os.path.join(root_dir, item.lower())
     if new_name != old_name:
-      print "renaming {} to {}".format(old_name, new_name)
+      print("renaming {} to {}".format(old_name, new_name))
       os.rename(old_name, new_name)
 
 def lowercase_recursively(dir): #this is the function that is actually used
@@ -203,18 +201,18 @@ def lowercase_recursively(dir): #this is the function that is actually used
     subdir_list[:] = [d for d in subdir_list if d not in lowercase_exclude]
     for sd in subdir_list:
       for dname, sdir_list, file_list in os.walk(sd, topdown = False):
-        lowercase_rename(dir_name,file_list)
-        lowercase_rename(dir_name,sdir_list)
+        lowercase_rename(dir_name, file_list)
+        lowercase_rename(dir_name, sdir_list)
   children = os.listdir(dir)
   children[:] = [c for c in children if c not in lowercase_exclude]
   for c in children:
     new_c = c.lower()
     if c != new_c:
-      print "renaming {} to {}".format(c, new_c)
+      print("renaming {} to {}".format(c, new_c))
       os.rename(c, new_c)
 
 def get_value(key, filename = ini, ini_section = main_ini_section):
-  parser = ConfigParser.SafeConfigParser()
+  parser = configparser.SafeConfigParser()
   try:
     parser.read(filename)
     try:
@@ -238,9 +236,9 @@ def get_poify_dir():
 
 def dir_or_exit(d):
   if os.path.isdir(d):
-    print 'Found directory {}'.format(d)
+    print('Found directory {}'.format(d))
   else:
-    print 'Directory {} does not exist, cannot continue!'.format(d)
+    print('Directory {} does not exist, cannot continue!'.format(d))
     sys.exit(1)
 
 #returns list of extensions for which a separate female package should be prepared
@@ -350,10 +348,10 @@ def check_path_in_po(po, path):
       present_files.add(eo[0])
   present_files_list = sorted(set(present_files))
   if not path in present_files_list:
-    print "{} is not present in selected PO file".format(path)
-    print "supply one of present files with --path argument:"
+    print("{} is not present in selected PO file".format(path))
+    print("supply one of present files with --path argument:")
     for pf in present_files_list:
-      print pf
+      print(pf)
     sys.exit(1)
 
 # return dict of dicts mapping filepaths to entries/occurrences where they are present
@@ -424,21 +422,23 @@ def po2file(epo, output_file, encoding, occurrence_path, dst_dir = None, newline
     #get line format
     lfrm = get_line_format(re, ext)
 
+
     #add line to common/male package
-    lines.append(lfrm.format(index=re['index'], value=re['value'], context=re['context'], female=re['female']))
+    line = lfrm.format(index=re['index'], value=re['value'], context=re['context'], female=re['female'])
+    # TODO: get rid of replace, handle improper characters in weblate
+    lines.append(line.encode(encoding, 'replace').decode(encoding))
 
     # add string to female package if needed
     if 'female' in line_format and line_format['female'] == 'separate':
       if re['female'] is not None:
-        lines_female.append(lfrm.format(index=re['index'], value=re['female'], context=re['context']))
+        female_line = lfrm.format(index=re['index'], value=re['female'], context=re['context'])
       else:
-        lines_female.append(lfrm.format(index=re['index'], value=re['value'], context=re['context']))
+        female_line = lfrm.format(index=re['index'], value=re['value'], context=re['context'])
+      lines_female.append(female_line.encode(encoding, 'replace').decode(encoding))
 
   #write main package
-  file = io.open(output_file, 'w', encoding=encoding, newline=newline)
-  for line in lines:
-    file.write(line.encode(encoding,'replace').decode(encoding).decode('utf-8'))
-  file.close()
+  with open(output_file, 'w', encoding=encoding, newline=newline) as file:
+    file.writelines(lines)
 
   #separate female translation bundle if needed
   female_done = False
@@ -446,11 +446,9 @@ def po2file(epo, output_file, encoding, occurrence_path, dst_dir = None, newline
     and dst_dir is not None and lines_female != lines):
     female_file = output_file.replace(dst_dir + os.sep, dst_dir + female_dir_suffix + os.sep)
     create_dir(get_dir(female_file)) #create dir if not exists
-    print 'Also extracting female counterpart into {}'.format(female_file)
-    file2 = io.open(female_file, 'w', encoding=encoding, newline=newline)
-    for line in lines_female:
-      file2.write(line.encode(encoding,'replace').decode(encoding).decode('utf-8'))
-    file2.close()
+    print('Also extracting female counterpart into {}'.format(female_file))
+    with open(female_file, 'w', encoding=encoding, newline=newline) as file2:
+      file2.writelines(lines_female)
     female_done = True
 
   return female_done
@@ -499,10 +497,10 @@ def file2msgstr(input_file, epo, path, encoding = defaults['encoding']):
         # map entries to occurrences for faster access, part 2
         e2 = entries_dict[(path, index)]
         if e2.msgstr is not None and e2.msgstr != '' and e2.msgstr != value:
-          print "WARN: different translations found for {}. Replacing first string with second:\n      {}\n      {}".format(e2.occurrences, e2.msgstr, value)
+          print("WARN: different translations found for {}. Replacing first string with second:\n      {}\n      {}".format(e2.occurrences, e2.msgstr, value))
 
         if e2.msgid == value:
-          print "WARN: string and translation are the same for {}. Using it regardless:\n      {}".format(e2.occurrences, e2.msgid)
+          print("WARN: string and translation are the same for {}. Using it regardless:\n      {}".format(e2.occurrences, e2.msgid))
         e2.msgstr = value
 
         e2.msgctxt = context
@@ -511,20 +509,20 @@ def file2msgstr(input_file, epo, path, encoding = defaults['encoding']):
           epo.female_strings[e2.msgid] = female
 
       else:
-        print "WARN: no msgid found for {}:{}, skipping string\n      {}".format(path, index, value)
+        print("WARN: no msgid found for {}:{}, skipping string\n      {}".format(path, index, value))
   return epo
 
 
 #check if TXT file is indexed
 def check_indexed(txt_filename, encoding = defaults['encoding']):
-  f = io.open(txt_filename, 'r', encoding = encoding)
+  f = open(txt_filename, 'r', encoding = encoding)
   #count non-empty lines
   num_lines = sum(1 for line in f if line.rstrip())
   f.close()
 
   #count lines that are indexed
   pattern = file_format['txt']['pattern']
-  f = io.open(txt_filename, 'r', encoding = encoding)
+  f = open(txt_filename, 'r', encoding = encoding)
   text = f.read()
   indexed_lines = re.findall(pattern, text)
   num_indexed_lines = len(indexed_lines)
@@ -537,12 +535,12 @@ def check_indexed(txt_filename, encoding = defaults['encoding']):
 #find valid file extensions
 def find_valid_extenstions(dir):
   ext_list={}
-  for dir_name, subdir_list, file_list in os.walk(dir,topdown=False):
+  for dir_name, subdir_list, file_list in os.walk(dir, topdown=False):
     for file_name in file_list:
       ext=bgforge_po.get_ext(file_name)
       if ext is not None:
         ext_list[ext] = 1
-  for ext, value in ext_list.items():
+  for ext, value in list(ext_list.items()):
     #skip po and pot
     if ext == 'po':
       del ext_list['po']
@@ -553,17 +551,17 @@ def find_valid_extenstions(dir):
     #check if tool is in PATH
     po_tool=ext + '2po'
     try:
-      subprocess.call([po_tool, "-h"],stdout=devnull, stderr=devnull)
+      subprocess.call([po_tool, "-h"], stdout=devnull, stderr=devnull)
     except OSError as err:
-      print "{} is not in PATH, skipping {} files".format(po_tool,ext)
+      print("{} is not in PATH, skipping {} files".format(po_tool, ext))
       del ext_list[ext]
   return ext_list
 
 #strip # #-#-#-#-# stuff from file
 def strip_msgcat_comments(filename):
   for line in fileinput.input(filename, inplace = True):
-    if not re.search('^#$',line) and not re.search('^# #-#-#-#-#.*',line):
-      print line
+    if not re.search('^#$', line) and not re.search('^# #-#-#-#-#.*', line):
+      print(line)
 
 def po_make_unique(po):
   entries_dict = collections.OrderedDict()
@@ -600,7 +598,7 @@ def po_make_unique(po):
       entries_dict[(e.msgid, e.msgctxt)] = e
   po2 = polib.POFile()
   po2.metadata = metadata
-  for key, value in entries_dict.items():
+  for key, value in list(entries_dict.items()):
     po2.append(value)
   return po2
 
@@ -624,7 +622,7 @@ class TRANSFile(list):
     encoding = kwargs.get('encoding', defaults['encoding'])
     fext = get_ext(filepath)
 
-    text = io.open(filepath, 'r', encoding = encoding).read()
+    text = open(filepath, 'r', encoding = encoding).read()
 
     self.fformat = file_format[fext]
     pattern = self.fformat['pattern']
@@ -647,11 +645,11 @@ class TRANSFile(list):
 
       # index and value
       index = line[self.fformat['index']]
-      entry['value'] = unicode(line[self.fformat['value']])
+      entry['value'] = str(line[self.fformat['value']])
 
       # skip invalid '000' entries in MSG files
       if fext == 'msg' and index == '000':
-        print 'WARN: {} - invalid entry number found, skipping:\n     {{000}}{{}}{{{}}}'.format(filepath,entry['value'])
+        print('WARN: {} - invalid entry number found, skipping:\n     {{000}}{{}}{{{}}}'.format(filepath, entry['value']))
         continue
 
       entry['index'] = line[self.fformat['index']]
@@ -680,7 +678,7 @@ class TRANSFile(list):
       entry['female'] = None #default
       if fext == 'tra': # TRA file specific
         try:
-          entry['female'] = unicode(line[self.fformat['female']])
+          entry['female'] = str(line[self.fformat['female']])
         except:
           pass
         if entry['female'] == '':
@@ -688,7 +686,7 @@ class TRANSFile(list):
 
       # protection against duplicate indexes, part 2
       if (entry['index']) in seen:
-        print "WARN: duplicate string definition found {}:{}, using new value:\n      {}".format(filepath, entry['index'], entry['value'])
+        print("WARN: duplicate string definition found {}:{}, using new value:\n      {}".format(filepath, entry['index'], entry['value']))
         self[:] = [entry if x['index'] == entry['index'] else x for x in self]
         continue
       else:
@@ -718,12 +716,12 @@ class EPOFile(polib.POFile):
     self.save_csv()
 
   def save_csv(self):
-    with io.open(self.csv, 'wb') as csvfile:
+    with open(self.csv, 'wb') as csvfile:
       writer = csv.writer(csvfile)
-      writer.writerows(self.female_strings.items())
+      writer.writerows(list(self.female_strings.items()))
 
   def load_csv(self):
-    with io.open(self.csv, 'r', encoding = 'utf-8') as csvfile:
+    with open(self.csv, 'r', encoding = 'utf-8') as csvfile:
       reader = csv.reader(csvfile)
       for row in reader:
         self.female_strings[row[0]] = row[1]
@@ -744,18 +742,18 @@ def clean_female_csv(po_path):
 
   if os.path.isfile(csv_path):
 
-    print "Found female CSV {}, cleaning stale strings".format(csv_path)
+    print("Found female CSV {}, cleaning stale strings".format(csv_path))
     po = polib.pofile(po_path)
     msgid_dict = {}
     for e in po:
       msgid_dict[e.msgid] = e.msgstr
 
     female_strings = collections.OrderedDict()
-    with io.open(csv_path, 'r', encoding = 'utf-8') as csvfile:
+    with open(csv_path, 'r', encoding = 'utf-8') as csvfile:
       reader = csv.reader(csvfile)
       for row in reader:
         if row[0] in female_strings and row[1] != female_strings[row[0]]:
-          print "Dupe", row[0], '+', row[1], '+', female_strings[row[0]]
+          print("Dupe", row[0], '+', row[1], '+', female_strings[row[0]])
         else:
           female_strings[row[0]] = row[1]
 
@@ -764,6 +762,6 @@ def clean_female_csv(po_path):
       if f in msgid_dict and female_strings[f] != msgid_dict[f]:
         new_female_strings[f] = female_strings[f]
 
-    with io.open(csv_path, 'wb') as csvfile:
+    with open(csv_path, 'wb') as csvfile:
       writer = csv.writer(csvfile)
-      writer.writerows(new_female_strings.items())
+      writer.writerows(list(new_female_strings.items()))

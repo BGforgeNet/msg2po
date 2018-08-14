@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding: utf-8
 
 version='1.0.0'
@@ -14,7 +14,7 @@ import os
 import bgforge_po
 
 #parse args
-parser = argparse.ArgumentParser(description='Load strings from files in selected dir into PO',formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser = argparse.ArgumentParser(description='Load strings from files in selected dir into PO', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-s', dest='src_dir', default='.', help='directory to load', required=True)
 parser.add_argument('-o', dest='output_file', help='existing PO file', required=True)
 parser.add_argument('--ext', dest='file_ext', help='only load files with this extension', required=True)
@@ -32,16 +32,16 @@ devnull = open(os.devnull, 'w')
 def dir2msgstr(src_dir, epo): #relative path, epofile object
   with bgforge_po.cd(src_dir):
 
-    for dir_name, subdir_list, file_list in os.walk('.',topdown=False):
+    for dir_name, subdir_list, file_list in os.walk('.', topdown=False):
       for file_name in file_list:
         full_name=os.path.join(dir_name, file_name)
-        full_name=re.sub('^\./','',full_name)  #remove trailing './'
+        full_name=re.sub('^\./', '', full_name)  #remove trailing './'
         fext=bgforge_po.get_ext(file_name)
         if not fext == ext:
           continue
 
         enc = bgforge_po.get_enc(src_dir, file_name)
-        print "processing {} with encoding {}".format(full_name, enc)
+        print("processing {} with encoding {}".format(full_name, enc))
         epo = bgforge_po.file2msgstr(full_name, epo, full_name, enc)
   epo.po = bgforge_po.po_make_unique(epo.po)
   return epo
@@ -51,4 +51,4 @@ epo.po.metadata = bgforge_po.metadata
 epo = dir2msgstr(src_dir, epo)
 
 epo.save(output_file)
-print "Processed directory {}, the result is in {}".format(src_dir, output_file)
+print("Processed directory {}, the result is in {}".format(src_dir, output_file))
