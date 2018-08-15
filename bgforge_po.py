@@ -734,12 +734,12 @@ class EPOFile(polib.POFile):
     self.save_csv()
 
   def save_csv(self):
-    with open(self.csv, 'wb') as csvfile:
-      writer = csv.writer(csvfile)
+    with open(self.csv, 'w') as csvfile:
+      writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
       writer.writerows(list(self.female_strings.items()))
 
   def load_csv(self):
-    with open(self.csv, 'r', encoding = 'utf-8') as csvfile:
+    with open(self.csv, 'r') as csvfile:
       reader = csv.reader(csvfile)
       for row in reader:
         self.female_strings[row[0]] = row[1]
@@ -767,7 +767,7 @@ def clean_female_csv(po_path):
       msgid_dict[e.msgid] = e.msgstr
 
     female_strings = collections.OrderedDict()
-    with open(csv_path, 'r', encoding = 'utf-8') as csvfile:
+    with open(csv_path, 'r') as csvfile:
       reader = csv.reader(csvfile)
       for row in reader:
         if row[0] in female_strings and row[1] != female_strings[row[0]]:
@@ -780,6 +780,6 @@ def clean_female_csv(po_path):
       if f in msgid_dict and female_strings[f] != msgid_dict[f]:
         new_female_strings[f] = female_strings[f]
 
-    with open(csv_path, 'wb') as csvfile:
-      writer = csv.writer(csvfile)
+    with open(csv_path, 'w') as csvfile:
+      writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
       writer.writerows(list(new_female_strings.items()))
