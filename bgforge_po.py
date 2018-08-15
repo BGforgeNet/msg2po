@@ -18,6 +18,7 @@ import fileinput
 import configparser
 import csv
 from multiprocessing import cpu_count
+import natsort
 
 # extensions recognized by file2po, etc
 valid_extensions = [ 'msg', 'txt', 'sve', 'tra']
@@ -318,21 +319,19 @@ def file2po(filepath, encoding = defaults['encoding'], noempty = False):
   po.metadata = metadata
 
   entry_added = 0
+  trans_map = {}
+  i = 0 # index in PO object
   for t in trans:
     index = t['index']
     value = t['value']
     context = t['context']
     comment = t['comment']
 
-    # try to find a matching entry first
-    dupe = 0
-    for e in po:
-      if e.msgid == value and e.msgctxt == context:
-        e.occurrences.append((filepath, index))
-        dupe = 1
-    if dupe == 1:
-      dupe = 0
-      continue # pass on to the next trans entry
+    # append to occurrences if id and context match
+    if (value, context) in trans_map:
+      e = po[trans_map[(value, context)]]
+      e.occurrences.append((filepath, index))
+      continue
 
     #no matching msgid + msgctxt, add new entry
     entry = polib.POEntry(
@@ -343,6 +342,8 @@ def file2po(filepath, encoding = defaults['encoding'], noempty = False):
         comment = comment,
     )
     po.append(entry)
+    trans_map[(value, context)] = i
+    i = i + 1
 
   return(po)
 
@@ -569,6 +570,16 @@ def strip_msgcat_comments(filename):
   for line in fileinput.input(filename, inplace = True):
     if not re.search('^#$', line) and not re.search('^# #-#-#-#-#.*', line):
       print(line)
+
+def sort_po(po):
+  for e in po:
+    e.occurrences = natsort.natsorted(e.occurrences, key=lambda k: (k[0], k[1]))
+  po = natsort.natsorted(po, key=lambda k: k.occurrences[0])
+  po2 = polib.POFile()
+  po2.metadata = metadata
+  for e in po:
+    po2.append(e)
+  return po2
 
 def po_make_unique(po):
   entries_dict = collections.OrderedDict()
