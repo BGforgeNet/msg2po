@@ -12,6 +12,7 @@ import shutil
 import re
 import os
 import bgforge_po
+import natsort
 
 valid_extensions = bgforge_po.valid_extensions
 default_poify_dir = bgforge_po.get_poify_dir()
@@ -57,9 +58,9 @@ def poify(dir): #relative path
     po = polib.POFile()
     po.metadata = bgforge_po.metadata
 
-    for dir_name, subdir_list, file_list in sorted(os.walk('.', topdown=False)):
-      subdir_list.sort()
-      file_list.sort()
+    for dir_name, subdir_list, file_list in natsort.natsorted(os.walk('.', topdown=False), alg=natsort.PATH):
+      subdir_list = natsort.natsorted(subdir_list, alg=natsort.PATH)
+      file_list = natsort.natsorted(file_list, alg=natsort.PATH)
       for file_name in file_list:
         full_name=os.path.join(dir_name, file_name)
         full_name=re.sub('^\./', '', full_name)  #remove trailing './'
