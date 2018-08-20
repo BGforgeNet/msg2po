@@ -401,7 +401,7 @@ def po2file(epo, output_file, encoding, occurrence_path, dst_dir = None, newline
   for i in occurrence_map[occurrence_path]:
     entry = po[occurrence_map[occurrence_path][i]]
     index = i
-    if entry.msgstr == '': #if not translated, keep msgid
+    if entry.msgstr == "" or "fuzzy" in entry.flags: #if not translated or fuzzy, keep msgid
       value = entry.msgid
     else:
       value = entry.msgstr
