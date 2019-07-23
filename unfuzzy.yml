@@ -1,0 +1,60 @@
+# punctuation
+- [" . . .", "..."]
+- ["….", "..."]
+- ["…", "..."]
+- ["`", "'"]
+- ["’", "'"]
+- ["‘", "'"]
+- ["—", "-"] # em dash
+- ["–", "-"] # en dash
+
+
+# line breaks
+- ["\\n", ""]
+- ["\r", ""]
+- ["\n", ""]
+- ["  ", " "]
+
+
+# article
+- [" a ", " 1 "]
+
+
+# words
+- ["All-In-One", "All-N-One"]
+- ["All right", "Alright"]
+- ["all right", "alright"]
+
+- ["buck", "cap"]
+- ["Buck", "Cap"]
+
+- ["Death Claw", "Deathclaw"]
+- ["Death claw", "Deathclaw"]
+- ["Death Claw", "deathclaw"]
+- ["Death claw", "deathclaw"]
+
+- ["Good bye", "Goodbye"]
+- ["Good Bye", "Goodbye"]
+- ["Good-bye", "Goodbye"]
+
+- ["Hell", "hell"]
+
+- ["master", "Master"]
+
+- ["OK", "okay"]
+- ["OK", "Okay"]
+- ["Ok", "Okay"]
+- ["ok", "okay"]
+
+- ["Rad Scorpion", "radscorpion"]
+- ["Rad Scorpion", "Radscorpion"]
+
+- ["script", "cap"]
+- ["supermutant", "Super Mutant"] # fixt
+- ["Super Mutant", "super mutant"] # up/rp
+- ["Super Mutant", "Super mutant"] # up/rp
+
+- ["the Boneyard", "L.A. Boneyard"]
+- ["The Boneyard", "L.A. Boneyard"]
+
+- ["water chip", "Water Chip"]

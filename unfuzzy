@@ -6,83 +6,53 @@ version='1.0.0'
 import argparse
 import polib
 import sys
+import oyaml as yaml
+import os
 
 parser = argparse.ArgumentParser(description='Unmark PO entries as fuzzy, if replacing string 1 with string2 in previous msgid results in current msgid', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('INPUT_FILE', help='input PO file')
 parser.add_argument('-w', default=False, dest='WRITE', action='store_true', help='save PO file?')
 args=parser.parse_args()
 
+yml = os.path.abspath(sys.argv[0]) + ".yml" # replaces list
 input_file = args.INPUT_FILE
 write = args.WRITE
 po = polib.pofile(input_file)
 
-def make_replaces(g):
-  g = g.replace(" . . .", "...")
-  g = g.replace("…", "...")
-  g = g.replace("\\n", "")
-  #  g = g.replace("\\n"," ")
-  g = g.replace("\r", "")
-  g = g.replace("\n", "")
-  #  g = g.replace("\n"," ")
-  g = g.replace("  ", " ")
-  g = g.replace("`", "'")
-  g = g.replace("Good bye", "Goodbye")
-  g = g.replace("Good Bye", "Goodbye")
-  g = g.replace("All right", "Alright")
-  g = g.replace("all right", "alright")
-  g = g.replace("OK", "okay")
-  g = g.replace("OK", "Okay")
-  g = g.replace("Ok", "Okay")
-  g = g.replace("ok", "okay")
-  g = g.replace("Death Claw", "Deathclaw")
-  g = g.replace("Death claw", "Deathclaw")
-  g = g.replace("All-In-One", "All-N-One")
-  g = g.replace("script", "cap")
-  g = g.replace("the Boneyard", "L.A. Boneyard")
-  g = g.replace("The Boneyard", "L.A. Boneyard")
-  g = g.replace(",", "")
-  g = g.replace("the ", " ")
-  g = g.replace("The ", " ")
-  g = g.replace("Hell", "hell")
-  g = g.replace("Rad Scorpion", "radscorpion")
-  g = g.replace("Rad Scorpion", "Radscorpion")
-  g = g.replace(" a ", " 1 ")
-  g = g.replace("’", "'")
-  g = g.replace("‘", "'")
-  g = g.replace("Hell", "hell")
-  g = g.replace("buck", "cap")
-  g = g.replace("Buck", "Cap")
-  g = g.replace("water chip", "Water Chip")
-  g = g.replace("master", "Master")
-  g = g.replace("supermutant", "Super Mutant")
-  g = g.replace("Good-bye", "Goodbye")
-  return g
+with open(yml) as yf:
+  replace_list = yaml.load(yf)
 
+def make_replaces(line, replace_list):
+  for r in replace_list:
+    line = line.replace(r[0], r[1])
+  return line
 
-def compare_msgids(g1, g2):
-  g1 = make_replaces(g1)
-  g2 = make_replaces(g2)
-  if g1 == g2:
-    return 0
+def msgids_equal(id1, id2):
+  id1 = make_replaces(id1, replace_list)
+  id2 = make_replaces(id2, replace_list)
+  if id1 == id2:
+    return True
   else:
-    return 1
+    return False
 
 i = 0
 for e in po.fuzzy_entries():
-  if e.previous_msgid: #strange, shouldn't need this
+  if e.previous_msgid: #some fuzzies are assigned automatically on merge and don't have previous msgids
     e1 = e.msgid
     e2 = e.previous_msgid
-    if compare_msgids(e1, e2) == 0:
-      i = i + 1
-      print(e1)
-      print(e2)
-      print(e.msgstr)
-      if write == True:
+    if msgids_equal(e1, e2):
+      if write:
         e.flags.remove('fuzzy')
         e.previous_msgid = None
         e.previous_msgid_plural = None
         e.previous_msgctxt = None
-print(i)
+      else: # preview
+        i = i + 1
+        print(e1)
+        print(e2)
+        print(e.msgstr)
 
-if write == True:
+if write:
   po.save(input_file)
+else:
+  print(i)
