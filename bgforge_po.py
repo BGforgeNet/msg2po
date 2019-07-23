@@ -79,9 +79,10 @@ file_format = {
   },
 }
 
+# new
 yml = '.bgforge.yml'
-ini = 'bgforge.ini'
-main_ini_section = 'main'
+stanza = 'translation'
+# keys
 po_dirname = 'po'
 po_dir_key = 'po_dir'
 tra_dir_key = 'tra_dir'
@@ -216,29 +217,22 @@ def lowercase_recursively(dir): #this is the function that is actually used
       os.rename(c, new_c)
 
 def get_config(key):
-  value = False
+  try:
+    with open(yml) as yf:
+      config = yaml.load(yf)[stanza] # "translation" in .bgforge.yml
+      value = config[key]
+  except:
+    value = defaults[key]
   return value
 
-def get_value(key, filename = ini, ini_section = main_ini_section):
-  parser = configparser.SafeConfigParser()
-  try:
-    parser.read(filename)
-    try:
-      v = parser.get(ini_section, key)
-    except:
-      v = defaults[key]
-  except:
-    v = defaults[key]
-  return v
-
 def get_po_dir():
-  tra_dir = get_value(tra_dir_key)
+  tra_dir = get_config(tra_dir_key)
   po_dir = os.path.join(tra_dir, po_dirname)
   return po_dir
 
 def get_poify_dir():
-  tra_dir = get_value(tra_dir_key)
-  src_lang = get_value(src_lang_key)
+  tra_dir = get_config(tra_dir_key)
+  src_lang = get_config(src_lang_key)
   poify_dir = os.path.join(tra_dir, src_lang)
   return poify_dir
 
