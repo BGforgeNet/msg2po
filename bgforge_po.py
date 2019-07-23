@@ -19,6 +19,7 @@ import configparser
 import csv
 from multiprocessing import cpu_count
 import natsort
+import oyaml as yaml
 
 # extensions recognized by file2po, etc
 valid_extensions = [ 'msg', 'txt', 'sve', 'tra']
@@ -78,6 +79,7 @@ file_format = {
   },
 }
 
+yml = '.bgforge.yml'
 ini = 'bgforge.ini'
 main_ini_section = 'main'
 po_dirname = 'po'
@@ -212,6 +214,10 @@ def lowercase_recursively(dir): #this is the function that is actually used
     if c != new_c:
       print("renaming {} to {}".format(c, new_c))
       os.rename(c, new_c)
+
+def get_config(key):
+  value = False
+  return value
 
 def get_value(key, filename = ini, ini_section = main_ini_section):
   parser = configparser.SafeConfigParser()
@@ -545,7 +551,7 @@ def find_valid_extenstions(dir):
   ext_list={}
   for dir_name, subdir_list, file_list in os.walk(dir, topdown=False):
     for file_name in file_list:
-      ext=bgforge_po.get_ext(file_name)
+      ext=get_ext(file_name)
       if ext is not None:
         ext_list[ext] = 1
   for ext, value in list(ext_list.items()):
@@ -559,8 +565,9 @@ def find_valid_extenstions(dir):
     #check if tool is in PATH
     po_tool=ext + '2po'
     try:
+      devnull = open(os.devnull, 'w')
       subprocess.call([po_tool, "-h"], stdout=devnull, stderr=devnull)
-    except OSError as err:
+    except OSError:
       print("{} is not in PATH, skipping {} files".format(po_tool, ext))
       del ext_list[ext]
   return ext_list
