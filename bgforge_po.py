@@ -219,7 +219,7 @@ def lowercase_recursively(dir): #this is the function that is actually used
 def get_config(key):
   try:
     with open(yml) as yf:
-      config = yaml.load(yf)[stanza] # "translation" in .bgforge.yml
+      config = yaml.safe_load(yf)[stanza] # "translation" in .bgforge.yml
       value = config[key]
   except:
     value = defaults[key]
