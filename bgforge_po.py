@@ -217,12 +217,17 @@ def lowercase_recursively(dir): #this is the function that is actually used
       os.rename(c, new_c)
 
 def get_config(key):
-  try:
-    with open(yml) as yf:
-      config = yaml.safe_load(yf)[stanza] # "translation" in .bgforge.yml
-      value = config[key]
-  except:
-    value = defaults[key]
+  if key == 'po_dir':      # ok this is ugly but I'm not sure how to improve
+    value = get_po_dir()
+  elif key == 'poify_dir':
+    value = get_poify_dir()
+  else:
+    try:
+      with open(yml) as yf:
+        config = yaml.safe_load(yf)[stanza] # "translation" in .bgforge.yml
+        value = config[key]
+    except:
+      value = defaults[key]
   return value
 
 def get_po_dir():
