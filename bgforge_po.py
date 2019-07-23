@@ -94,6 +94,7 @@ defaults = {
   'encoding': 'cp1252',
   'tra_dir': '.',
   'src_lang': 'english',
+  'po_dir': 'po',
 }
 
 encodings = {
