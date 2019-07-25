@@ -28,8 +28,6 @@
 - ["buck", "cap"]
 - ["Buck", "Cap"]
 
-- ["Death Claw", "Deathclaw"]
-- ["Death claw", "Deathclaw"]
 - ["Death Claw", "deathclaw"]
 - ["Death claw", "deathclaw"]
 
@@ -47,12 +45,11 @@
 - ["ok", "okay"]
 
 - ["Rad Scorpion", "radscorpion"]
-- ["Rad Scorpion", "Radscorpion"]
 
 - ["script", "cap"]
-- ["supermutant", "Super Mutant"] # fixt
+# - ["supermutant", "Super Mutant"] # fixt - deprecated
+- ["supermutant", "super mutant"] # up/rp
 - ["Super Mutant", "super mutant"] # up/rp
-- ["Super Mutant", "Super mutant"] # up/rp
 
 - ["the Boneyard", "L.A. Boneyard"]
 - ["The Boneyard", "L.A. Boneyard"]
