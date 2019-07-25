@@ -5,9 +5,9 @@
 - ["`", "'"]
 - ["’", "'"]
 - ["‘", "'"]
-- ["—", "-"] # em dash
-- ["–", "-"] # en dash
-
+- ["–", "--"] # em dash
+- ["—", "--"] # en dash
+- ["...", "... "] # end space
 
 # line breaks
 - ["\\n", ""]
@@ -25,6 +25,10 @@
 - ["All right", "Alright"]
 - ["all right", "alright"]
 
+- ["autodoc", "Auto-Doc"]
+- ["Autodoc", "Auto-Doc"]
+- ["Auto Doc", "Auto-Doc"]
+
 - ["buck", "cap"]
 - ["Buck", "Cap"]
 
@@ -37,6 +41,8 @@
 
 - ["Hell", "hell"]
 
+- ["jet", 'Jet']
+
 - ["master", "Master"]
 
 - ["OK", "okay"]
@@ -44,7 +50,11 @@
 - ["Ok", "Okay"]
 - ["ok", "okay"]
 
+- ["Pip Boy", "Pip-Boy"]
+
 - ["Rad Scorpion", "radscorpion"]
+- ["RoboBrain", "Robobrain"]
+- ["Robo Brain", "Robobrain"]
 
 - ["script", "cap"]
 # - ["supermutant", "Super Mutant"] # fixt - deprecated
