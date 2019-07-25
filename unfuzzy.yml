@@ -5,6 +5,8 @@
 - ["`", "'"]
 - ["’", "'"]
 - ["‘", "'"]
+- ["-—", "--"] # em dash
+- ["—-", "--"] # en dash
 - ["–", "--"] # em dash
 - ["—", "--"] # en dash
 - ["...", "... "] # end space
@@ -51,6 +53,7 @@
 - ["ok", "okay"]
 
 - ["Pip Boy", "Pip-Boy"]
+- ["PipBoy",  "Pip-Boy"]
 
 - ["Rad Scorpion", "radscorpion"]
 - ["RoboBrain", "Robobrain"]
