@@ -37,9 +37,6 @@ def extract_po(pf):
 
   dst_dir = bgforge_po.strip_ext(pf) # lang
 
-  need_female = bgforge_po.need_female_package(occurrence_map)
-  female_dir = dst_dir + bgforge_po.female_dir_suffix
-
   for ef in sorted(occurrence_map):
     enc = bgforge_po.get_enc(po_path, ef)
     ef_extract_path = os.path.join(dst_dir, ef)
