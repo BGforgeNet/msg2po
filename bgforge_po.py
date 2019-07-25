@@ -472,13 +472,14 @@ def po2file(epo, output_file, encoding, occurrence_path, dst_dir = None, newline
     # what's out path?
     female_file = get_female_filepath(output_file, dst_dir, same)
 
-    # if female translation is the same
-    if same:
-      if female_file is False: # don't need to copy, automatic fallback
-        print("Female strings are same, not copying - sfall will fallback to male {}".format(output_file))
-      else:                    # fallback doesn't work for cuts
-        print("Female strings are same, copying to {}".format(female_file))
-        copycreate(output_file, female_file)
+    if female_file is False: # don't need to copy, automatic fallback
+      print("Female strings are same, not copying - sfall will fallback to male {}".format(output_file))
+      return True  # cutoff the rest of the function
+
+    # If need to create the file
+    if same: # if female translation is the same?
+      print("Female strings are same, copying to {}".format(female_file))
+      copycreate(output_file, female_file)
     else: # if it's different, extract separately
       print('Also extracting female counterpart into {}'.format(female_file))
       create_dir(get_dir(female_file)) #create dir if not exists
@@ -490,13 +491,11 @@ def get_female_filepath(path, dst_dir, same):
   # default: just add _female suffix
   female_path = path.replace(dst_dir + os.sep, dst_dir + female_dir_suffix + os.sep)
   if get_config("extract_format") == "sfall":
-    if "cuts" in path.split(os.sep):
+    female_path = False                 # default for sfall: don't copy, it will fallback to male
+    if "cuts" in path.split(os.sep):    # cuts dont' fallback
       female_path = path.replace(os.sep + "cuts" + os.sep, os.sep + "cuts_female" + os.sep)
-    if "dialog" in path.split(os.sep):
-      if same is True: # identical files, don't copy
-        female_path = False
-      else:
-        female_path = path.replace(os.sep + "dialog" + os.sep, os.sep + "dialog_female" + os.sep)
+    if "dialog" in path.split(os.sep) and not same:   # dialog, female translation differs
+      female_path = path.replace(os.sep + "dialog" + os.sep, os.sep + "dialog_female" + os.sep)
   return female_path
 
 #takes translation entry in format {'index': index, 'value': value, 'female': female, 'context': context}
