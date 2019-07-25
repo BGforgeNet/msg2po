@@ -50,7 +50,6 @@ for e in po.fuzzy_entries():
         i = i + 1
         print(e1)
         print(e2)
-        print(e.msgstr)
 
 if write:
   po.save(input_file)
