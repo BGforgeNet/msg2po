@@ -79,9 +79,16 @@ file_format = {
   },
 }
 
-# new
-yml = '.bgforge.yml'
+# load yml config. Is this a good way?
+yml = ".bgforge.yml"
 stanza = 'translation'
+print(os.path.realpath("."))
+try:
+  with open(yml) as yf:
+    config = yaml.safe_load(yf)[stanza]
+except:
+  print(yml + " not found, assuming defaults")
+
 # keys
 po_dirname = 'po'
 po_dir_key = 'po_dir'
@@ -217,17 +224,18 @@ def lowercase_recursively(dir): #this is the function that is actually used
       os.rename(c, new_c)
 
 def get_config(key):
-  if key == 'po_dir':      # ok this is ugly but I'm not sure how to improve
+  if key == 'po_dir':      # TODO: this is ugly and must be improved
     value = get_po_dir()
   elif key == 'poify_dir':
     value = get_poify_dir()
   else:
     try:
-      with open(yml) as yf:
-        config = yaml.safe_load(yf)[stanza] # "translation" in .bgforge.yml
-        value = config[key]
+      value = config[key]
     except:
-      value = defaults[key]
+      try:
+        value = defaults[key]
+      except:
+        value = None
   return value
 
 def get_po_dir():
@@ -455,16 +463,41 @@ def po2file(epo, output_file, encoding, occurrence_path, dst_dir = None, newline
 
   #separate female translation bundle if needed
   female_done = False
-  if ('female' in line_format and line_format['female'] == 'separate' 
-    and dst_dir is not None and lines_female != lines):
-    female_file = output_file.replace(dst_dir + os.sep, dst_dir + female_dir_suffix + os.sep)
-    create_dir(get_dir(female_file)) #create dir if not exists
-    print('Also extracting female counterpart into {}'.format(female_file))
-    with open(female_file, 'w', encoding=encoding, newline=newline) as file2:
-      file2.writelines(lines_female)
-    female_done = True
+  if ('female' in line_format and line_format['female'] == 'separate' and dst_dir is not None):
 
-  return female_done
+    # are translations the same? If yes, skipping copying "dialog" in sfall
+    same = False
+    if lines_female == lines:
+      same = True
+    # what's out path?
+    female_file = get_female_filepath(output_file, dst_dir, same)
+
+    # if female translation is the same
+    if same:
+      if female_file is False: # don't need to copy, automatic fallback
+        print("Female strings are same, not copying - sfall will fallback to male {}".format(output_file))
+      else:                    # fallback doesn't work for cuts
+        print("Female strings are same, copying to {}".format(female_file))
+        copycreate(output_file, female_file)
+    else: # if it's different, extract separately
+      print('Also extracting female counterpart into {}'.format(female_file))
+      create_dir(get_dir(female_file)) #create dir if not exists
+      with open(female_file, 'w', encoding=encoding, newline=newline) as file2:
+        file2.writelines(lines_female)
+
+# nasty hack for sfall's female strings placement
+def get_female_filepath(path, dst_dir, same):
+  # default: just add _female suffix
+  female_path = path.replace(dst_dir + os.sep, dst_dir + female_dir_suffix + os.sep)
+  if get_config("extract_format") == "sfall":
+    if "cuts" in path.split(os.sep):
+      female_path = path.replace(os.sep + "cuts" + os.sep, os.sep + "cuts_female" + os.sep)
+    if "dialog" in path.split(os.sep):
+      if same is True: # identical files, don't copy
+        female_path = False
+      else:
+        female_path = path.replace(os.sep + "dialog" + os.sep, os.sep + "dialog_female" + os.sep)
+  return female_path
 
 #takes translation entry in format {'index': index, 'value': value, 'female': female, 'context': context}
 #and file extension

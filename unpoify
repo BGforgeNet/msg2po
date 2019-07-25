@@ -44,14 +44,9 @@ def extract_po(pf):
     enc = bgforge_po.get_enc(po_path, ef)
     ef_extract_path = os.path.join(dst_dir, ef)
     print("Extracting {} from {} into {} with encoding {}".format(ef, po_path, ef_extract_path, enc))
-    female_done = bgforge_po.po2file(epo, ef_extract_path, enc, ef, dst_dir=dst_dir, occurrence_map=occurrence_map)
+    bgforge_po.po2file(epo, ef_extract_path, enc, ef, dst_dir=dst_dir, occurrence_map=occurrence_map)
 
-    if need_female and not female_done:
-      female_file = os.path.join(female_dir, ef)
-      print("Female strings are same, copying to {}".format(female_file))
-      bgforge_po.copycreate(ef_extract_path, female_file)
-
-  print('Extracted {} into {}'.format(po_path, dst_dir, enc))
+  print('Extracted {} into {} with encoding {}'.format(po_path, dst_dir, enc))
 
 
 with bgforge_po.cd(tra_dir):
