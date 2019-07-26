@@ -772,9 +772,11 @@ class EPOFile(polib.POFile):
     self.save_csv()
 
   def save_csv(self):
-    with open(self.csv, 'w') as csvfile:
-      writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
-      writer.writerows(list(self.female_strings.items()))
+    if len(self.female_strings) > 0:
+      print("Found female strings, saving to " + self.csv)
+      with open(self.csv, 'w') as csvfile:
+        writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
+        writer.writerows(list(self.female_strings.items()))
 
   def load_csv(self):
     with open(self.csv, 'r') as csvfile:
