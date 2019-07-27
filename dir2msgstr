@@ -17,19 +17,23 @@ import bgforge_po
 parser = argparse.ArgumentParser(description='Load strings from files in selected dir into PO', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-s', dest='src_dir', default='.', help='directory to load', required=True)
 parser.add_argument('-o', dest='output_file', help='existing PO file', required=True)
-parser.add_argument('--ext', dest='file_ext', help='only load files with this extension', required=True)
+parser.add_argument('--ext', dest='file_ext', help='load files with this extension', required=True)
+parser.add_argument('--no-overwrite', dest='no_overwrite', action='store_true', help="don't overwrite existing msgstrs")
 args=parser.parse_args()
-
 
 #init vars
 src_dir = args.src_dir
 ext = args.file_ext
 output_file = args.output_file
+overwrite = True
+if args.no_overwrite:
+  overwrite = False
 
 devnull = open(os.devnull, 'w')
 
 
-def dir2msgstr(src_dir, epo): #relative path, epofile object
+def dir2msgstr(src_dir, epo, overwrite=True): #relative path, epofile object
+  print("overwrite is " + str(overwrite))
   with bgforge_po.cd(src_dir):
 
     for dir_name, subdir_list, file_list in os.walk('.', topdown=False):
@@ -42,13 +46,13 @@ def dir2msgstr(src_dir, epo): #relative path, epofile object
 
         enc = bgforge_po.get_enc(src_dir, file_name)
         print("processing {} with encoding {}".format(full_name, enc))
-        epo = bgforge_po.file2msgstr(full_name, epo, full_name, enc)
+        epo = bgforge_po.file2msgstr(full_name, epo, full_name, enc, overwrite)
   epo.po = bgforge_po.po_make_unique(epo.po)
   return epo
 
 epo = bgforge_po.epofile(output_file)
 epo.po.metadata = bgforge_po.metadata
-epo = dir2msgstr(src_dir, epo)
+epo = dir2msgstr(src_dir, epo, overwrite)
 
 epo.save(output_file)
 print("Processed directory {}, the result is in {}".format(src_dir, output_file))

@@ -521,7 +521,7 @@ def copycreate(src_file, dst_file):
 
 
 #returns PO file object
-def file2msgstr(input_file, epo, path, encoding = defaults['encoding']):
+def file2msgstr(input_file, epo, path, encoding = defaults['encoding'], overwrite=True):
   trans = TRANSFile(filepath=input_file, encoding=encoding) #load translations
 
   # map entries to occurrences for faster access, part 1
@@ -541,6 +541,12 @@ def file2msgstr(input_file, epo, path, encoding = defaults['encoding']):
       if (path, index) in entries_dict:
         # map entries to occurrences for faster access, part 2
         e2 = entries_dict[(path, index)]
+
+        # if overwrite is disabled and translation exists, skip
+        if e2.msgstr is not None and e2.msgstr != '' and overwrite == False:
+          print("INFO: overwrite disabled, translation already exists for {}, skipping:\n    {}\n    {}".format(e2.occurrences[0], e2.msgstr, value))
+          continue
+
         if e2.msgstr is not None and e2.msgstr != '' and e2.msgstr != value:
           print("WARN: different translations found for {}. Replacing first string with second:\n      {}\n      {}".format(e2.occurrences, e2.msgstr, value))
 
