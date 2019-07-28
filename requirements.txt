@@ -1,0 +1,5 @@
+configparser
+natsort
+oyaml
+polib
+python-dateutil
