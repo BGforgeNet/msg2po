@@ -86,7 +86,7 @@ try:
   with open(yml) as yf:
     config = yaml.safe_load(yf)[stanza]
 except:
-  print(yml + " not found, assuming defaults")
+  print(yml + " not found, assuming defaults", file=sys.stderr)
 
 # keys
 po_dirname = 'po'
