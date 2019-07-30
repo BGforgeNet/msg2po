@@ -82,7 +82,6 @@ file_format = {
 # load yml config. Is this a good way?
 yml = ".bgforge.yml"
 stanza = 'translation'
-print(os.path.realpath("."))
 try:
   with open(yml) as yf:
     config = yaml.safe_load(yf)[stanza]
