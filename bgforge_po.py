@@ -410,13 +410,17 @@ def po2file(epo, output_file, encoding, occurrence_path, dst_dir = None, newline
 
   context = ''
   resulting_entries = []
+  extract_fuzzy = get_config("extract_fuzzy") # extract fuzzy? config flag
+
   for i in occurrence_map[occurrence_path]:
     entry = po[occurrence_map[occurrence_path][i]]
     index = i
-    if entry.msgstr == "" or "fuzzy" in entry.flags: #if not translated or fuzzy, keep msgid
+    if entry.msgstr == "": #if not translated, keep msgid
+      value = entry.msgid
+    elif "fuzzy" in entry.flags and not extract_fuzzy: # skip fuzzy?
       value = entry.msgid
     else:
-      value = entry.msgstr
+      value = entry.msgstr # either translated or fuzzy+extract_fuzzy
 
     #empty lines detected by comment
     if entry.comment == empty_comment:
