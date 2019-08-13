@@ -214,13 +214,15 @@ def lowercase_recursively(dir): #this is the function that is actually used
       for dname, sdir_list, file_list in os.walk(sd, topdown = False):
         lowercase_rename(dir_name, file_list)
         lowercase_rename(dir_name, sdir_list)
+  # why is this separate?
   children = os.listdir(dir)
   children[:] = [c for c in children if c not in lowercase_exclude]
-  for c in children:
-    new_c = c.lower()
-    if c != new_c:
-      print("renaming {} to {}".format(c, new_c))
-      os.rename(c, new_c)
+  with cd(dir):
+    for c in children:
+      new_c = c.lower()
+      if c != new_c:
+        print("renaming {} to {}".format(c, new_c))
+        os.rename(c, new_c)
 
 def get_config(key):
   if key == 'po_dir':      # TODO: this is ugly and must be improved
