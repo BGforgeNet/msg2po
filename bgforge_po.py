@@ -468,8 +468,11 @@ def po2file(epo, output_file, encoding, occurrence_path, dst_dir = None, newline
 
   #separate female translation bundle if needed
   female_done = False
-  if ('female' in line_format and line_format['female'] == 'separate' and dst_dir is not None):
 
+  # explicitly disabled female?
+  no_female = get_config("no_female")
+
+  if ('female' in line_format and line_format['female'] == 'separate' and dst_dir is not None and no_female is not True):
     # are translations the same? If yes, skipping copying "dialog" in sfall
     same = False
     if lines_female == lines:
