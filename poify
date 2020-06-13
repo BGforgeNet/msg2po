@@ -58,7 +58,7 @@ def poify(dir): #relative path
     po = polib.POFile()
     po.metadata = bgforge_po.metadata
 
-    for dir_name, subdir_list, file_list in natsort.natsorted(os.walk('.', topdown=False), alg=natsort.PATH):
+    for dir_name, subdir_list, file_list in natsort.natsorted(os.walk('.', topdown=False, followlinks=True), alg=natsort.PATH):
       subdir_list = natsort.natsorted(subdir_list, alg=natsort.PATH)
       file_list = natsort.natsorted(file_list, alg=natsort.PATH)
       for file_name in file_list:
