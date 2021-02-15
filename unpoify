@@ -35,7 +35,7 @@ def extract_po(pf):
   epo = bgforge_po.epofile(po_path) #open once
   occurrence_map = bgforge_po.get_po_occurrence_map(epo.po)
 
-  dst_dir = bgforge_po.strip_ext(pf) # lang
+  dst_dir = bgforge_po.strip_ext(pf).lower() # lang
 
   for ef in sorted(occurrence_map):
     enc = bgforge_po.get_enc(po_path, ef)
