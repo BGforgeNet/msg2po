@@ -858,5 +858,4 @@ def output_lang_slug(po_filename):
       slug = slug_map[slug]
     except:
       pass
-  print("slug is {}".format(slug))
   return slug
