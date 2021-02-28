@@ -100,6 +100,7 @@ defaults = {
   'encoding': 'cp1252',
   'tra_dir': '.',
   'src_lang': 'english',
+  'simple_languages': True
 }
 
 encodings = {
@@ -837,3 +838,23 @@ def clean_female_csv(po_path):
     with open(csv_path, 'w') as csvfile:
       writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
       writer.writerows(list(new_female_strings.items()))
+
+
+def output_lang_slug(po_filename):
+  '''
+  Allows to extract PO files into simplified language names: pt_BR.po -> portuguese/1.msg.
+  Working with language codes is not convenient in mods.
+  A temporary hack until a better solution is found.
+  '''
+  slug_map = {
+    "pt_br": "portuguese"
+  }
+  slug = strip_ext(po_filename).lower()
+  simple_languages = get_config('simple_languages')
+  if simple_languages is True:
+    try:
+      slug = slug_map[slug]
+    except:
+      pass
+  print("slug is {}".format(slug))
+  return slug
