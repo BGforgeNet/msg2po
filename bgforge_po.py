@@ -847,6 +847,8 @@ def output_lang_slug(po_filename):
   A temporary hack until a better solution is found.
   '''
   slug_map = {
+    "de": "german",
+    "fr": "french",
     "pt_br": "portuguese"
   }
   slug = strip_ext(po_filename).lower()
