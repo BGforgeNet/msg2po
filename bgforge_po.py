@@ -168,7 +168,8 @@ metadata = {
 #used for determining empty strings, which are invalid by PO spec
 empty_comment = 'LEAVE empty space in translation'
 
-lowercase_exclude = ['.git', '.svn', '.hg', 'README.md']
+# po: new translations added through weblate use case sensitive code: pt_BR.po. Keeping them.
+lowercase_exclude = ['.git', '.svn', '.hg', 'README.md', 'po']
 
 #file and dir manipulation
 #################################
