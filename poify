@@ -58,12 +58,21 @@ def poify(dir): #relative path
     po = polib.POFile()
     po.metadata = bgforge_po.metadata
 
+    # skip female cuts, they are built from male ones
+    extract_format = bgforge_po.get_config("extract_format")
+
     for dir_name, subdir_list, file_list in natsort.natsorted(os.walk('.', topdown=False, followlinks=True), alg=natsort.PATH):
       subdir_list = natsort.natsorted(subdir_list, alg=natsort.PATH)
       file_list = natsort.natsorted(file_list, alg=natsort.PATH)
       for file_name in file_list:
         full_name=os.path.join(dir_name, file_name)
         full_name=re.sub('^\./', '', full_name)  #remove trailing './'
+
+        # skip female cuts
+        if extract_format == 'sfall' and re.sub('^\./', '', dir_name) == 'cuts_female':
+          print("{} is in cuts_female. Skipping!".format(full_name))
+          continue
+
         ext=bgforge_po.get_ext(file_name)
         if ext in valid_extensions:
             po_tool=ext + '2po'
