@@ -61,6 +61,8 @@ def poify(dir): #relative path
     # skip female cuts, they are built from male ones
     extract_format = bgforge_po.get_config("extract_format")
 
+    skip_files = bgforge_po.get_config("skip_files")
+
     for dir_name, subdir_list, file_list in natsort.natsorted(os.walk('.', topdown=False, followlinks=True), alg=natsort.PATH):
       subdir_list = natsort.natsorted(subdir_list, alg=natsort.PATH)
       file_list = natsort.natsorted(file_list, alg=natsort.PATH)
@@ -69,8 +71,13 @@ def poify(dir): #relative path
         full_name=re.sub('^\./', '', full_name)  #remove trailing './'
 
         # skip female cuts
-        if extract_format == 'sfall' and re.sub('^\./', '', dir_name) == 'cuts_female':
+        pretty_dir_name = re.sub('^\./', '', dir_name)
+        if extract_format == 'sfall' and pretty_dir_name == 'cuts_female':
           print("{} is in cuts_female. Skipping!".format(full_name))
+          continue
+
+        if full_name in skip_files:
+          print("{} is in skip_files. Skipping!".format(full_name))
           continue
 
         ext=bgforge_po.get_ext(file_name)

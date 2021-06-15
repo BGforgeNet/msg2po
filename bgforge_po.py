@@ -100,7 +100,9 @@ defaults = {
   'encoding': 'cp1252',
   'tra_dir': '.',
   'src_lang': 'english',
-  'simple_languages': True
+  'simple_languages': True,
+  'skip_files': [],
+  'extract_format': ''
 }
 
 encodings = {
