@@ -5,11 +5,27 @@ version='1.0.0'
 
 import argparse
 import polib
-import bgforge_po
 
 parser = argparse.ArgumentParser(description='Resave PO file using polib API, to correct formatting', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('INPUT_FILE', help='PO file to resave')
 args=parser.parse_args()
 
 po = polib.pofile(args.INPUT_FILE)
+
+female_entries = {x.msgid: x for x in po if x.msgctxt == 'female'}
+previous_male_entries = {x.previous_msgid: x for x in po if x.previous_msgid and x.msgctxt != 'female'}
+male_entries = {x.msgid: x for x in po if not x.previous_msgid and x.msgctxt != 'female'}
+
+# un-obsolete and if necessary fuzzy female strings
+for e in po:
+  if e.msgctxt == 'female':
+    if e.obsolete and (e.msgid in male_entries or e.msgid in previous_male_entries):
+      e.obsolete = False
+    if e.msgid in previous_male_entries:
+      male_e = previous_male_entries[e.msgid]
+      e.msgid = male_e.msgid
+      e.previous_msgid = male_e.previous_msgid
+      if not 'fuzzy' in e.flags:
+        e.flags.append('fuzzy')
+
 po.save(args.INPUT_FILE)
