@@ -634,8 +634,7 @@ def sort_po(po):
   po = natsort.natsorted(po, key=lambda k: k.occurrences[0] if len(k.occurrences)>0 else ('zzz', '999')) # female empty occurences hack
   po2 = polib.POFile()
   po2.metadata = metadata
-  for e in po:
-    po2.append(e)
+  po2.extend(po)
   return po2
 
 def po_make_unique(po):
