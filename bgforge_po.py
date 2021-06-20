@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-version='1.0.0'
+version='1.1.0'
 
 import io
 import re
@@ -16,7 +16,6 @@ import subprocess
 from contextlib import contextmanager
 import fileinput
 import configparser
-import csv
 from multiprocessing import cpu_count
 import natsort
 import oyaml as yaml
@@ -93,7 +92,6 @@ po_dirname = 'po'
 po_dir_key = 'po_dir'
 tra_dir_key = 'tra_dir'
 src_lang_key = 'src_lang'
-female_suffix = '_female.csv'
 female_dir_suffix = '_female'
 
 defaults = {
@@ -387,9 +385,12 @@ def get_po_occurrence_map(po):
   ocmap = {}
   i = 0
   for entry in po:
+    if entry.msgctxt == 'female': # pass female strings
+      continue
+
     for eo in entry.occurrences:
       if eo[0] in ocmap:
-        ocmap[eo[0]][int(eo[1])]= i
+        ocmap[eo[0]][int(eo[1])] = i
       else:
         ocmap[eo[0]] = {int(eo[1]): i}
     i = i + 1
@@ -630,7 +631,7 @@ def strip_msgcat_comments(filename):
 def sort_po(po):
   for e in po:
     e.occurrences = natsort.natsorted(e.occurrences, key=lambda k: (k[0], k[1]))
-  po = natsort.natsorted(po, key=lambda k: k.occurrences[0])
+  po = natsort.natsorted(po, key=lambda k: k.occurrences[0] if len(k.occurrences)>0 else ('zzz', '999')) # female empty occurences hack
   po2 = polib.POFile()
   po2.metadata = metadata
   for e in po:
@@ -772,35 +773,29 @@ class TRANSFile(list):
 
 class EPOFile(polib.POFile):
   '''
-  Extended PO file class, also reading from and writing to _female.csv
+  Extended PO file class, handling female mgctxt entries
   '''
   def __init__(self, *args):
     po = args[0]
-    self.csv = po + female_suffix
     self.female_strings = {}
     if po:
       self.po = polib.pofile(po)
-      if os.path.isfile(self.csv):
-        self.load_csv()
+      self.load_female()
     else:
       self.po = polib.POFile()
 
+  def load_female(self):
+    female_entries = [e for e in self.po if e.msgctxt == 'female']
+    for fe in female_entries:
+      extract_fuzzy = get_config("extract_fuzzy") # extract fuzzy? config flag
+      if "fuzzy" in fe.flags and not extract_fuzzy: # skip fuzzy?
+        value = fe.msgid
+      else:
+        value = fe.msgstr # either translated or fuzzy+extract_fuzzy
+      self.female_strings[fe.msgid] = value
+
   def save(self, output_file):
     self.po.save(output_file)
-    self.save_csv()
-
-  def save_csv(self):
-    if len(self.female_strings) > 0:
-      print("Found female strings, saving to " + self.csv)
-      with open(self.csv, 'w') as csvfile:
-        writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
-        writer.writerows(list(self.female_strings.items()))
-
-  def load_csv(self):
-    with open(self.csv, 'r') as csvfile:
-      reader = csv.reader(csvfile)
-      for row in reader:
-        self.female_strings[row[0]] = row[1]
 
 def epofile(f):
   '''
@@ -808,40 +803,6 @@ def epofile(f):
   '''
   epo = EPOFile(f)
   return epo
-
-
-def clean_female_csv(po_path):
-  '''
-  Removes strings not present in PO file from corresponding female csv
-  '''
-  csv_path = po_path + female_suffix
-
-  if os.path.isfile(csv_path):
-
-    print("Found female CSV {}, cleaning stale strings".format(csv_path))
-    po = polib.pofile(po_path)
-    msgid_dict = {}
-    for e in po:
-      msgid_dict[e.msgid] = e.msgstr
-
-    female_strings = collections.OrderedDict()
-    with open(csv_path, 'r') as csvfile:
-      reader = csv.reader(csvfile)
-      for row in reader:
-        if row[0] in female_strings and row[1] != female_strings[row[0]]:
-          print("Dupe", row[0], '+', row[1], '+', female_strings[row[0]])
-        else:
-          female_strings[row[0]] = row[1]
-
-    new_female_strings = collections.OrderedDict()
-    for f in female_strings:
-      if f in msgid_dict and female_strings[f] != msgid_dict[f]:
-        new_female_strings[f] = female_strings[f]
-
-    with open(csv_path, 'w') as csvfile:
-      writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
-      writer.writerows(list(new_female_strings.items()))
-
 
 def output_lang_slug(po_filename):
   '''

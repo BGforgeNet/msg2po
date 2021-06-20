@@ -13,4 +13,3 @@ args=parser.parse_args()
 
 po = polib.pofile(args.INPUT_FILE)
 po.save(args.INPUT_FILE)
-bgforge_po.clean_female_csv(args.INPUT_FILE)
