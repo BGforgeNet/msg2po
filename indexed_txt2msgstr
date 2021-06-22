@@ -6,6 +6,7 @@ version='1.0.0'
 import argparse
 import bgforge_po
 import polib
+import sys
 
 parser = argparse.ArgumentParser(description='Load indexed TXT into gettext PO msgstr', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('INPUT_FILE', help='input TXT/SVE file')
