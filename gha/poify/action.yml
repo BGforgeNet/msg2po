@@ -13,11 +13,7 @@ runs:
       working-directory: ${{ github.action_path }}
     - run: |
         set -xeu -o pipefail
-        ls -la
-        pwd
         action_root="$(realpath $(dirname $(dirname ${{ github.action_path }})))"
-        ls "$action_root"
         export PATH="$PATH:$action_root"
-        echo $PATH
         ${{ github.action_path }}/poify.sh
       shell: bash
