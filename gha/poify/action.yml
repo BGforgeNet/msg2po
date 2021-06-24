@@ -1,0 +1,11 @@
+name: 'BGforge poify'
+description: 'Updates and commits Gettext POT template'
+branding:
+  icon: 'message-circle'
+  color: 'green'
+runs:
+  using: "composite"
+  steps: 
+    - run: ${{ github.action_path }}/poify.sh
+      shell: bash
+
