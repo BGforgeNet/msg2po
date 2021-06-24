@@ -8,3 +8,4 @@ runs:
   steps:
     - run: ${{ github.action_path }}/poify.sh
       shell: bash
+      working-directory: ${{ github.action_path }}

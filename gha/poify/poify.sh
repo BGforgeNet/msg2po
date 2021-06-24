@@ -2,6 +2,9 @@
 
 set -xeu -o pipefail
 
+ls -la
+pwd
+
 action_root="$(realpath ../../)"
 pip3 install -r "$action_root/requirements.txt"
 export PATH="$PATH:$action_root"
