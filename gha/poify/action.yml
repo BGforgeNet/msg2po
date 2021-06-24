@@ -7,11 +7,8 @@ runs:
   using: "composite"
   steps:
     - run: |
-        set -xeu -o pipefail
-        
-        pip3 install -r "$action_root/requirements.txt"
-        export PATH="$PATH:$action_root"
-        echo $PATH
+        set -xeu -o pipefail        
+        pip3 install -r "../../requirements.txt"
       shell: bash
       working-directory: ${{ github.action_path }}
     - run: |
