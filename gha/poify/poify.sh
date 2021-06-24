@@ -8,8 +8,6 @@ src_lang="$(bgforge-config.py src_lang)"
 
 pot_path="$tra_dir/po/$src_lang.pot"
 
-pip3 install -r requirements.txt
-poify
 if [[ "$(git status --porcelain \"$pot_path\" | wc -l)" != "0" ]]; then
   echo "poify: changes found, updating POT"
   git config user.name "BGforge GHA poify"
