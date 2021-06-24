@@ -6,7 +6,7 @@ branding:
 runs:
   using: "composite"
   steps:
-    - run: pip3 install -r requirements.txt
+    - run: pwd; ls -la; pip3 install -r requirements.txt
       shell: bash
       working-directory: ${{ github.action_path }}
     - run:
