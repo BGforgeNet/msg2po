@@ -1,8 +1,14 @@
 #!/bin/bash
 
 set -xeu -o pipefail
+
+action_root="$(realpath ../../)"
+pip3 install -r "$action_root/requirements.txt"
+export PATH="$PATH:$action_root"
+echo $PATH
 ls -la
 pwd
+
 tra_dir="$(bgforge-config.py tra_dir)"
 src_lang="$(bgforge-config.py src_lang)"
 

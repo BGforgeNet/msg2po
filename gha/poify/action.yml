@@ -6,10 +6,5 @@ branding:
 runs:
   using: "composite"
   steps:
-    - run: pwd; ls -la; pip3 install -r requirements.txt
-      shell: bash
-      working-directory: ${{ github.workspace }}
-    - run:
-        export PATH="$PATH:${{ github.action_path }}"
-        ${{ github.action_path }}/poify.sh
+    - run: ${{ github.action_path }}/poify.sh
       shell: bash
