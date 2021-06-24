@@ -16,6 +16,9 @@ runs:
       working-directory: ${{ github.action_path }}
     - run: |
         set -xeu -o pipefail
+        ls -la
+        pwd
         export PATH="$PATH:${{ github.action_path }}"
         ${{ github.action_path }}/poify.sh
+        echo $PATH
       shell: bash
