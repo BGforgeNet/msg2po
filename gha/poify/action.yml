@@ -5,7 +5,6 @@ branding:
   color: 'green'
 runs:
   using: "composite"
-  steps: 
+  steps:
     - run: ${{ github.action_path }}/poify.sh
       shell: bash
-
