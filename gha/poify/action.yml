@@ -7,6 +7,7 @@ runs:
   using: "composite"
   steps:
     - run: |
+        set -xeu -o pipefail
         action_root="$(realpath ../../)"
         pip3 install -r "$action_root/requirements.txt"
         export PATH="$PATH:$action_root"
@@ -14,6 +15,7 @@ runs:
       shell: bash
       working-directory: ${{ github.action_path }}
     - run: |
+        set -xeu -o pipefail
         export PATH="$PATH:${{ github.action_path }}"
         ${{ github.action_path }}/poify.sh
       shell: bash
