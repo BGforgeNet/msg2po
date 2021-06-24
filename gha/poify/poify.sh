@@ -20,7 +20,7 @@ poify
 git status
 git diff
 
-if [[ "$(git status --porcelain '$pot_path' | wc -l)" != "0" ]]; then
+if [[ "$(git status --porcelain $pot_path | wc -l)" != "0" ]]; then
   echo "poify: changes found, updating POT"
   git config user.name "BGforge GHA poify"
   git config user.email "poify@bgforge.net"
