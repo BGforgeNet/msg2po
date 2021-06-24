@@ -12,5 +12,6 @@ runs:
         export PATH="$PATH:$action_root"
         echo $PATH
       shell: bash
+      working-directory: ${{ github.action_path }}
     - run: ${{ github.action_path }}/poify.sh
       shell: bash
