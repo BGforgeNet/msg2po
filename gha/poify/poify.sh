@@ -17,6 +17,8 @@ src_lang="$(bgforge-config.py src_lang)"
 
 pot_path="$tra_dir/po/$src_lang.pot"
 poify
+git status
+git diff
 
 if [[ "$(git status --porcelain \"$pot_path\" | wc -l)" != "0" ]]; then
   echo "poify: changes found, updating POT"
