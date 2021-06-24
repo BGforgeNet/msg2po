@@ -8,7 +8,7 @@ runs:
   steps:
     - run: |
         set -xeu -o pipefail
-        action_root="$(realpath ../../)"
+        
         pip3 install -r "$action_root/requirements.txt"
         export PATH="$PATH:$action_root"
         echo $PATH
@@ -18,7 +18,8 @@ runs:
         set -xeu -o pipefail
         ls -la
         pwd
-        export PATH="$PATH:${{ github.action_path }}"
-        ${{ github.action_path }}/poify.sh
+        action_root="$(realpath $(dirname $(dirname "${{ github.action_path }}")"
+        export PATH="$PATH:$action_root"
         echo $PATH
+        ${{ github.action_path }}/poify.sh
       shell: bash
