@@ -1,0 +1,33 @@
+name: BGforge poify/unpoify
+description: Updates Gettext POT template from source language, extracts translations from PO files, commits and pushes the files.
+branding:
+  icon: message-circle
+  color: green
+
+inputs:
+  poify:
+    description: run poify
+    default: 'true'
+    required: false
+  unpoify:
+    description: run unpoify
+    default: 'true'
+    required: false
+  commit:
+    description: commit and push poify/unpoify results
+    default: 'true'
+    required: false
+  single_commit:
+    description: use separate commits for poify and unpoify, or a single one
+    default: 'true'
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        set -xeu -o pipefail
+        pip3 install -r "${GITHUB_ACTION_PATH//\\//}/requirements.txt"
+        export PATH="$PATH:${GITHUB_ACTION_PATH//\\//}"
+        ${GITHUB_ACTION_PATH//\\//}/gha.sh
+      shell: bash
