@@ -25,7 +25,7 @@ fi
 git config user.name "BGforge Weblate GHA"
 git config user.email "weblate@bgforge.net"
 
-if [[ "$INPUT_SEPARATE_COMMITS" != 'true' ]]; # combined
+if [[ "$INPUT_SEPARATE_COMMITS" != 'true' ]]; then # combined
   if [[ "$(git status --porcelain $tra_dir | wc -l)" != "0" ]]; then
     echo "poify/unpoify: changes found, committing"
     git add "$tra_dir"
