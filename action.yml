@@ -27,6 +27,7 @@ runs:
   steps:
     - run: |
         set -xeu -o pipefail
+        env
         pip3 install -r "${GITHUB_ACTION_PATH//\\//}/requirements.txt"
         export PATH="$PATH:${GITHUB_ACTION_PATH//\\//}"
         ${GITHUB_ACTION_PATH//\\//}/gha.sh
