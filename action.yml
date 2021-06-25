@@ -17,7 +17,7 @@ inputs:
     description: commit and push poify/unpoify results
     default: 'true'
     required: false
-  single_commit:
+  separate_commits:
     description: use separate commits for poify and unpoify, or a single one
     default: 'true'
     required: false
