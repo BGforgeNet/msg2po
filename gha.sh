@@ -2,6 +2,8 @@
 
 set -xeu -o pipefail
 
+env
+
 tra_dir="$(bgforge-config.py tra_dir)"
 src_lang="$(bgforge-config.py src_lang)"
 pot_path="$tra_dir/po/$src_lang.pot"
