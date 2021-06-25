@@ -27,8 +27,13 @@ runs:
   steps:
     - run: |
         set -xeu -o pipefail
-        env
-        pip3 install -r "${GITHUB_ACTION_PATH//\\//}/requirements.txt"
-        export PATH="$PATH:${GITHUB_ACTION_PATH//\\//}"
-        ${GITHUB_ACTION_PATH//\\//}/gha.sh
+        env | grep INPUT
+        pip3 install -r "$GITHUB_ACTION_PATH/requirements.txt"
+        export PATH="$PATH:$GITHUB_ACTION_PATH"
+        $GITHUB_ACTION_PATH/gha.sh
       shell: bash
+      env:
+        INPUT_POIFY: ${{ inputs.poify }}
+        INPUT_UNPOIFY: ${{ inputs.unpoify }}
+        INPUT_COMMIT: ${{ inputs.commit }}
+        INPUT_SEPARATE_COMMITS: ${{ inputs.separate_commits }}
