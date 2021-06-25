@@ -6,16 +6,16 @@ tra_dir="$(bgforge-config.py tra_dir)"
 src_lang="$(bgforge-config.py src_lang)"
 pot_path="$tra_dir/po/$src_lang.pot"
 
-if [[ "$INPUTS_POIFY" == 'true' ]]; then
+if [[ "$INPUT_POIFY" == 'true' ]]; then
   echo 'updating POT'
   poify
 fi
-if [[ "$INPUTS_UNPOIFY" == 'true' ]]; then
+if [[ "$INPUT_UNPOIFY" == 'true' ]]; then
   echo 'extracting translations from PO'
   unpoify
 fi
 
-if [[ "$INPUTS_COMMIT" != 'true' ]]; then
+if [[ "$INPUT_COMMIT" != 'true' ]]; then
   echo "commit disabled, pass"
   exit 0
 fi
@@ -23,7 +23,7 @@ fi
 git config user.name "BGforge Weblate GHA"
 git config user.email "weblate@bgforge.net"
 
-if [[ "$INPUTS_SEPARATE_COMMITS" != 'true' ]]; # combined
+if [[ "$INPUT_SEPARATE_COMMITS" != 'true' ]]; # combined
   if [[ "$(git status --porcelain $tra_dir | wc -l)" != "0" ]]; then
     echo "poify/unpoify: changes found, committing"
     git add "$tra_dir"
