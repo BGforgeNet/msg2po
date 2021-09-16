@@ -303,7 +303,6 @@ def get_enc(po_name,
   encoding = defaults['encoding']
   lang = strip_ext(basename(po_name))
   filename = basename(po_occurrence_name)
-
   if lang in encoding_dict:
     try: encoding = encoding_dict[lang]
     except: pass
@@ -556,8 +555,8 @@ def file2msgstr(input_file, epo, path, encoding = defaults['encoding'], overwrit
         e2 = entries_dict[(path, index)]
 
         # if overwrite is disabled and translation exists, skip
-        if e2.msgstr is not None and e2.msgstr != '' and overwrite == False:
-          print("INFO: overwrite disabled, translation already exists for {}, skipping:\n    {}\n    {}".format(e2.occurrences[0], e2.msgstr, value))
+        if e2.msgstr is not None and e2.msgstr != '' and overwrite == False and e2.msgstr != value:
+          print("INFO: overwrite disabled, translation already exists for {}, skipping:\n   ORIG: {}\n    OLD: {}\n    NEW: {}".format(e2.occurrences[0], e2.msgid, e2.msgstr, value))
           continue
 
         if e2.msgstr is not None and e2.msgstr != '' and e2.msgstr != value:
@@ -812,7 +811,8 @@ def output_lang_slug(po_filename):
   slug_map = {
     "de": "german",
     "fr": "french",
-    "pt_br": "portuguese"
+    "pt_br": "portuguese",
+    "it": "italian"
   }
   slug = strip_ext(po_filename).lower()
   simple_languages = get_config('simple_languages')

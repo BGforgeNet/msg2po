@@ -36,7 +36,7 @@ def dir2msgstr(src_dir, epo, overwrite=True): #relative path, epofile object
   print("overwrite is " + str(overwrite))
   with bgforge_po.cd(src_dir):
 
-    for dir_name, subdir_list, file_list in os.walk('.', topdown=False):
+    for dir_name, subdir_list, file_list in os.walk('.', topdown=False, followlinks=True):
       for file_name in file_list:
         full_name=os.path.join(dir_name, file_name)
         full_name=re.sub('^\./', '', full_name)  #remove trailing './'
