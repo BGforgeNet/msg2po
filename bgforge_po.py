@@ -812,7 +812,10 @@ def output_lang_slug(po_filename):
     "de": "german",
     "fr": "french",
     "pt_br": "portuguese",
-    "it": "italian"
+    "it": "italian",
+    "pl": "polish",
+    "es": "spanish",
+    "ru": "russian",
   }
   slug = strip_ext(po_filename).lower()
   simple_languages = get_config('simple_languages')
