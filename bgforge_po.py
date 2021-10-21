@@ -117,6 +117,7 @@ encodings = {
   'polski': 'cp1250',
 
   'russian': 'cp1251',
+  'ukrainian': 'cp1251',
 }
 
 dos_encodings = {
@@ -126,7 +127,7 @@ dos_encodings = {
 #  'polski': 'cp852',
 
   'russian': 'cp866',
-
+  'ukrainian': 'cp866',
 #  'french': 'cp850',
 #  'francais': 'cp850',
 
@@ -816,6 +817,7 @@ def output_lang_slug(po_filename):
     "pl": "polish",
     "es": "spanish",
     "ru": "russian",
+    "uk": "ukrainian",
   }
   slug = strip_ext(po_filename).lower()
   simple_languages = get_config('simple_languages')
