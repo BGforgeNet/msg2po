@@ -6,6 +6,8 @@ version='1.0.0'
 import argparse
 import polib
 
+from bgforge_po import sort_po
+
 parser = argparse.ArgumentParser(description='Resave PO file using polib API, to correct formatting', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('INPUT_FILE', help='PO file to resave')
 args=parser.parse_args()
@@ -28,4 +30,6 @@ for e in po:
       if not 'fuzzy' in e.flags:
         e.flags.append('fuzzy')
 
-po.save(args.INPUT_FILE)
+po2 = sort_po(po)
+
+po2.save(args.INPUT_FILE)
