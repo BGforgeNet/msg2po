@@ -101,6 +101,7 @@ def poify(dir): #relative path
         for e2 in po2:
           po.append(e2)
   po = bgforge_po.po_make_unique(po)
+  po = bgforge_po.sort_po(po)
   po.save(dst_file)
 
   clean_po_dir(po_dir)
