@@ -12,7 +12,7 @@ import os
 import argparse
 import subprocess
 import sys
-from multiprocessing import Pool as ThreadPool
+from multiprocessing import Pool
 from bgforge_po import get_src_lang, get_ext, get_po_dir, sort_po, threads_number, restore_female_entries
 import polib
 
@@ -66,9 +66,9 @@ pot_file = os.path.join(po_dir, get_src_lang() + ".pot")
 # extract PO files
 threads = threads_number(max=True)
 print("Merging PO files in {} with {}, using {} threads".format(po_dir, pot_file, threads))
-pool = ThreadPool(threads)
+pool = Pool(threads)
 try:
-    N = pool.map(partial(merge, pot=pot_file), po_files)
+    N = pool.map_async(partial(merge, pot=pot_file), po_files)
     pool.close()
 except KeyboardInterrupt:
     pool.terminate()
