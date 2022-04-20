@@ -1,5 +1,5 @@
-configparser
-natsort>=6,<7
-oyaml
-polib
-python-dateutil
+configparser>=5.2.0
+natsort>=6.2.1,<7
+oyaml>=1.0
+polib>=1.1.1
+python-dateutil>=2.8.2

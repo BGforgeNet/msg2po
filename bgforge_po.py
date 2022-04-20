@@ -172,6 +172,8 @@ empty_comment = 'LEAVE empty space in translation'
 # po: new translations added through weblate use case sensitive code: pt_BR.po. Keeping them.
 lowercase_exclude = ['.git', '.svn', '.hg', 'README.md', 'po']
 
+CONTEXT_FEMALE = 'female'
+
 #file and dir manipulation
 #################################
 def get_ext(path):
@@ -253,6 +255,10 @@ def get_poify_dir():
   poify_dir = os.path.join(tra_dir, src_lang)
   return poify_dir
 
+def get_src_lang():
+  src_lang = get_config(src_lang_key)
+  return src_lang
+
 def dir_or_exit(d):
   if os.path.isdir(d):
     print('Found directory {}'.format(d))
@@ -289,7 +295,9 @@ def cd(newdir):
   finally:
     os.chdir(prevdir)
 
-def threads_number():
+def threads_number(max=False):
+  if max:
+    return cpu_count()
   tnum = cpu_count() - 2
   if tnum < 1:
     tnum = 1
@@ -628,9 +636,10 @@ def strip_msgcat_comments(filename):
     if not re.search('^#$', line) and not re.search('^# #-#-#-#-#.*', line):
       print(line)
 
-def sort_po(po):
+def sort_po(po: polib.POFile):
   for e in po:
     e.occurrences = natsort.natsorted(e.occurrences, key=lambda k: (k[0], k[1]))
+  metadata = po.metadata
   po = natsort.natsorted(po, key=lambda k: k.occurrences[0] if len(k.occurrences)>0 else ('zzz', '999')) # female empty occurences hack
   po2 = polib.POFile()
   po2.metadata = metadata
@@ -827,3 +836,32 @@ def output_lang_slug(po_filename):
     except:
       pass
   return slug
+
+def restore_female_entries(po: polib.POFile):
+  """
+  Unobsoletes and if necessary (un)fuzzies female strings that have a corresponding male counterpart.
+  (Male = no context)
+  """
+  male_entries = {x.msgid: x for x in po if not x.previous_msgid and (x.msgctxt is None)}
+  fuzzy_male_entries = {x.previous_msgid: x for x in po if x.previous_msgid and (x.msgctxt is None)}
+  for e in po.obsolete_entries():
+    if e.msgctxt != CONTEXT_FEMALE:
+      continue
+
+    # if exact male match found, unobsolete
+    if e.msgid in male_entries:
+      male_entry = male_entries[e.msgid]
+      # if it's fuzzy, doing the same for female
+      e.previous_msgid = male_entry.previous_msgid
+      e.flags = male_entry.flags
+      e.obsolete = False
+
+    # if a fuzzy male string was found, fixing female to have the same attributes
+    if (e.msgid not in male_entries) and (e.msgid in fuzzy_male_entries):
+      male_entry = fuzzy_male_entries[e.msgid]
+      e.msgid = male_entry.msgid
+      e.previous_msgid = male_entry.previous_msgid
+      if "fuzzy" not in e.flags:
+        e.flags.append("fuzzy")
+      e.obsolete = False
+  return po
