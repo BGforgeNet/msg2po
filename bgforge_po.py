@@ -159,6 +159,7 @@ lowercase_exclude = [".git", ".svn", ".hg", "README.md", "po"]
 
 CONTEXT_FEMALE = "female"
 
+
 # file and dir manipulation
 #################################
 def get_ext(path):
@@ -354,7 +355,6 @@ def file2po(filepath, encoding=defaults["encoding"], noempty=False):
     po = polib.POFile()
     po.metadata = metadata
 
-    entry_added = 0
     trans_map = {}
     i = 0  # index in PO object
     for t in trans:
@@ -393,7 +393,7 @@ def check_path_in_po(po, path):
         for eo in entry.occurrences:
             present_files.add(eo[0])
     present_files_list = sorted(set(present_files))
-    if not path in present_files_list:
+    if path not in present_files_list:
         print("{} is not present in selected PO file".format(path))
         print("supply one of present files with --path argument:")
         for pf in present_files_list:
@@ -473,35 +473,32 @@ def po2file(epo, output_file, encoding, occurrence_path, dst_dir=None, newline="
     lines = []
     lines_female = []
 
-    for re in resulting_entries:
+    for res in resulting_entries:
         # get line format
-        lfrm = get_line_format(re, ext)
+        lfrm = get_line_format(res, ext)
 
         # add line to common/male package
-        line = lfrm.format(index=re["index"], value=re["value"], context=re["context"], female=re["female"])
+        line = lfrm.format(index=res["index"], value=res["value"], context=res["context"], female=res["female"])
         # TODO: get rid of replace, handle improper characters in weblate
         lines.append(line.encode(encoding, "replace").decode(encoding))
 
         # add string to female package if needed
         if "female" in line_format and line_format["female"] == "separate":
-            if re["female"] is not None:
-                female_line = lfrm.format(index=re["index"], value=re["female"], context=re["context"])
+            if res["female"] is not None:
+                female_line = lfrm.format(index=res["index"], value=res["female"], context=res["context"])
             else:
-                female_line = lfrm.format(index=re["index"], value=re["value"], context=re["context"])
+                female_line = lfrm.format(index=res["index"], value=res["value"], context=res["context"])
             lines_female.append(female_line.encode(encoding, "replace").decode(encoding))
 
     # write main package
     with open(output_file, "w", encoding=encoding, newline=newline) as file:
         file.writelines(lines)
 
-    # separate female translation bundle if needed
-    female_done = False
-
     # explicitly disabled female?
     no_female = get_config("no_female")
 
     if (
-        "female" in line_format
+        ("female" in line_format)
         and line_format["female"] == "separate"
         and dst_dir is not None
         and no_female is not True
@@ -588,9 +585,10 @@ def file2msgstr(input_file, epo, path, encoding=defaults["encoding"], overwrite=
                 e2 = entries_dict[(path, index)]
 
                 # if overwrite is disabled and translation exists, skip
-                if e2.msgstr is not None and e2.msgstr != "" and overwrite == False and e2.msgstr != value:
+                if e2.msgstr is not None and e2.msgstr != "" and overwrite is False and e2.msgstr != value:
                     print(
-                        "INFO: overwrite disabled, translation already exists for {}, skipping:\n   ORIG: {}\n    OLD: {}\n    NEW: {}".format(
+                        "INFO: overwrite disabled,"
+                        "translation already exists for {}, skipping:\n   ORIG: {}\n    OLD: {}\n    NEW: {}".format(
                             e2.occurrences[0], e2.msgid, e2.msgstr, value
                         )
                     )
@@ -598,7 +596,8 @@ def file2msgstr(input_file, epo, path, encoding=defaults["encoding"], overwrite=
 
                 if e2.msgstr is not None and e2.msgstr != "" and e2.msgstr != value:
                     print(
-                        "WARN: different translations found for {}. Replacing first string with second:\n      {}\n      {}".format(
+                        "WARN: different translations found for {}."
+                        "Replacing first string with second:\n      {}\n      {}".format(
                             e2.occurrences, e2.msgstr, value
                         )
                     )
@@ -709,7 +708,7 @@ def po_make_unique(po):
                     e0.tcomment = e0.tcomment + "; " + e.tcomment
 
             for f in e.flags:
-                if not f in e0.flags:
+                if f not in e0.flags:
                     e0.flags.append(f)
 
             if e.previous_msgctxt and not e0.previous_msgctxt:
@@ -761,7 +760,7 @@ class TRANSFile(list):
         except:
             pass
 
-        if dotall == True:
+        if dotall is True:
             lines = re.findall(pattern, text, re.DOTALL)
         else:
             lines = re.findall(pattern, text)
@@ -795,7 +794,7 @@ class TRANSFile(list):
                 entry["comment"] = None
             # 2. handle empty lines in source files
             if entry["value"] == "":
-                if is_source == True:
+                if is_source is True:
                     entry["value"] = " "
                     entry["comment"] = empty_comment
 
