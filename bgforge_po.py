@@ -8,8 +8,8 @@ from contextlib import contextmanager
 import fileinput
 from multiprocessing import cpu_count
 import natsort
-import oyaml as yaml
 from version import VERSION
+from config import CONFIG
 
 # extensions recognized by file2po, etc
 VALID_EXTENSIONS = ["msg", "txt", "sve", "tra"]
@@ -20,7 +20,7 @@ VALID_EXTENSIONS = ["msg", "txt", "sve", "tra"]
 # line_format to write to translated files
 # index, value, context, female - order of these tokens in pattern
 # dotall - whether file entries are multiline
-file_format = {
+FILE_FORMAT = {
     "msg": {
         "pattern": "{(\d+)}{([^}]*)}{([^}]*)}",
         "dotall": True,
@@ -69,30 +69,6 @@ file_format = {
     },
 }
 
-# load yml config. Is this a good way?
-yml = ".bgforge.yml"
-stanza = "translation"
-try:
-    with open(yml) as yf:
-        config = yaml.safe_load(yf)[stanza]
-except:
-    print(yml + " not found, assuming defaults", file=sys.stderr)
-
-# keys
-po_dirname = "po"
-po_dir_key = "po_dir"
-tra_dir_key = "tra_dir"
-src_lang_key = "src_lang"
-female_dir_suffix = "_female"
-
-defaults = {
-    "encoding": "cp1252",
-    "tra_dir": ".",
-    "src_lang": "english",
-    "simple_languages": True,
-    "skip_files": [],
-    "extract_format": "",
-}
 
 encodings = {
     "schinese": "cp936",
@@ -146,6 +122,7 @@ metadata = {
     "Content-Transfer-Encoding": "8bit",
     "X-Generator": "bgforge_po v.{}".format(VERSION),
 }
+
 
 # used for determining empty strings, which are invalid by PO spec
 empty_comment = "LEAVE empty space in translation"
@@ -219,40 +196,6 @@ def lowercase_recursively(dir):  # this is the function that is actually used
                 os.rename(c, new_c)
 
 
-def get_config(key):
-    if key == "po_dir":  # TODO: this is ugly and must be improved
-        value = get_po_dir()
-    elif key == "poify_dir":
-        value = get_poify_dir()
-    else:
-        try:
-            value = config[key]
-        except:
-            try:
-                value = defaults[key]
-            except:
-                value = None
-    return value
-
-
-def get_po_dir():
-    tra_dir = get_config(tra_dir_key)
-    po_dir = os.path.join(tra_dir, po_dirname)
-    return po_dir
-
-
-def get_poify_dir():
-    tra_dir = get_config(tra_dir_key)
-    src_lang = get_config(src_lang_key)
-    poify_dir = os.path.join(tra_dir, src_lang)
-    return poify_dir
-
-
-def get_src_lang():
-    src_lang = get_config(src_lang_key)
-    return src_lang
-
-
 def dir_or_exit(d):
     if os.path.isdir(d):
         print("Found directory {}".format(d))
@@ -264,8 +207,8 @@ def dir_or_exit(d):
 # returns list of extensions for which a separate female package should be prepared
 def separate_file_formats():
     extensions = []
-    for ff in file_format:
-        if "female" in file_format[ff]["line_format"] and file_format[ff]["line_format"]["female"] == "separate":
+    for ff in FILE_FORMAT:
+        if "female" in FILE_FORMAT[ff]["line_format"] and FILE_FORMAT[ff]["line_format"]["female"] == "separate":
             extensions.append(ff)
     return extensions
 
@@ -309,7 +252,7 @@ def get_enc(
     dos_filename_list=dos_filenames,
     utf_filename_list=utf_filenames,
 ):
-    encoding = defaults["encoding"]
+    encoding = CONFIG.encoding
     lang = strip_ext(basename(po_name))
     filename = basename(po_occurrence_name)
     if lang in encoding_dict:
@@ -344,7 +287,7 @@ def get_enc(
 
 
 # returns PO file object
-def file2po(filepath, encoding=defaults["encoding"], noempty=False):
+def file2po(filepath, encoding=CONFIG.encoding, noempty=False):
 
     trans = TRANSFile(filepath=filepath, is_source=True, encoding=encoding)  # load translations
 
@@ -430,14 +373,14 @@ def po2file(epo, output_file, encoding, occurrence_path, dst_dir=None, newline="
     create_dir(get_dir(output_file))
 
     ext = get_ext(output_file)
-    ff = file_format[ext]
+    ff = FILE_FORMAT[ext]
     line_format = ff["line_format"]
 
     po = epo.po
 
     context = ""
     resulting_entries = []
-    extract_fuzzy = get_config("extract_fuzzy")  # extract fuzzy? config flag
+    extract_fuzzy = CONFIG.extract_fuzzy  # extract fuzzy? config flag
 
     for i in occurrence_map[occurrence_path]:
         entry = po[occurrence_map[occurrence_path][i]]
@@ -491,7 +434,7 @@ def po2file(epo, output_file, encoding, occurrence_path, dst_dir=None, newline="
         file.writelines(lines)
 
     # explicitly disabled female?
-    no_female = get_config("no_female")
+    no_female = CONFIG.no_female
 
     if (
         ("female" in line_format)
@@ -524,8 +467,8 @@ def po2file(epo, output_file, encoding, occurrence_path, dst_dir=None, newline="
 # nasty hack for sfall's female strings placement
 def get_female_filepath(path, dst_dir, same):
     # default: just add _female suffix
-    female_path = path.replace(dst_dir + os.sep, dst_dir + female_dir_suffix + os.sep)
-    if get_config("extract_format") == "sfall":
+    female_path = path.replace(dst_dir + os.sep, dst_dir + CONFIG.female_dir_suffix + os.sep)
+    if CONFIG.extract_format == "sfall":
         female_path = False  # default for sfall: don't copy, it will fallback to male
         if "cuts" in path.split(os.sep):  # cuts dont' fallback
             female_path = path.replace(os.sep + "cuts" + os.sep, os.sep + "cuts_female" + os.sep)
@@ -538,7 +481,7 @@ def get_female_filepath(path, dst_dir, same):
 # and file extension
 # returns corresponding string with placeholders from line_format
 def get_line_format(e, ext):
-    ff = file_format[ext]
+    ff = FILE_FORMAT[ext]
     line_format = ff["line_format"]
     if e["context"] is not None:  # entry with context
         lfrm = line_format["context"]
@@ -559,7 +502,7 @@ def copycreate(src_file, dst_file):
 
 
 # returns PO file object
-def file2msgstr(input_file, epo, path, encoding=defaults["encoding"], overwrite=True):
+def file2msgstr(input_file, epo, path, encoding=CONFIG.encoding, overwrite=True):
     trans = TRANSFile(filepath=input_file, encoding=encoding)  # load translations
 
     # map entries to occurrences for faster access, part 1
@@ -617,14 +560,14 @@ def file2msgstr(input_file, epo, path, encoding=defaults["encoding"], overwrite=
 
 
 # check if TXT file is indexed
-def check_indexed(txt_filename, encoding=defaults["encoding"]):
+def check_indexed(txt_filename, encoding=CONFIG.encoding):
     f = open(txt_filename, "r", encoding=encoding)
     # count non-empty lines
     num_lines = sum(1 for line in f if line.rstrip())
     f.close()
 
     # count lines that are indexed
-    pattern = file_format["txt"]["pattern"]
+    pattern = FILE_FORMAT["txt"]["pattern"]
     f = open(txt_filename, "r", encoding=encoding)
     text = f.read()
     indexed_lines = re.findall(pattern, text)
@@ -716,12 +659,12 @@ class TRANSFile(list):
             "is_source", False
         )  # distinguish source TRAs to allow empty comment to be set on empty strings
         # the file encoding
-        encoding = kwargs.get("encoding", defaults["encoding"])
+        encoding = kwargs.get("encoding", CONFIG.encoding)
         fext = get_ext(filepath)
 
         text = open(filepath, "r", encoding=encoding).read()
 
-        self.fformat = file_format[fext]
+        self.fformat = FILE_FORMAT[fext]
         pattern = self.fformat["pattern"]
         dotall = self.fformat["dotall"]
         try:  # comment for all entries in file
@@ -819,7 +762,7 @@ class EPOFile(polib.POFile):
     def load_female(self):
         female_entries = [e for e in self.po if e.msgctxt == "female"]
         for fe in female_entries:
-            extract_fuzzy = get_config("extract_fuzzy")  # extract fuzzy? config flag
+            extract_fuzzy = CONFIG["extract_fuzzy"]  # extract fuzzy? config flag
             if "fuzzy" in fe.flags and not extract_fuzzy:  # skip fuzzy?
                 value = fe.msgid
             else:
@@ -855,7 +798,7 @@ def output_lang_slug(po_filename):
         "uk": "ukrainian",
     }
     slug = strip_ext(po_filename).lower()
-    simple_languages = get_config("simple_languages")
+    simple_languages = CONFIG["simple_languages"]
     if simple_languages is True:
         try:
             slug = slug_map[slug]

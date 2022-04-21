@@ -8,31 +8,32 @@ import shutil
 import re
 from bgforge_po import (
     VALID_EXTENSIONS,
-    get_poify_dir,
     dir_or_exit,
     get_enc,
-    po_dirname,
     cd,
     basename,
     metadata,
     file2po,
-    get_config,
     get_ext,
     po_make_unique,
     sort_po,
     parent_dir,
     check_indexed,
     lowercase_recursively,
+    CONFIG,
 )
 import natsort
-
-default_poify_dir = get_poify_dir()
 
 # parse args
 parser = argparse.ArgumentParser(
     description="Poify files in selected directory", formatter_class=argparse.ArgumentDefaultsHelpFormatter
 )
-parser.add_argument("DIR", nargs="?", default=default_poify_dir, help="source language directory (default: ./english)")
+parser.add_argument(
+    "DIR",
+    nargs="?",
+    default="{}".format(CONFIG.poify_dir),
+    help="source language directory",
+)
 parser.add_argument("-e", dest="enc", help="source encoding", default="cp1252")
 parser.add_argument(
     "--no-lowercase",
@@ -70,7 +71,7 @@ def clean_po_dir(d):
 
 
 def poify(dir):  # relative path
-    po_dir = po_dirname
+    po_dir = CONFIG.po_dirname
     prepare_po_dir(po_dir)
     # process with po_tool
     with cd(dir):
@@ -81,9 +82,9 @@ def poify(dir):  # relative path
         po.metadata = metadata
 
         # skip female cuts, they are built from male ones
-        extract_format = get_config("extract_format")
+        extract_format = CONFIG.extract_format
 
-        skip_files = get_config("skip_files")
+        skip_files = CONFIG.skip_files
 
         for dir_name, subdir_list, file_list in natsort.natsorted(
             os.walk(".", topdown=False, followlinks=True), alg=natsort.PATH

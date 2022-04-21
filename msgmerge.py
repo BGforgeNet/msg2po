@@ -13,7 +13,7 @@ import argparse
 import subprocess
 import sys
 from multiprocessing import Pool
-from bgforge_po import get_src_lang, get_ext, get_po_dir, sort_po, threads_number, restore_female_entries
+from bgforge_po import get_ext, sort_po, threads_number, restore_female_entries, CONFIG
 import polib
 
 # parse args
@@ -59,9 +59,9 @@ if (args.PO is not None) and (args.POT is not None):
     sys.exit(0)
 
 # multifile, read .bgforge.yml
-po_dir = get_po_dir()
+po_dir = CONFIG.po_dir
 po_files = find_files(po_dir, "po")
-pot_file = os.path.join(po_dir, get_src_lang() + ".pot")
+pot_file = os.path.join(po_dir, CONFIG.src_lang + ".pot")
 
 # extract PO files
 threads = threads_number(max=True)

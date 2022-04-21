@@ -3,9 +3,14 @@
 
 # this script is needed for shell wrappers
 
-import bgforge_po
 import sys
+from config import CONFIG
 
-key = sys.argv[1]
-value = bgforge_po.get_config(key)
-print(value)
+
+stanza = sys.argv[1]
+key = sys.argv[2]
+try:
+    value = CONFIG._config[stanza][key]
+    print(value)
+except:
+    print("config {}:{} not found".format(stanza, key))
