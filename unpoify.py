@@ -11,7 +11,7 @@ from bgforge_po import (
     cd,
     epofile,
     get_po_occurrence_map,
-    output_lang_slug,
+    simple_lang_slug,
     get_enc,
     po2file,
     get_ext,
@@ -39,7 +39,7 @@ def extract_po(pf):
     epo = epofile(po_path)  # open once
     occurrence_map = get_po_occurrence_map(epo.po)
 
-    dst_dir = output_lang_slug(pf)  # lang
+    dst_dir = simple_lang_slug(pf)  # lang
 
     for ef in sorted(occurrence_map):
         enc = get_enc(po_path, ef)

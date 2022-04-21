@@ -118,7 +118,7 @@ def poify(dir):  # relative path
                         continue
 
                 bname = basename(full_name)
-                enc = get_enc("", po_occurrence_name=bname)
+                enc = get_enc(file_path=bname)
                 print("processing {} with encoding {}".format(full_name, enc))
                 po2 = file2po(full_name, encoding=enc)
                 for e2 in po2:

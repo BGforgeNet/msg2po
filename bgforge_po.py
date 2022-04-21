@@ -70,45 +70,6 @@ FILE_FORMAT = {
 }
 
 
-encodings = {
-    "schinese": "cp936",
-    "tchinese": "cp950",
-    "czech": "cp1250",
-    "japanese": "cp932",
-    "korean": "cp949",
-    "polish": "cp1250",
-    "polski": "cp1250",
-    "russian": "cp1251",
-    "ukrainian": "cp1251",
-}
-
-dos_encodings = {
-    #  'czech': 'cp852',
-    #  'polish': 'cp852',
-    #  'polski': 'cp852',
-    "russian": "cp866",
-    "ukrainian": "cp866",
-    #  'french': 'cp850',
-    #  'francais': 'cp850',
-    #  'german': 'cp850',
-    #  'deutsch': 'cp850',
-    #  'italian': 'cp850',
-    #  'italiano': 'cp850',
-    #  'spanish': 'cp850',
-    #  'espanol': 'cp850',
-    #  'castilian': 'cp850',
-    #  'castellano': 'cp850',
-}
-
-dos_filenames = [
-    "setup.tra",
-    "install.tra",
-]
-
-utf_filenames = [
-    "ee.tra",
-]
-
 metadata = {
     "Project-Id-Version": "PACKAGE VERSION",
     "Report-Msgid-Bugs-To": "",
@@ -244,41 +205,67 @@ def threads_number(max=False):
     return tnum
 
 
-def get_enc(
-    po_name,
-    po_occurrence_name="",
-    encoding_dict=encodings,
-    dos_encoding_dict=dos_encodings,
-    dos_filename_list=dos_filenames,
-    utf_filename_list=utf_filenames,
-):
+def get_enc(po_path: str = "", file_path: str = ""):
+    '''
+    Returns encoding based on PO and file path
+    '''
+    ENCODINGS = {
+        "schinese": "cp936",
+        "tchinese": "cp950",
+        "czech": "cp1250",
+        "japanese": "cp932",
+        "korean": "cp949",
+        "polish": "cp1250",
+        "polski": "cp1250",
+        "russian": "cp1251",
+        "ukrainian": "cp1251",
+    }
+
+    DOS_ENCODINGS = {
+        #  'czech': 'cp852',
+        #  'polish': 'cp852',
+        #  'polski': 'cp852',
+        "russian": "cp866",
+        "ukrainian": "cp866",
+        #  'french': 'cp850',
+        #  'francais': 'cp850',
+        #  'german': 'cp850',
+        #  'deutsch': 'cp850',
+        #  'italian': 'cp850',
+        #  'italiano': 'cp850',
+        #  'spanish': 'cp850',
+        #  'espanol': 'cp850',
+        #  'castilian': 'cp850',
+        #  'castellano': 'cp850',
+    }
+
+    DOS_FILENAMES = [
+        "setup.tra",
+        "install.tra",
+    ]
+
+    UTF_FILENAMES = [
+        "ee.tra",
+    ]
+
     encoding = CONFIG.encoding
-    lang = strip_ext(basename(po_name))
-    filename = basename(po_occurrence_name)
-    if lang in encoding_dict:
+    lang = strip_ext(basename(po_path))
+    filename = basename(file_path)
+    if lang in ENCODINGS:
+        encoding = ENCODINGS[lang]
+
+    if filename in DOS_FILENAMES:
         try:
-            encoding = encoding_dict[lang]
+            encoding = DOS_ENCODINGS[lang]
         except:
             pass
 
-    if filename in dos_filenames:
-        try:
-            encoding = dos_encoding_dict[lang]
-        except:
-            pass
-
-    if filename in utf_filenames:
-        try:
-            encoding = "utf-8"
-        except:
-            pass
+    if filename in UTF_FILENAMES:
+        encoding = "utf-8"
 
     utf_name = re.compile(".*_ee.tra$")
     if utf_name.match(filename):
-        try:
-            encoding = "utf-8"
-        except:
-            pass
+        encoding = "utf-8"
 
     return encoding
 
@@ -762,7 +749,7 @@ class EPOFile(polib.POFile):
     def load_female(self):
         female_entries = [e for e in self.po if e.msgctxt == "female"]
         for fe in female_entries:
-            extract_fuzzy = CONFIG["extract_fuzzy"]  # extract fuzzy? config flag
+            extract_fuzzy = CONFIG.extract_fuzzy  # extract fuzzy? config flag
             if "fuzzy" in fe.flags and not extract_fuzzy:  # skip fuzzy?
                 value = fe.msgid
             else:
@@ -781,7 +768,7 @@ def epofile(f):
     return epo
 
 
-def output_lang_slug(po_filename):
+def simple_lang_slug(po_filename):
     """
     Allows to extract PO files into simplified language names: pt_BR.po -> portuguese/1.msg.
     Working with language codes is not convenient in mods.
@@ -798,8 +785,7 @@ def output_lang_slug(po_filename):
         "uk": "ukrainian",
     }
     slug = strip_ext(po_filename).lower()
-    simple_languages = CONFIG["simple_languages"]
-    if simple_languages is True:
+    if CONFIG.simple_languages:
         try:
             slug = slug_map[slug]
         except:
