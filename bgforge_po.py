@@ -353,11 +353,13 @@ def get_po_occurrence_map(po):
     return ocmap
 
 
-# extract and write to disk a single file from EPO object
-# epo is EPO object
-# output_file is path relative to dst_dir
-# dst_dir is actually dst language. Used only in unpoify
 def po2file(epo, output_file, encoding, occurrence_path, dst_dir=None, newline="\r\n", occurrence_map=None):
+    """
+    Extract and write to disk a single file from EPO object
+    epo is EPO object
+    output_file is path relative to dst_dir
+    dst_dir is actually dst language. Used only in unpoify
+    """
     if occurrence_map is None:  # when extracting single file with po2tra/po2msg, etc
         # check if file is present in po, exit if not
         check_path_in_po(epo.po, occurrence_path)
@@ -434,7 +436,7 @@ def po2file(epo, output_file, encoding, occurrence_path, dst_dir=None, newline="
         ("female" in line_format)
         and line_format["female"] == "separate"
         and dst_dir is not None
-        and no_female is not True
+        and not no_female
     ):
         # are translations the same? If yes, skipping copying "dialog" in sfall
         same = False
@@ -471,10 +473,12 @@ def get_female_filepath(path, dst_dir, same):
     return female_path
 
 
-# takes translation entry in format {'index': index, 'value': value, 'female': female, 'context': context}
-# and file extension
-# returns corresponding string with placeholders from line_format
-def get_line_format(e, ext):
+def get_line_format(e, ext: str):
+    """
+    Takes translation entry in format {'index': index, 'value': value, 'female': female, 'context': context}
+    And file extension
+    Returns corresponding string with placeholders from line_format
+    """
     ff = FILE_FORMAT[ext]
     line_format = ff["line_format"]
     if e["context"] is not None:  # entry with context
