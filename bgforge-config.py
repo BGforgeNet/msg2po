@@ -14,3 +14,4 @@ try:
     print(value)
 except:
     print("config {}:{} not found".format(stanza, key))
+    sys.exit(1)
