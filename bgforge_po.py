@@ -5,7 +5,6 @@ import polib
 import os
 import shutil
 from contextlib import contextmanager
-import fileinput
 from multiprocessing import cpu_count
 import natsort
 from config import CONFIG
@@ -432,12 +431,7 @@ def po2file(epo, output_file, encoding, occurrence_path, dst_dir=None, newline="
     # explicitly disabled female?
     no_female = CONFIG.no_female
 
-    if (
-        ("female" in line_format)
-        and line_format["female"] == "separate"
-        and dst_dir is not None
-        and not no_female
-    ):
+    if ("female" in line_format) and line_format["female"] == "separate" and dst_dir is not None and not no_female:
         # are translations the same? If yes, skipping copying "dialog" in sfall
         same = False
         if lines_female == lines:
@@ -558,7 +552,7 @@ def file2msgstr(input_file, epo, path, encoding=CONFIG.encoding, overwrite=True)
 
 
 # check if TXT file is indexed
-def is_indexed(txt_filename, encoding=CONFIG.encoding):
+def is_indexed(txt_filename: str, encoding=CONFIG.encoding):
     f = open(txt_filename, "r", encoding=encoding)
     # count non-empty lines
     num_lines = sum(1 for line in f if line.rstrip())
@@ -575,13 +569,6 @@ def is_indexed(txt_filename, encoding=CONFIG.encoding):
         return True
     else:
         return False
-
-
-# strip # #-#-#-#-# stuff from file
-def strip_msgcat_comments(filename):
-    for line in fileinput.input(filename, inplace=True):
-        if not re.search("^#$", line) and not re.search("^# #-#-#-#-#.*", line):
-            print(line)
 
 
 def sort_po(po: polib.POFile):
