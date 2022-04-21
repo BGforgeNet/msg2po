@@ -4,7 +4,7 @@
 import os
 import argparse
 import re
-import bgforge_po
+from bgforge_po import cd, get_ext, get_enc, file2msgstr, po_make_unique, EPOFile
 
 # parse args
 parser = argparse.ArgumentParser(
@@ -30,25 +30,24 @@ devnull = open(os.devnull, "w")
 
 def dir2msgstr(src_dir, epo, overwrite=True):  # relative path, epofile object
     print("overwrite is " + str(overwrite))
-    with bgforge_po.cd(src_dir):
+    with cd(src_dir):
 
         for dir_name, subdir_list, file_list in os.walk(".", topdown=False, followlinks=True):
             for file_name in file_list:
                 full_name = os.path.join(dir_name, file_name)
                 full_name = re.sub("^\./", "", full_name)  # remove trailing './'
-                fext = bgforge_po.get_ext(file_name)
+                fext = get_ext(file_name)
                 if not fext == ext:
                     continue
 
-                enc = bgforge_po.get_enc(src_dir, file_name)
+                enc = get_enc(src_dir, file_name)
                 print("processing {} with encoding {}".format(full_name, enc))
-                epo = bgforge_po.file2msgstr(full_name, epo, full_name, enc, overwrite)
-    epo.po = bgforge_po.po_make_unique(epo.po)
+                epo = file2msgstr(full_name, epo, full_name, enc, overwrite)
+    epo.po = po_make_unique(epo.po)
     return epo
 
 
-epo = bgforge_po.epofile(output_file)
-epo.po.metadata = bgforge_po.metadata
+epo = EPOFile(output_file)
 epo = dir2msgstr(src_dir, epo, overwrite)
 
 epo.save(output_file)

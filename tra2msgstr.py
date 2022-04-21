@@ -24,6 +24,5 @@ else:
 encoding = args.encoding
 
 epo = bgforge_po.epofile(output_file)
-epo.po.metadata = bgforge_po.metadata
 epo = bgforge_po.file2msgstr(input_file, epo, path, encoding=encoding)
 epo.save(output_file)

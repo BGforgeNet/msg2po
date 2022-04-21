@@ -2,6 +2,8 @@ import ruamel.yaml
 import sys
 import os
 
+VERSION = "1.1.0"
+
 
 class Config:
     def __init__(self):
@@ -40,6 +42,7 @@ class Config:
         self.female_dir_suffix = "_female"
         self.po_dir = os.path.join(self.tra_dir, self.po_dirname)
         self.poify_dir = os.path.join(self.tra_dir, self.src_lang)
+        self.version = VERSION
 
 
 CONFIG = Config()

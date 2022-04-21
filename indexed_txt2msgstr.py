@@ -2,7 +2,7 @@
 # coding: utf-8
 
 import argparse
-import bgforge_po
+from bgforge_po import check_indexed, EPOFile, file2msgstr
 import sys
 
 parser = argparse.ArgumentParser(
@@ -24,11 +24,10 @@ else:
     path = args.path
 encoding = args.encoding
 
-if not bgforge_po.check_indexed(input_file):
+if not check_indexed(input_file):
     print(("{} is NOT an indexed TXT. Can't process, exiting!".format(input_file)))
     sys.exit(1)
 
-epo = bgforge_po.epofile(output_file)
-epo.po.metadata = bgforge_po.metadata
-epo = bgforge_po.file2msgstr(input_file, epo, path, encoding=encoding)
+epo = EPOFile(output_file)
+epo = file2msgstr(input_file, epo, path, encoding=encoding)
 epo.save(output_file)

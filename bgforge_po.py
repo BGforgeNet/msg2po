@@ -8,8 +8,8 @@ from contextlib import contextmanager
 import fileinput
 from multiprocessing import cpu_count
 import natsort
-from version import VERSION
 from config import CONFIG
+from datetime import datetime
 
 # extensions recognized by file2po, etc
 VALID_EXTENSIONS = ["msg", "txt", "sve", "tra"]
@@ -67,21 +67,6 @@ FILE_FORMAT = {
             "female": "@{index} = ~{value}~ ~{female}~\n",
         },
     },
-}
-
-
-metadata = {
-    "Project-Id-Version": "PACKAGE VERSION",
-    "Report-Msgid-Bugs-To": "",
-    "POT-Creation-Date": "1970-1-01 00:00+0000",
-    "PO-Revision-Date": "YEAR-MO-DA HO:MI+ZONE",
-    "Last-Translator": "FULL NAME <EMAIL@ADDRESS>",
-    "Language-Team": "LANGUAGE <LL@li.org>",
-    "Language": "",
-    "MIME-Version": "1.0",
-    "Content-Type": "text/plain; charset=UTF-8",
-    "Content-Transfer-Encoding": "8bit",
-    "X-Generator": "bgforge_po v.{}".format(VERSION),
 }
 
 
@@ -206,9 +191,9 @@ def threads_number(max=False):
 
 
 def get_enc(po_path: str = "", file_path: str = ""):
-    '''
+    """
     Returns encoding based on PO and file path
-    '''
+    """
     ENCODINGS = {
         "schinese": "cp936",
         "tchinese": "cp950",
@@ -273,13 +258,35 @@ def get_enc(po_path: str = "", file_path: str = ""):
 ################################
 
 
+def metadata(old_metadata=None, pot=False, po=False):
+    if old_metadata is None:
+        data = {
+            "Project-Id-Version": "PACKAGE VERSION",
+            "Report-Msgid-Bugs-To": "",
+            "Last-Translator": "FULL NAME <EMAIL@ADDRESS>",
+            "Language-Team": "LANGUAGE <LL@li.org>",
+            "Language": "",
+            "MIME-Version": "1.0",
+            "Content-Type": "text/plain; charset=UTF-8",
+            "Content-Transfer-Encoding": "8bit",
+            "X-Generator": "bgforge_po v.{}".format(CONFIG.version),
+        }
+        if pot:
+            data["POT-Creation-Date"] = datetime.today().strftime("%Y-%m-%d-%H:%M") + "+0000"
+        if po:
+            data["PO-Revision-Date"] = datetime.today().strftime("%Y-%m-%d-%H:%M") + "+0000"
+    else:
+        return old_metadata
+    return data
+
+
 # returns PO file object
-def file2po(filepath, encoding=CONFIG.encoding, noempty=False):
+def file2po(filepath, encoding=CONFIG.encoding):
 
     trans = TRANSFile(filepath=filepath, is_source=True, encoding=encoding)  # load translations
 
     po = polib.POFile()
-    po.metadata = metadata
+    po.metadata = metadata()
 
     trans_map = {}
     i = 0  # index in PO object
@@ -588,6 +595,7 @@ def sort_po(po: polib.POFile):
 
 def po_make_unique(po):
     entries_dict = collections.OrderedDict()
+    old_metadata = po.metadata
     for e in po:
         if (e.msgid, e.msgctxt) in entries_dict:
 
@@ -620,7 +628,7 @@ def po_make_unique(po):
         else:
             entries_dict[(e.msgid, e.msgctxt)] = e
     po2 = polib.POFile()
-    po2.metadata = metadata
+    po2.metadata = old_metadata
     for key, value in list(entries_dict.items()):
         po2.append(value)
     return po2
@@ -745,6 +753,7 @@ class EPOFile(polib.POFile):
             self.load_female()
         else:
             self.po = polib.POFile()
+            self.po.metadata = metadata(po=True)
 
     def load_female(self):
         female_entries = [e for e in self.po if e.msgctxt == "female"]
@@ -758,14 +767,6 @@ class EPOFile(polib.POFile):
 
     def save(self, output_file):
         self.po.save(output_file)
-
-
-def epofile(f):
-    """
-    Returns EPOFile object
-    """
-    epo = EPOFile(f)
-    return epo
 
 
 def simple_lang_slug(po_filename):

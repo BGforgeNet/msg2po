@@ -79,7 +79,7 @@ def poify(dir):  # relative path
         lang = basename(dir)
         dst_file = os.path.join(po_dir, lang + ".pot")
         po = polib.POFile()
-        po.metadata = metadata
+        po.metadata = metadata(pot=True)
 
         # skip female cuts, they are built from male ones
         extract_format = CONFIG.extract_format
