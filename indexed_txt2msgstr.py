@@ -2,7 +2,7 @@
 # coding: utf-8
 
 import argparse
-from bgforge_po import check_indexed, EPOFile, file2msgstr
+from bgforge_po import is_indexed, EPOFile, file2msgstr
 import sys
 
 parser = argparse.ArgumentParser(
@@ -24,7 +24,7 @@ else:
     path = args.path
 encoding = args.encoding
 
-if not check_indexed(input_file):
+if not is_indexed(input_file):
     print(("{} is NOT an indexed TXT. Can't process, exiting!".format(input_file)))
     sys.exit(1)
 

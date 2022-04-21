@@ -558,7 +558,7 @@ def file2msgstr(input_file, epo, path, encoding=CONFIG.encoding, overwrite=True)
 
 
 # check if TXT file is indexed
-def check_indexed(txt_filename, encoding=CONFIG.encoding):
+def is_indexed(txt_filename, encoding=CONFIG.encoding):
     f = open(txt_filename, "r", encoding=encoding)
     # count non-empty lines
     num_lines = sum(1 for line in f if line.rstrip())

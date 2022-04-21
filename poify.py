@@ -18,7 +18,7 @@ from bgforge_po import (
     po_make_unique,
     sort_po,
     parent_dir,
-    check_indexed,
+    is_indexed,
     lowercase_recursively,
     CONFIG,
 )
@@ -111,7 +111,7 @@ def poify(dir):  # relative path
 
                 # checked txt is indexed and if it is, process it
                 if ext == "txt":
-                    if check_indexed(full_name):
+                    if is_indexed(full_name):
                         print("{} is indexed TXT".format(full_name))
                     else:
                         print("{} is TXT, but not indexed. Skipping!".format(full_name))
