@@ -6,11 +6,27 @@ import argparse
 import polib
 import shutil
 import re
-import bgforge_po
+from bgforge_po import (
+    VALID_EXTENSIONS,
+    get_poify_dir,
+    dir_or_exit,
+    get_enc,
+    po_dirname,
+    cd,
+    basename,
+    metadata,
+    file2po,
+    get_config,
+    get_ext,
+    po_make_unique,
+    sort_po,
+    parent_dir,
+    check_indexed,
+    lowercase_recursively,
+)
 import natsort
 
-valid_extensions = bgforge_po.valid_extensions
-default_poify_dir = bgforge_po.get_poify_dir()
+default_poify_dir = get_poify_dir()
 
 # parse args
 parser = argparse.ArgumentParser(
@@ -30,8 +46,8 @@ args = parser.parse_args()
 
 # init vars
 poify_dir = args.DIR
-bgforge_po.dir_or_exit(poify_dir)
-enc = bgforge_po.get_enc(args.DIR)
+dir_or_exit(poify_dir)
+enc = get_enc(args.DIR)
 nolowercase = args.nolowercase
 
 devnull = open(os.devnull, "w")
@@ -54,20 +70,20 @@ def clean_po_dir(d):
 
 
 def poify(dir):  # relative path
-    po_dir = bgforge_po.po_dirname
+    po_dir = po_dirname
     prepare_po_dir(po_dir)
     # process with po_tool
-    with bgforge_po.cd(dir):
+    with cd(dir):
         # Final PO
-        lang = bgforge_po.basename(dir)
+        lang = basename(dir)
         dst_file = os.path.join(po_dir, lang + ".pot")
         po = polib.POFile()
-        po.metadata = bgforge_po.metadata
+        po.metadata = metadata
 
         # skip female cuts, they are built from male ones
-        extract_format = bgforge_po.get_config("extract_format")
+        extract_format = get_config("extract_format")
 
-        skip_files = bgforge_po.get_config("skip_files")
+        skip_files = get_config("skip_files")
 
         for dir_name, subdir_list, file_list in natsort.natsorted(
             os.walk(".", topdown=False, followlinks=True), alg=natsort.PATH
@@ -88,39 +104,37 @@ def poify(dir):  # relative path
                     print("{} is in skip_files. Skipping!".format(full_name))
                     continue
 
-                ext = bgforge_po.get_ext(file_name)
-                if ext in valid_extensions:
-                    po_tool = ext + "2po"
-                else:
+                ext = get_ext(file_name)
+                if ext not in VALID_EXTENSIONS:
                     continue
 
                 # checked txt is indexed and if it is, process it
                 if ext == "txt":
-                    if bgforge_po.check_indexed(full_name):
+                    if check_indexed(full_name):
                         print("{} is indexed TXT".format(full_name))
                     else:
                         print("{} is TXT, but not indexed. Skipping!".format(full_name))
                         continue
 
-                bname = bgforge_po.basename(full_name)
-                enc = bgforge_po.get_enc("", po_occurrence_name=bname)
+                bname = basename(full_name)
+                enc = get_enc("", po_occurrence_name=bname)
                 print("processing {} with encoding {}".format(full_name, enc))
-                po2 = bgforge_po.file2po(full_name, encoding=enc)
+                po2 = file2po(full_name, encoding=enc)
                 for e2 in po2:
                     po.append(e2)
-    po = bgforge_po.po_make_unique(po)
-    po = bgforge_po.sort_po(po)
+    po = po_make_unique(po)
+    po = sort_po(po)
     po.save(dst_file)
 
     clean_po_dir(po_dir)
     print("Processed directory {}, the result is in {}/{}/{}.pot".format(poify_dir, tra_dir, po_dir, lang))
 
 
-tra_dir = os.path.relpath(bgforge_po.parent_dir(poify_dir))
+tra_dir = os.path.relpath(parent_dir(poify_dir))
 
 # lowercase if not disabled on cmd
-if nolowercase == False:
-    bgforge_po.lowercase_recursively(tra_dir)
+if not nolowercase:
+    lowercase_recursively(tra_dir)
 
-with bgforge_po.cd(bgforge_po.parent_dir(os.path.abspath(poify_dir))):
-    poify(bgforge_po.basename(poify_dir))  # keeping relative occurrences in resulting po
+with cd(parent_dir(os.path.abspath(poify_dir))):
+    poify(basename(poify_dir))  # keeping relative occurrences in resulting po

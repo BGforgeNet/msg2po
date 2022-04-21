@@ -1,13 +1,9 @@
-#!/usr/bin/env python3
-# coding: utf-8
-
 import re
 import sys
 import collections
 import polib
 import os
 import shutil
-import subprocess
 from contextlib import contextmanager
 import fileinput
 from multiprocessing import cpu_count
@@ -16,7 +12,7 @@ import oyaml as yaml
 from version import VERSION
 
 # extensions recognized by file2po, etc
-valid_extensions = ["msg", "txt", "sve", "tra"]
+VALID_EXTENSIONS = ["msg", "txt", "sve", "tra"]
 
 
 # supported file formats
@@ -638,33 +634,6 @@ def check_indexed(txt_filename, encoding=defaults["encoding"]):
         return True
     else:
         return False
-
-
-# find valid file extensions
-def find_valid_extenstions(dir):
-    ext_list = {}
-    for dir_name, subdir_list, file_list in os.walk(dir, topdown=False):
-        for file_name in file_list:
-            ext = get_ext(file_name)
-            if ext is not None:
-                ext_list[ext] = 1
-    for ext, value in list(ext_list.items()):
-        # skip po and pot
-        if ext == "po":
-            del ext_list["po"]
-            continue
-        if ext == "pot":
-            del ext_list["pot"]
-            continue
-        # check if tool is in PATH
-        po_tool = ext + "2po"
-        try:
-            devnull = open(os.devnull, "w")
-            subprocess.call([po_tool, "-h"], stdout=devnull, stderr=devnull)
-        except OSError:
-            print("{} is not in PATH, skipping {} files".format(po_tool, ext))
-            del ext_list[ext]
-    return ext_list
 
 
 # strip # #-#-#-#-# stuff from file
