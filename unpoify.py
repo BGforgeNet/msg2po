@@ -9,7 +9,7 @@ from bgforge_po import (
     CONFIG,
     dir_or_exit,
     cd,
-    epofile,
+    EPOFile,
     get_po_occurrence_map,
     simple_lang_slug,
     get_enc,
@@ -36,7 +36,7 @@ def extract_po(pf):
     po_path = os.path.join(po_dir, pf)
     print("processing {}".format(po_path))
 
-    epo = epofile(po_path)  # open once
+    epo = EPOFile(po_path)  # open once
     occurrence_map = get_po_occurrence_map(epo.po)
 
     dst_dir = simple_lang_slug(pf)  # lang

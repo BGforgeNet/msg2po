@@ -3,7 +3,7 @@
 
 
 import argparse
-import bgforge_po
+from bgforge_po import EPOFile, po2file
 
 parser = argparse.ArgumentParser(
     description="Extract WeiDU TRA from gettext PO", formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -19,5 +19,5 @@ if args.path is None:
 else:
     path = args.path
 
-epo = bgforge_po.epofile(args.INPUT_FILE)  # open once, it's a heavy op
-bgforge_po.po2file(epo, args.OUTPUT_FILE, args.encoding, path)
+epo = EPOFile(args.INPUT_FILE)  # open once, it's a heavy op
+po2file(epo, args.OUTPUT_FILE, args.encoding, path)

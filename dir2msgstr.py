@@ -28,7 +28,11 @@ if args.no_overwrite:
 devnull = open(os.devnull, "w")
 
 
-def dir2msgstr(src_dir, epo, overwrite=True):  # relative path, epofile object
+def dir2msgstr(src_dir: str, epo: EPOFile, overwrite: bool = True):
+    """
+    src_dir is relative
+    overwrite means ovewrite existing entries if any
+    """
     print("overwrite is " + str(overwrite))
     with cd(src_dir):
 
