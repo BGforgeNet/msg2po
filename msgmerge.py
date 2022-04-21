@@ -18,7 +18,7 @@ import polib
 
 # parse args
 parser = argparse.ArgumentParser(
-    description="Update POs from POT, keeping female entries",
+    description="Update POs from POT, keeping female entries. Requires Gettext msgmerge in PATH",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 # parser.add_argument("DIR", nargs="?", default=default_po_dir, help="directory with PO files")
