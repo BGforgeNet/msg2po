@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 import argparse
-import bgforge_po
+from bgforge_po import CONFIG, sort_po
 import csv
 import collections
 import polib
@@ -30,5 +30,5 @@ po = polib.pofile(args.OUTPUT_PO)
 for fs in female_strings:
     entry = polib.POEntry(msgid=fs, msgstr=female_strings[fs], msgctxt="female")
     po.append(entry)
-po = bgforge_po.sort_po(po)
-po.save(args.OUTPUT_PO)
+po = sort_po(po)
+po.save(args.OUTPUT_PO, newline=CONFIG.newline)

@@ -4,7 +4,8 @@
 import os
 import argparse
 import re
-from bgforge_po import cd, get_ext, get_enc, file2msgstr, po_make_unique, EPOFile
+from bgforge_po import cd, get_ext, get_enc, file2msgstr, po_make_unique, CONFIG
+from polib import POFile
 
 # parse args
 parser = argparse.ArgumentParser(
@@ -28,7 +29,7 @@ if args.no_overwrite:
 devnull = open(os.devnull, "w")
 
 
-def dir2msgstr(src_dir: str, epo: EPOFile, overwrite: bool = True):
+def dir2msgstr(src_dir: str, po: POFile, overwrite: bool = True):
     """
     src_dir is relative
     overwrite means ovewrite existing entries if any
@@ -46,13 +47,13 @@ def dir2msgstr(src_dir: str, epo: EPOFile, overwrite: bool = True):
 
                 enc = get_enc(src_dir, file_name)
                 print("processing {} with encoding {}".format(full_name, enc))
-                epo = file2msgstr(full_name, epo, full_name, enc, overwrite)
-    epo.po = po_make_unique(epo.po)
-    return epo
+                po = file2msgstr(full_name, po, full_name, enc, overwrite)
+    po = po_make_unique(po)
+    return po
 
 
-epo = EPOFile(output_file)
-epo = dir2msgstr(src_dir, epo, overwrite)
+po = POFile(output_file)
+po = dir2msgstr(src_dir, po, overwrite)
 
-epo.save(output_file)
+po.save(output_file, newline=CONFIG.newline)
 print("Processed directory {}, the result is in {}".format(src_dir, output_file))

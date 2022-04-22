@@ -125,7 +125,7 @@ def poify(dir):  # relative path
                     po.append(e2)
     po = po_make_unique(po)
     po = sort_po(po)
-    po.save(dst_file)
+    po.save(dst_file, newline=CONFIG.newline)
 
     clean_po_dir(po_dir)
     print("Processed directory {}, the result is in {}/{}/{}.pot".format(poify_dir, tra_dir, po_dir, lang))

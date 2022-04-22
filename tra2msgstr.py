@@ -2,7 +2,8 @@
 # coding: utf-8
 
 import argparse
-from bgforge_po import EPOFile, file2msgstr
+from bgforge_po import file2msgstr, CONFIG
+from polib import POFile
 
 parser = argparse.ArgumentParser(
     description="WeiDU TRA into gettext PO msgstr", formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -23,6 +24,6 @@ else:
     path = args.path
 encoding = args.encoding
 
-epo = EPOFile(output_file)
-epo = file2msgstr(input_file, epo, path, encoding=encoding)
-epo.save(output_file)
+po = POFile(output_file)
+po = file2msgstr(input_file, po, path, encoding=encoding)
+po.save(output_file, newline=CONFIG.newline)

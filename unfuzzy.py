@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import polib
+from polib import pofile
 import sys
 import oyaml as yaml
 import os
+from bgforge_po import CONFIG
 
 parser = argparse.ArgumentParser(
     description="Unmark PO entries as fuzzy,"
@@ -19,7 +20,7 @@ args = parser.parse_args()
 yml = os.path.abspath(sys.argv[0]) + ".yml"  # replaces list
 input_file = args.INPUT_FILE
 write = args.WRITE
-po = polib.pofile(input_file)
+po = pofile(input_file)
 
 with open(yml) as yf:
     replace_list = yaml.load(yf)
@@ -57,6 +58,6 @@ for e in po.fuzzy_entries():
                 print(e2)
 
 if write:
-    po.save(input_file)
+    po.save(input_file, newline=CONFIG.newline)
 else:
     print(i)

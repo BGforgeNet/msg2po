@@ -43,6 +43,7 @@ class Config:
         self.po_dir = os.path.join(self.tra_dir, self.po_dirname)
         self.poify_dir = os.path.join(self.tra_dir, self.src_lang)
         self.version = VERSION
+        self.newline = "\n"
 
 
 CONFIG = Config()

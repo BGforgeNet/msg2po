@@ -41,7 +41,7 @@ def merge(po: str, pot: str):
     po2 = polib.pofile(po)
     po2 = restore_female_entries(po2)
     po2 = sort_po(po2)
-    po2.save(po)
+    po2.save(po, newline=CONFIG.newline)
 
 
 def find_files(dir: str, ext: str):

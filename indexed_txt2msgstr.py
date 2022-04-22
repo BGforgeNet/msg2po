@@ -2,7 +2,8 @@
 # coding: utf-8
 
 import argparse
-from bgforge_po import is_indexed, EPOFile, file2msgstr
+from bgforge_po import is_indexed, file2msgstr, CONFIG
+from polib import POFile
 import sys
 
 parser = argparse.ArgumentParser(
@@ -28,6 +29,6 @@ if not is_indexed(input_file):
     print(("{} is NOT an indexed TXT. Can't process, exiting!".format(input_file)))
     sys.exit(1)
 
-epo = EPOFile(output_file)
-epo = file2msgstr(input_file, epo, path, encoding=encoding)
-epo.save(output_file)
+po: POFile = POFile(output_file)
+po = file2msgstr(input_file, po, path, encoding=encoding)
+po.save(output_file, newline=CONFIG.newline)

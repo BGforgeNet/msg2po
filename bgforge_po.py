@@ -12,7 +12,6 @@ from datetime import datetime
 # extensions recognized by file2po, etc
 VALID_EXTENSIONS = ["msg", "txt", "sve", "tra"]
 
-
 # supported file formats
 # pattern is used to parse original files
 # line_format to write to translated files
@@ -372,7 +371,6 @@ def po2file(
     encoding: str,
     occurrence_path: str,
     dst_dir=None,
-    newline="\r\n",
     trans_map=None,
     female_map=None,
 ):
@@ -455,7 +453,7 @@ def po2file(
             lines_female.append(female_line.encode(encoding, "replace").decode(encoding))
 
     # write main package
-    with open(output_file, "w", encoding=encoding, newline=newline) as file:
+    with open(output_file, "w", encoding=encoding, newline=CONFIG.newline) as file:
         file.writelines(lines)
 
     # explicitly disabled female?
@@ -480,7 +478,7 @@ def po2file(
         else:  # if it's different, extract separately
             print("Also extracting female counterpart into {}".format(female_file))
             create_dir(get_dir(female_file))  # create dir if not exists
-            with open(female_file, "w", encoding=encoding, newline=newline) as file2:
+            with open(female_file, "w", encoding=encoding, newline=CONFIG.newline) as file2:
                 file2.writelines(lines_female)
 
 
