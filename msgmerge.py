@@ -14,22 +14,23 @@ import subprocess
 import sys
 from multiprocessing import Pool
 from bgforge_po import get_ext, sort_po, restore_female_entries, CONFIG
-import polib
+from polib import pofile
 
 # parse args
 parser = argparse.ArgumentParser(
     description="Update POs from POT, keeping female entries. Requires Gettext msgmerge in PATH",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
-# parser.add_argument("DIR", nargs="?", default=default_po_dir, help="directory with PO files")
+
 parser.add_argument("PO", help="PO file", nargs="?", default=None)
 parser.add_argument("POT", help="POT file", nargs="?", default=None)
 args = parser.parse_args()
 
 
-def merge(po: str, pot: str):
-    print(po)
-    cmd = ["msgmerge", "--previous", "--no-wrap", "-U", "-q", "--backup=off", po, pot]
+def merge(po_path: str, pot_path: str):
+    print(po_path)
+    exit_code = 0
+    cmd = ["msgmerge", "--previous", "--no-wrap", "-U", "-q", "--backup=off", po_path, pot_path]
     res = subprocess.run(
         cmd,
         capture_output=True,
@@ -38,10 +39,14 @@ def merge(po: str, pot: str):
     )
     print(res.stdout)
     print(res.stderr)
-    po2 = polib.pofile(po)
+    if res.returncode != 0:
+        exit_code = res.returncode
+        print("ERROR: msgmerge failed for {}".format(po_path))
+    po2 = pofile(po_path)
     po2 = restore_female_entries(po2)
     po2 = sort_po(po2)
-    po2.save(po, newline=CONFIG.newline)
+    po2.save(fpath=po_path, newline=CONFIG.newline)
+    return exit_code
 
 
 def find_files(dir: str, ext: str):
@@ -55,7 +60,10 @@ def find_files(dir: str, ext: str):
 
 # single file
 if (args.PO is not None) and (args.POT is not None):
-    po = merge(args.PO, args.POT)
+    res = merge(args.PO, args.POT)
+    if res != 0:
+        print("ERROR: msgmerge failed for {}".format(args.PO))
+        sys.exit(1)
     sys.exit(0)
 
 # multifile, read .bgforge.yml
@@ -63,13 +71,18 @@ po_dir = CONFIG.po_dir
 po_files = find_files(po_dir, "po")
 pot_file = os.path.join(po_dir, CONFIG.src_lang + ".pot")
 
-# extract PO files
 print("Merging PO files in {} with {}".format(po_dir, pot_file))
 pool = Pool()
 try:
-    pool.map_async(partial(merge, pot=pot_file), po_files)
+    r = pool.map_async(partial(merge, pot_path=pot_file), po_files)
     pool.close()
+    codes = r.get()
 except KeyboardInterrupt:
     pool.terminate()
 finally:
     pool.join()
+
+for c in codes:
+    if c != 0:
+        print("ERROR: one of msgmerge invocations failed.")
+        sys.exit(1)
