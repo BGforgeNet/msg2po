@@ -67,7 +67,7 @@ pot_file = os.path.join(po_dir, CONFIG.src_lang + ".pot")
 print("Merging PO files in {} with {}".format(po_dir, pot_file))
 pool = Pool()
 try:
-    N = pool.map_async(partial(merge, pot=pot_file), po_files)
+    pool.map_async(partial(merge, pot=pot_file), po_files)
     pool.close()
 except KeyboardInterrupt:
     pool.terminate()
