@@ -358,7 +358,6 @@ def female_entries(po: polib.POFile) -> "dict[str: polib.POEntry]":
         try:
             me = male_entries[0]
             entries[me.msgid] = fe
-            entries[me.msgid] = fe
         except:
             print("WARNING: couldn't find a corresponding male counterpart for a female entry")
             print(fe)
