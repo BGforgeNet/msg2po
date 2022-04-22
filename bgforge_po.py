@@ -519,7 +519,7 @@ def file2msgstr(input_file: str, po: polib.POFile, path: str, encoding=CONFIG.en
         if female:
             context = CONTEXT_FEMALE
 
-        if (value is None) or (value != ""):
+        if (value is None) or (value == ""):
             print("WARN: no msgid found for {}:{}, skipping string\n      {}".format(path, index, value))
             continue
 
