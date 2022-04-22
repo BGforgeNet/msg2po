@@ -499,14 +499,14 @@ def copycreate(src_file, dst_file):
     shutil.copyfile(src_file, dst_file)
 
 
-def file2msgstr(input_file, epo, path, encoding=CONFIG.encoding, overwrite=True):
+def file2msgstr(input_file: str, po: polib.POFile, path: str, encoding=CONFIG.encoding, overwrite=True):
     """returns PO file object"""
 
     trans = TRANSFile(filepath=input_file, encoding=encoding)  # load translations
 
     # map entries to occurrences for faster access, part 1
     entries_dict = collections.OrderedDict()
-    po = epo.po
+    po = po
     for e in po:
         for eo in e.occurrences:
             entries_dict[(eo[0], eo[1])] = e
@@ -554,7 +554,7 @@ def file2msgstr(input_file, epo, path, encoding=CONFIG.encoding, overwrite=True)
 
             else:
                 print("WARN: no msgid found for {}:{}, skipping string\n      {}".format(path, index, value))
-    return epo
+    return po
 
 
 # check if TXT file is indexed
