@@ -5,7 +5,7 @@ import os
 import argparse
 import re
 from bgforge_po import cd, get_ext, get_enc, file2msgstr, po_make_unique, CONFIG
-from polib import POFile
+from polib import pofile, POFile
 
 # parse args
 parser = argparse.ArgumentParser(
@@ -52,7 +52,7 @@ def dir2msgstr(src_dir: str, po: POFile, overwrite: bool = True):
     return po
 
 
-po = POFile(output_file)
+po = pofile(output_file)
 po = dir2msgstr(src_dir, po, overwrite)
 
 po.save(output_file, newline=CONFIG.newline)
