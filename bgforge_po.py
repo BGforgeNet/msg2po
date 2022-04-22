@@ -527,8 +527,9 @@ def file2msgstr(input_file: str, po: polib.POFile, path: str, encoding=CONFIG.en
             # map entries to occurrences for faster access, part 2
             e2 = entries_dict[(path, index)]
 
-            # if overwrite is disabled and translation exists, skip
+            # if translation already exists and different
             if e2.msgstr is not None and e2.msgstr != "" and e2.msgstr != value:
+                # if overwrite is disabled, cutoff
                 if not overwrite:
                     print(
                         "INFO: overwrite disabled, translation already exists "
@@ -536,10 +537,10 @@ def file2msgstr(input_file: str, po: polib.POFile, path: str, encoding=CONFIG.en
                             e2.occurrences[0], e2.msgid, e2.msgstr, value
                         )
                     )
-                    continue  # cutoff
+                    continue
                 print(
                     "WARN: different translations found for {}."
-                    "Replacing first string with second:\n      {}\n      {}".format(
+                    "\n   Replacing first string with second:\n     {}\n     {}".format(
                         e2.occurrences, e2.msgstr, value
                     )
                 )
