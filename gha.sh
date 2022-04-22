@@ -6,7 +6,6 @@ tra_dir="$(bgforge-config.py translation tra_dir)"
 src_lang="$(bgforge-config.py translation src_lang)"
 pot_path="$tra_dir/po/$src_lang.pot"
 
-pip install -r requirements.txt
 
 if [[ "$INPUT_POIFY" == 'true' ]]; then
   echo 'updating POT'
@@ -14,7 +13,6 @@ if [[ "$INPUT_POIFY" == 'true' ]]; then
 fi
 if [[ "$INPUT_MSGMERGE" == 'true' ]]; then
   echo 'updating PO files from POT'
-  apt install gettext
   msgmerge.py
 fi
 if [[ "$INPUT_UNPOIFY" == 'true' ]]; then

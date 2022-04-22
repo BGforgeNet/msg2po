@@ -31,8 +31,19 @@ runs:
   steps:
     - run: |
         set -xeu -o pipefail
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          apt install gettext
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          wget https://github.com/mlocati/gettext-iconv-windows/releases/download/v0.21-v1.16/gettext0.21-iconv1.16-static-32.zip -O gettext.zip
+          7z e gettext.zip bin/msgmerge.exe
+          mv msgmerge.exe "$GITHUB_ACTION_PATH"/
+          rm gettext.zip
+        else
+          echo "$RUNNER_OS not supported"
+          exit 1
+        fi
         pip3 install -r "$GITHUB_ACTION_PATH/requirements.txt"
-        export PATH="$PATH:$GITHUB_ACTION_PATH"
+        echo "{$GITHUB_ACTION_PATH}" >> $GITHUB_PATH
         $GITHUB_ACTION_PATH/gha.sh
       shell: bash
       env:
@@ -40,3 +51,4 @@ runs:
         INPUT_UNPOIFY: ${{ inputs.unpoify }}
         INPUT_COMMIT: ${{ inputs.commit }}
         INPUT_SEPARATE_COMMITS: ${{ inputs.separate_commits }}
+        INPUT_MSGMERGE: ${{ inputs.msgmerge }}
