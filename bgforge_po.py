@@ -147,27 +147,6 @@ def dir_or_exit(d):
         sys.exit(1)
 
 
-# returns list of extensions for which a separate female package should be prepared
-def separate_file_formats():
-    extensions = []
-    for ff in FILE_FORMAT:
-        if "female" in FILE_FORMAT[ff]["line_format"] and FILE_FORMAT[ff]["line_format"]["female"] == "separate":
-            extensions.append(ff)
-    return extensions
-
-
-# check if need to make female package
-def need_female_package(file_list):
-    need_female = False
-    ext_list = separate_file_formats()
-    for f in file_list:
-        ext = get_ext(f)
-        if ext in ext_list:
-            need_female = True
-            break
-    return need_female
-
-
 @contextmanager
 def cd(newdir):
     prevdir = os.getcwd()
