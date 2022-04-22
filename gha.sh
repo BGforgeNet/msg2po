@@ -2,8 +2,8 @@
 
 set -xeu -o pipefail
 
-tra_dir="$(bgforge-config.py tra_dir)"
-src_lang="$(bgforge-config.py src_lang)"
+tra_dir="$(bgforge-config.py translation tra_dir)"
+src_lang="$(bgforge-config.py translation src_lang)"
 pot_path="$tra_dir/po/$src_lang.pot"
 
 if [[ "$INPUT_POIFY" == 'true' ]]; then

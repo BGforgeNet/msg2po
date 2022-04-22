@@ -24,7 +24,7 @@ class Config:
             with open(yml) as yf:
                 yaml = ruamel.yaml.YAML()
                 config = yaml.load(yf)
-                config = {**defaults, **config["translation"]}
+                config = {**defaults, **config}
         except:
             print(yml + " not found, assuming defaults", file=sys.stderr)
         self._config = config  # for shell wrapper

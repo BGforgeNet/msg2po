@@ -6,7 +6,6 @@
 import sys
 from config import CONFIG
 
-
 stanza = sys.argv[1]
 key = sys.argv[2]
 try:
