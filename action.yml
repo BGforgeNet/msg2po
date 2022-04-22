@@ -9,6 +9,10 @@ inputs:
     description: run poify
     default: 'true'
     required: false
+  msgmerge:
+    description: update PO files from POT
+    default: 'true'
+    required: false
   unpoify:
     description: run unpoify
     default: 'true'
