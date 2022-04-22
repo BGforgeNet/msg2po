@@ -499,7 +499,7 @@ def copycreate(src_file, dst_file):
     shutil.copyfile(src_file, dst_file)
 
 
-def file2msgstr(input_file: str, po: polib.POFile, path: str, encoding=CONFIG.encoding, overwrite=True):
+def file2msgstr(input_file: str, po: polib.POFile, path: str, encoding=CONFIG.encoding, overwrite: bool = True):
     """returns PO file object"""
 
     trans = TRANSFile(filepath=input_file, encoding=encoding)  # load translations
@@ -519,41 +519,41 @@ def file2msgstr(input_file: str, po: polib.POFile, path: str, encoding=CONFIG.en
         if female:
             context = CONTEXT_FEMALE
 
-        if value is not None and value != "":
-            if (path, index) in entries_dict:
-                # map entries to occurrences for faster access, part 2
-                e2 = entries_dict[(path, index)]
+        if (value is None) or (value != ""):
+            print("WARN: no msgid found for {}:{}, skipping string\n      {}".format(path, index, value))
+            continue
 
-                # if overwrite is disabled and translation exists, skip
-                if e2.msgstr is not None and e2.msgstr != "" and overwrite is False and e2.msgstr != value:
+        if (path, index) in entries_dict:
+            # map entries to occurrences for faster access, part 2
+            e2 = entries_dict[(path, index)]
+
+            # if overwrite is disabled and translation exists, skip
+            if e2.msgstr is not None and e2.msgstr != "" and e2.msgstr != value:
+                if not overwrite:
                     print(
-                        "INFO: overwrite disabled,"
-                        "translation already exists for {}, skipping:\n   ORIG: {}\n    OLD: {}\n    NEW: {}".format(
+                        "INFO: overwrite disabled, translation already exists "
+                        "for {}, skipping:\n   ORIG: {}\n    OLD: {}\n    NEW: {}".format(
                             e2.occurrences[0], e2.msgid, e2.msgstr, value
                         )
                     )
-                    continue
-
-                if e2.msgstr is not None and e2.msgstr != "" and e2.msgstr != value:
-                    print(
-                        "WARN: different translations found for {}."
-                        "Replacing first string with second:\n      {}\n      {}".format(
-                            e2.occurrences, e2.msgstr, value
-                        )
+                    continue  # cutoff
+                print(
+                    "WARN: different translations found for {}."
+                    "Replacing first string with second:\n      {}\n      {}".format(
+                        e2.occurrences, e2.msgstr, value
                     )
+                )
 
-                if e2.msgid == value:
-                    print(
-                        "WARN: string and translation are the same for {}. Using it regardless:\n      {}".format(
-                            e2.occurrences, e2.msgid
-                        )
+            if e2.msgid == value:
+                print(
+                    "WARN: string and translation are the same for {}. Using it regardless:\n      {}".format(
+                        e2.occurrences, e2.msgid
                     )
-                e2.msgstr = value
+                )
+            e2.msgstr = value
 
-                e2.msgctxt = context
+            e2.msgctxt = context
 
-            else:
-                print("WARN: no msgid found for {}:{}, skipping string\n      {}".format(path, index, value))
     return po
 
 
