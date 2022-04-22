@@ -24,19 +24,19 @@ class Config:
             with open(yml) as yf:
                 yaml = ruamel.yaml.YAML()
                 config = yaml.load(yf)
-                config = {**defaults, **config}
+                translation_config = {**defaults, **config["translation"]}
         except:
             print(yml + " not found, assuming defaults", file=sys.stderr)
         self._config = config  # for shell wrapper
 
-        self.encoding = config["encoding"]
-        self.tra_dir = config["tra_dir"]
-        self.src_lang = config["src_lang"]
-        self.simple_languages = config["simple_languages"]
-        self.skip_files = config["skip_files"]
-        self.extract_format = config["extract_format"]
-        self.no_female = config["no_female"]
-        self.extract_fuzzy = config["extract_fuzzy"]
+        self.encoding = translation_config["encoding"]
+        self.tra_dir = translation_config["tra_dir"]
+        self.src_lang = translation_config["src_lang"]
+        self.simple_languages = translation_config["simple_languages"]
+        self.skip_files = translation_config["skip_files"]
+        self.extract_format = translation_config["extract_format"]
+        self.no_female = translation_config["no_female"]
+        self.extract_fuzzy = translation_config["extract_fuzzy"]
 
         self.po_dirname = "po"
         self.female_dir_suffix = "_female"
