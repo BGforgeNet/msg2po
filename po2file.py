@@ -2,11 +2,12 @@
 # coding: utf-8
 
 import argparse
-from bgforge_po import po2file
+from bgforge_po import po2file, VALID_EXTENSIONS
 from polib import POFile
 
+formats = "/".join(VALID_EXTENSIONS)
 parser = argparse.ArgumentParser(
-    description="Extract Fallout MSG from gettext PO", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    description="Extract {} from gettext PO".format(formats), formatter_class=argparse.ArgumentDefaultsHelpFormatter
 )
 parser.add_argument("INPUT_FILE", help="input PO file")
 parser.add_argument("OUTPUT_FILE", help="output MSG file")
@@ -19,5 +20,5 @@ if args.path is None:
 else:
     path = args.path
 
-po = POFile(args.INPUT_FILE)  # open once, it's a heavy op
+po = POFile(args.INPUT_FILE)
 po2file(po, args.OUTPUT_FILE, args.encoding, path)
