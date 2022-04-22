@@ -17,6 +17,7 @@ class Config:
             "extract_format": "",  # could be 'sfall'
             "no_female": False,  # expllicitly disable female extraction?
             "extract_fuzzy": False,
+            "lowercase": True
         }
 
         config = defaults
@@ -37,6 +38,7 @@ class Config:
         self.extract_format = translation_config["extract_format"]
         self.no_female = translation_config["no_female"]
         self.extract_fuzzy = translation_config["extract_fuzzy"]
+        self.lowercase = translation_config["lowercase"]
 
         self.po_dirname = "po"
         self.female_dir_suffix = "_female"

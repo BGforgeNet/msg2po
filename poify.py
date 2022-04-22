@@ -50,6 +50,8 @@ poify_dir = args.DIR
 dir_or_exit(poify_dir)
 enc = get_enc(args.DIR)
 nolowercase = args.nolowercase
+if nolowercase is False:
+    nolowercase = not (CONFIG.lowercase)
 
 devnull = open(os.devnull, "w")
 
