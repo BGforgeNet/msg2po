@@ -795,8 +795,8 @@ def restore_female_entries(po: polib.POFile):
     Unobsoletes and if necessary (un)fuzzies female strings that have a corresponding male counterpart.
     (Male = no context)
     """
-    male_entries = {x.msgid: x for x in po if not x.previous_msgid and (x.msgctxt is None)}
-    fuzzy_male_entries = {x.previous_msgid: x for x in po if x.previous_msgid and (x.msgctxt is None)}
+    male_entries = {x.msgid: x for x in po if not x.previous_msgid and (x.msgctxt != CONTEXT_FEMALE)}
+    fuzzy_male_entries = {x.previous_msgid: x for x in po if x.previous_msgid and (x.msgctxt != CONTEXT_FEMALE)}
     for e in po.obsolete_entries():
         if e.msgctxt != CONTEXT_FEMALE:
             continue
