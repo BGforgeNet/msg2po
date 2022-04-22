@@ -3,7 +3,7 @@
 import argparse
 from bgforge_po import CONFIG, sort_po
 import csv
-import collections
+from collections import OrderedDict
 import polib
 
 parser = argparse.ArgumentParser(
@@ -15,12 +15,12 @@ args = parser.parse_args()
 
 
 def load_csv(path):
-    female_strings = collections.OrderedDict()
+    female_strings = OrderedDict()
     with open(path, "r") as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
             female_strings[row[0]] = row[1]
-    sorted_strings = collections.OrderedDict(sorted(female_strings.items()))
+    sorted_strings = OrderedDict(sorted(female_strings.items()))
     return sorted_strings
 
 
