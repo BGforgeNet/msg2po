@@ -4,7 +4,7 @@
 import argparse
 from polib import pofile
 import sys
-import oyaml as yaml
+import ruamel.yaml
 import os
 from bgforge_po import CONFIG
 
@@ -23,6 +23,7 @@ write = args.WRITE
 po = pofile(input_file)
 
 with open(yml) as yf:
+    yaml = ruamel.yaml.YAML()
     replace_list = yaml.load(yf)
 
 
