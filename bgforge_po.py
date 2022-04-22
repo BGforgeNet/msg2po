@@ -5,7 +5,6 @@ import polib
 import os
 import shutil
 from contextlib import contextmanager
-from multiprocessing import cpu_count
 import natsort
 from config import CONFIG
 from datetime import datetime
@@ -180,15 +179,6 @@ def cd(newdir):
         os.chdir(prevdir)
 
 
-def threads_number(max=False):
-    if max:
-        return cpu_count()
-    tnum = cpu_count() - 2
-    if tnum < 1:
-        tnum = 1
-    return tnum
-
-
 def get_enc(po_path: str = "", file_path: str = ""):
     """
     Returns encoding based on PO and file path
@@ -279,8 +269,8 @@ def metadata(old_metadata=None, pot=False, po=False):
     return data
 
 
-# returns PO file object
 def file2po(filepath, encoding=CONFIG.encoding):
+    """Returns PO file object"""
 
     trans = TRANSFile(filepath=filepath, is_source=True, encoding=encoding)  # load translations
 
@@ -289,30 +279,31 @@ def file2po(filepath, encoding=CONFIG.encoding):
 
     trans_map = {}
     i = 0  # index in PO object
-    for t in trans:
-        index = t["index"]
-        value = t["value"]
-        context = t["context"]
-        comment = t["comment"]
+    for t in trans.entries:
+
+        # female entries don't have any context
+        context = t.context
+        if t.female:
+            context = CONTEXT_FEMALE
 
         # append to occurrences if id and context match
-        if (value, context) in trans_map:
-            e = po[trans_map[(value, context)]]
-            e.occurrences.append((filepath, index))
+        if (t.value, context) in trans_map:
+            e = po[trans_map[(t.value, context)]]
+            e.occurrences.append((filepath, t.index))
             continue
 
         # no matching msgid + msgctxt, add new entry
         entry = polib.POEntry(
-            msgid=value,
+            msgid=t.value,
             msgstr="",
             occurrences=[
-                (filepath, index),
+                (filepath, t.index),
             ],
-            msgctxt=context,
-            comment=comment,
+            msgctxt=t.context,
+            comment=t.comment,
         )
         po.append(entry)
-        trans_map[(value, context)] = i
+        trans_map[(t.value, context)] = i
         i = i + 1
 
     return po
@@ -333,36 +324,69 @@ def check_path_in_po(po, path):
         sys.exit(1)
 
 
-# return dict of dicts mapping filepaths to entries/occurrences where they are present
-# {} file_path: {unit_index: entry_index, unit2_index: entry2_index, ...},  }
-# entry_index is index in PO file (list)
-def get_po_occurrence_map(po):
-    ocmap = {}
+def translation_entries(po: polib.POFile):
+    """
+    returns {filepath: [{"file_index": index_in_file, "po_index": index_in_po}] }
+    does not include female entries, as they don't have occurences
+    """
+    entries = {}
     i = 0
     for entry in po:
-        if entry.msgctxt == "female":  # pass female strings
-            continue
-
         for eo in entry.occurrences:
-            if eo[0] in ocmap:
-                ocmap[eo[0]][int(eo[1])] = i
+            path = eo[0]
+            linenum = eo[1]
+            if path in entries:
+                entries[path].append({"file_index": int(linenum), "po_index": i})
             else:
-                ocmap[eo[0]] = {int(eo[1]): i}
+                entries[path] = [{"file_index": int(linenum), "po_index": i}]
         i = i + 1
-    return ocmap
+    return entries
 
 
-def po2file(epo, output_file, encoding, occurrence_path, dst_dir=None, newline="\r\n", occurrence_map=None):
+def female_entries(po: polib.POFile) -> "dict[str: polib.POEntry]":
     """
-    Extract and write to disk a single file from EPO object
-    epo is EPO object
+    Returns mapping of male msgids to corresponding female PO entries
+    """
+    entries = {}
+    fe_list = [e for e in po if len(e.occurrences) == 0 and e.msgctxt == CONTEXT_FEMALE]
+    for fe in fe_list:
+        # first, check male entries without context
+        male_entries = [e for e in po if e.msgid == fe.msgid and not e.msgctxt]
+        if len(male_entries) > 0:
+            me = male_entries[0]
+        else:  # then, those with
+            male_entries = [e for e in po if e.msgid == fe.msgid and e.msgctxt != CONTEXT_FEMALE]
+        try:
+            me = male_entries[0]
+            entries[me.msgid] = fe
+            entries[me.msgid] = fe
+        except:
+            print("WARNING: couldn't find a corresponding male counterpart for a female entry")
+            print(fe)
+    return entries
+
+
+def po2file(
+    po: polib.POFile,
+    output_file: str,
+    encoding: str,
+    occurrence_path: str,
+    dst_dir=None,
+    newline="\r\n",
+    trans_map=None,
+    female_map=None,
+):
+    """
+    Extract and write to disk a single file from POFile
     output_file is path relative to dst_dir
     dst_dir is actually dst language. Used only in unpoify
     """
-    if occurrence_map is None:  # when extracting single file with po2tra/po2msg, etc
+    if trans_map is None:  # when extracting single file with po2tra/po2msg, etc
         # check if file is present in po, exit if not
-        check_path_in_po(epo.po, occurrence_path)
-        occurrence_map = get_po_occurrence_map(epo.po)
+        check_path_in_po(po, occurrence_path)
+        trans_map = translation_entries(po)
+    if female_map is None:
+        female_map = female_entries(po)
 
     # create parent directory
     create_dir(get_dir(output_file))
@@ -371,15 +395,15 @@ def po2file(epo, output_file, encoding, occurrence_path, dst_dir=None, newline="
     ff = FILE_FORMAT[ext]
     line_format = ff["line_format"]
 
-    po = epo.po
-
     context = ""
     resulting_entries = []
-    extract_fuzzy = CONFIG.extract_fuzzy  # extract fuzzy? config flag
+    extract_fuzzy = CONFIG.extract_fuzzy
 
-    for i in occurrence_map[occurrence_path]:
-        entry = po[occurrence_map[occurrence_path][i]]
-        index = i
+    for file_trans in trans_map[occurrence_path]:
+        file_index = file_trans["file_index"]
+        po_index = file_trans["po_index"]
+        entry = po[po_index]
+
         if entry.msgstr == "":  # if not translated, keep msgid
             value = entry.msgid
         elif "fuzzy" in entry.flags and not extract_fuzzy:  # skip fuzzy?
@@ -393,13 +417,19 @@ def po2file(epo, output_file, encoding, occurrence_path, dst_dir=None, newline="
 
         # context
         context = entry.msgctxt
-        # female strings
-        if entry.msgid in epo.female_strings:
-            female = epo.female_strings[entry.msgid]
-        else:
-            female = None
 
-        resulting_entries.append({"index": index, "value": value, "female": female, "context": context})
+        # female strings
+        female = None
+        if entry.msgid in female_map:
+            fe_entry = female_map[entry.msgid]
+            if fe_entry.msgstr == "":
+                female = fe_entry.msgid
+            elif "fuzzy" in fe_entry.flags and not extract_fuzzy:
+                female = fe_entry.msgid
+            else:
+                female = fe_entry.msgstr
+
+        resulting_entries.append({"index": file_index, "value": value, "female": female, "context": context})
 
     # combined occurrences may mess up order, restoring
     resulting_entries = sorted(resulting_entries, key=lambda k: k["index"])
@@ -493,8 +523,9 @@ def copycreate(src_file, dst_file):
     shutil.copyfile(src_file, dst_file)
 
 
-# returns PO file object
 def file2msgstr(input_file, epo, path, encoding=CONFIG.encoding, overwrite=True):
+    """returns PO file object"""
+
     trans = TRANSFile(filepath=input_file, encoding=encoding)  # load translations
 
     # map entries to occurrences for faster access, part 1
@@ -504,11 +535,13 @@ def file2msgstr(input_file, epo, path, encoding=CONFIG.encoding, overwrite=True)
         for eo in e.occurrences:
             entries_dict[(eo[0], eo[1])] = e
 
-    for t in trans:
-        index = t["index"]
-        value = t["value"]
-        context = t["context"]
-        female = t["female"]
+    for t in trans.entries:
+        index = t.index
+        value = t.value
+        context = t.context
+        female = t.female
+        if female:
+            context = CONTEXT_FEMALE
 
         if value is not None and value != "":
             if (path, index) in entries_dict:
@@ -542,9 +575,6 @@ def file2msgstr(input_file, epo, path, encoding=CONFIG.encoding, overwrite=True)
                 e2.msgstr = value
 
                 e2.msgctxt = context
-
-                if female is not None:
-                    epo.female_strings[e2.msgid] = female
 
             else:
                 print("WARN: no msgid found for {}:{}, skipping string\n      {}".format(path, index, value))
@@ -625,20 +655,22 @@ def po_make_unique(po):
     return po2
 
 
-class TRANSFile(list):
+class TRANSEntry:
+    def __init__(self):
+        self.index = None
+        self.value = None
+        self.context = None
+        self.female = None
+        self.comment = None
+
+
+class TRANSFile:
     """
-    Common translation class, holding translation entries as a list of dictionaries
-    entry format:
-      index
-      value
-      context
-      female
-      comment
-    All set to None if not present
+    Common translation class, holding translation entries of a single file
     """
 
     def __init__(self, *args, **kwargs):
-        list.__init__(self)
+        self.entries: list[TRANSEntry] = []
         # the opened file handle
         filepath = kwargs.get("filepath", None)
         is_source = kwargs.get(
@@ -667,97 +699,73 @@ class TRANSFile(list):
         seen = []
 
         for line in lines:
-            entry = {}
+            entry = TRANSEntry()
 
             # index and value
             index = line[self.fformat["index"]]
-            entry["value"] = str(line[self.fformat["value"]])
+            entry.value = str(line[self.fformat["value"]])
 
             # skip invalid '000' entries in MSG files
             if fext == "msg" and index == "000":
                 print(
                     "WARN: {} - invalid entry number found, skipping:\n     {{000}}{{}}{{{}}}".format(
-                        filepath, entry["value"]
+                        filepath, entry.value
                     )
                 )
                 continue
 
-            entry["index"] = line[self.fformat["index"]]
+            entry.index = line[self.fformat["index"]]
 
             # comment
             # 1. generic comment for all entries in file
             try:
-                entry["comment"] = self.fformat["comment"]
+                entry.comment = self.fformat["comment"]
             except:
-                entry["comment"] = None
+                pass
             # 2. handle empty lines in source files
-            if entry["value"] == "":
+            if entry.value == "":
                 if is_source is True:
-                    entry["value"] = " "
-                    entry["comment"] = empty_comment
+                    entry.value = " "
+                    entry.comment = empty_comment
 
             # context
             try:
-                entry["context"] = line[self.fformat["context"]]
+                entry.context = line[self.fformat["context"]]
             except:
-                entry["context"] = None
-            if entry["context"] == "":
-                entry["context"] = None
+                pass
+            if entry.context == "":
+                entry.context = None
 
             # female
-            entry["female"] = None  # default
             if fext == "tra":  # TRA file specific
                 try:
-                    entry["female"] = str(line[self.fformat["female"]])
+                    entry.female = str(line[self.fformat["female"]])
                 except:
                     pass
-                if entry["female"] == "":
-                    entry["female"] = None
+                if entry.female == "":
+                    entry.female = None
+
+                if entry.female and entry.context:
+                    print("ERROR. TRA strings with female variants may not have context.")
+                    print(line)
+                    print(entry)
+                    sys.exit(1)
 
             # protection against duplicate indexes, part 2
-            if (entry["index"]) in seen:
+            if entry.index in seen:
                 print(
                     "WARN: duplicate string definition found {}:{}, using new value:\n      {}".format(
-                        filepath, entry["index"], entry["value"]
+                        filepath, entry.index, entry.value
                     )
                 )
-                self[:] = [entry if x["index"] == entry["index"] else x for x in self]
+                self[:] = [entry if x.index == entry.index else x for x in self]
                 continue
             else:
                 seen.append(index)
 
             # produce the final list of strings
-            if entry["value"] is not None and entry["value"] != "":
-                self.append(entry)
-
-
-class EPOFile(polib.POFile):
-    """
-    Extended PO file class, handling female mgctxt entries
-    """
-
-    def __init__(self, *args):
-        po = args[0]
-        self.female_strings = {}
-        if po:
-            self.po = polib.pofile(po)
-            self.load_female()
-        else:
-            self.po = polib.POFile()
-            self.po.metadata = metadata(po=True)
-
-    def load_female(self):
-        female_entries = [e for e in self.po if e.msgctxt == "female"]
-        for fe in female_entries:
-            extract_fuzzy = CONFIG.extract_fuzzy  # extract fuzzy? config flag
-            if "fuzzy" in fe.flags and not extract_fuzzy:  # skip fuzzy?
-                value = fe.msgid
-            else:
-                value = fe.msgstr  # either translated or fuzzy+extract_fuzzy
-            self.female_strings[fe.msgid] = value
-
-    def save(self, output_file):
-        self.po.save(output_file)
+            if entry.value is not None and entry.value != "":
+                self.entries.append(entry)
 
 
 def simple_lang_slug(po_filename):

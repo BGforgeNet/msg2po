@@ -13,7 +13,7 @@ import argparse
 import subprocess
 import sys
 from multiprocessing import Pool
-from bgforge_po import get_ext, sort_po, threads_number, restore_female_entries, CONFIG
+from bgforge_po import get_ext, sort_po, restore_female_entries, CONFIG
 import polib
 
 # parse args
@@ -64,9 +64,8 @@ po_files = find_files(po_dir, "po")
 pot_file = os.path.join(po_dir, CONFIG.src_lang + ".pot")
 
 # extract PO files
-threads = threads_number(max=True)
-print("Merging PO files in {} with {}, using {} threads".format(po_dir, pot_file, threads))
-pool = Pool(threads)
+print("Merging PO files in {} with {}".format(po_dir, pot_file))
+pool = Pool()
 try:
     N = pool.map_async(partial(merge, pot=pot_file), po_files)
     pool.close()

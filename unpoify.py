@@ -4,18 +4,18 @@
 import os
 import argparse
 import sys
-from multiprocessing import Pool as ThreadPool
+from multiprocessing import Pool
+from polib import pofile
 from bgforge_po import (
     CONFIG,
     dir_or_exit,
     cd,
-    EPOFile,
-    get_po_occurrence_map,
+    female_entries,
+    translation_entries,
     simple_lang_slug,
     get_enc,
     po2file,
     get_ext,
-    threads_number,
 )
 
 # parse args
@@ -31,21 +31,24 @@ po_dir = args.DIR
 dir_or_exit(po_dir)
 
 
-# pf is po file basename
-def extract_po(pf):
+def extract_po(pf: str):
+    """
+    pf is po file basename
+    """
     po_path = os.path.join(po_dir, pf)
     print("processing {}".format(po_path))
 
-    epo = EPOFile(po_path)  # open once
-    occurrence_map = get_po_occurrence_map(epo.po)
+    po = pofile(po_path)  # open once
+    trans_map = translation_entries(po)
+    female_map = female_entries(po)
 
     dst_dir = simple_lang_slug(pf)  # lang
 
-    for ef in sorted(occurrence_map):
+    for ef in sorted(trans_map):
         enc = get_enc(po_path, ef)
         ef_extract_path = os.path.join(dst_dir, ef)
         print("Extracting {} from {} into {} with encoding {}".format(ef, po_path, ef_extract_path, enc))
-        po2file(epo, ef_extract_path, enc, ef, dst_dir=dst_dir, occurrence_map=occurrence_map)
+        po2file(po, ef_extract_path, enc, ef, dst_dir=dst_dir, trans_map=trans_map, female_map=female_map)
 
     print("Extracted {} into {} with encoding {}".format(po_path, dst_dir, enc))
 
@@ -64,11 +67,9 @@ with cd(CONFIG.tra_dir):
         sys.exit(1)
 
     # extract PO files
-    threads_number = threads_number()
-    print("Processing files with {} threads".format(threads_number))
-    pool = ThreadPool(threads_number)
+    pool = Pool()
     try:
-        pool.map(extract_po, po_files)
+        pool.map_async(extract_po, po_files)
         pool.close()
     except KeyboardInterrupt:
         pool.terminate()
