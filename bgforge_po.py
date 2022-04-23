@@ -506,7 +506,6 @@ def file2msgstr(input_file: str, po: polib.POFile, path: str, encoding=CONFIG.en
 
     # map entries to occurrences for faster access, part 1
     entries_dict = OrderedDict()
-    po = po
     for e in po:
         for eo in e.occurrences:
             entries_dict[(eo[0], eo[1])] = e
@@ -525,35 +524,36 @@ def file2msgstr(input_file: str, po: polib.POFile, path: str, encoding=CONFIG.en
 
         if (path, index) in entries_dict:
             # map entries to occurrences for faster access, part 2
-            e2 = entries_dict[(path, index)]
+            e = entries_dict[(path, index)]
 
             # if translation already exists and different
-            if e2.msgstr is not None and e2.msgstr != "" and e2.msgstr != value:
+            if e.msgstr is not None and e.msgstr != "" and e.msgstr != value:
+
                 # if overwrite is disabled, cutoff
                 if not overwrite:
                     print(
                         "INFO: overwrite disabled, translation already exists "
                         "for {}, skipping:\n   ORIG: {}\n    OLD: {}\n    NEW: {}".format(
-                            e2.occurrences[0], e2.msgid, e2.msgstr, value
+                            e.occurrences[0], e.msgid, e.msgstr, value
                         )
                     )
                     continue
+                # else, overwrite
                 print(
-                    "WARN: different translations found for {}."
-                    "\n   Replacing first string with second:\n     {}\n     {}".format(
-                        e2.occurrences, e2.msgstr, value
+                    "WARN: inconsistent translation found for {}."
+                    "\n   Replacing old string with new:\n    ORIG: {}\n    OLD:  {}\n    NEW:  {}".format(
+                        e.occurrences, e.msgid, e.msgstr, value
                     )
                 )
 
-            if e2.msgid == value:
+            if e.msgid == value:
                 print(
-                    "WARN: string and translation are the same for {}. Using it regardless:\n      {}".format(
-                        e2.occurrences, e2.msgid
+                    "INFO: string and translation are the same for {}. Using it regardless:\n   {}".format(
+                        e.occurrences, e.msgid
                     )
                 )
-            e2.msgstr = value
-
-            e2.msgctxt = context
+            e.msgstr = value
+            e.msgctxt = context
 
     return po
 
