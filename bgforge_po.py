@@ -1,11 +1,11 @@
 import re
 import sys
-import collections
+from collections import OrderedDict
 import polib
 import os
 import shutil
 from contextlib import contextmanager
-import natsort
+from natsort import natsorted
 from config import CONFIG
 from datetime import datetime
 
@@ -68,10 +68,10 @@ FILE_FORMAT = {
 
 
 # used for determining empty strings, which are invalid by PO spec
-empty_comment = "LEAVE empty space in translation"
+EMPTY_COMMENT = "LEAVE empty space in translation"
 
 # po: new translations added through weblate use case sensitive code: pt_BR.po. Keeping them.
-lowercase_exclude = [".git", ".svn", ".hg", "README.md", "po"]
+LOWERCASE_EXCLUDE = [".git", ".svn", ".hg", "README.md", "po"]
 
 CONTEXT_FEMALE = "female"
 
@@ -123,14 +123,14 @@ def lowercase_rename(root_dir, items):
 
 def lowercase_recursively(dir):  # this is the function that is actually used
     for dir_name, subdir_list, file_list in os.walk(dir, topdown=False):
-        subdir_list[:] = [d for d in subdir_list if d not in lowercase_exclude]
+        subdir_list[:] = [d for d in subdir_list if d not in LOWERCASE_EXCLUDE]
         for sd in subdir_list:
             for dname, sdir_list, file_list in os.walk(sd, topdown=False):
                 lowercase_rename(dir_name, file_list)
                 lowercase_rename(dir_name, sdir_list)
     # why is this separate?
     children = os.listdir(dir)
-    children[:] = [c for c in children if c not in lowercase_exclude]
+    children[:] = [c for c in children if c not in LOWERCASE_EXCLUDE]
     with cd(dir):
         for c in children:
             new_c = c.lower()
@@ -388,7 +388,7 @@ def po2file(
             value = entry.msgstr  # either translated or fuzzy+extract_fuzzy
 
         # empty lines detected by comment
-        if entry.comment == empty_comment:
+        if entry.comment == EMPTY_COMMENT:
             value = ""
 
         # context
@@ -505,7 +505,7 @@ def file2msgstr(input_file: str, po: polib.POFile, path: str, encoding=CONFIG.en
     trans = TRANSFile(filepath=input_file, encoding=encoding)  # load translations
 
     # map entries to occurrences for faster access, part 1
-    entries_dict = collections.OrderedDict()
+    entries_dict = OrderedDict()
     po = po
     for e in po:
         for eo in e.occurrences:
@@ -580,9 +580,9 @@ def is_indexed(txt_filename: str, encoding=CONFIG.encoding):
 
 def sort_po(po: polib.POFile):
     for e in po:
-        e.occurrences = natsort.natsorted(e.occurrences, key=lambda k: (k[0], k[1]))
+        e.occurrences = natsorted(e.occurrences, key=lambda k: (k[0], k[1]))
     metadata = po.metadata
-    po = natsort.natsorted(
+    po = natsorted(
         po, key=lambda k: k.occurrences[0] if len(k.occurrences) > 0 else ("zzz", "999")
     )  # female empty occurences hack
     po2 = polib.POFile()
@@ -592,7 +592,7 @@ def sort_po(po: polib.POFile):
 
 
 def po_make_unique(po):
-    entries_dict = collections.OrderedDict()
+    entries_dict = OrderedDict()
     old_metadata = po.metadata
     for e in po:
         if (e.msgid, e.msgctxt) in entries_dict:
@@ -703,7 +703,7 @@ class TRANSFile:
             if entry.value == "":
                 if is_source is True:
                     entry.value = " "
-                    entry.comment = empty_comment
+                    entry.comment = EMPTY_COMMENT
 
             # context
             try:
