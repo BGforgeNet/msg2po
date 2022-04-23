@@ -51,7 +51,6 @@ def dir2msgstr(src_dir: str, po: POFile, overwrite: bool = True):
                 fext = get_ext(file_name)
                 if not fext == ext:
                     continue
-                # if CONFIG.extract_format == "sfall":
                 if dir_name.endswith(CONFIG.female_dir_suffix):
                     print("{} is a file with female strings, skipping".format(full_name))
                     continue
