@@ -528,7 +528,7 @@ def file2msgstr(
 
             # female entries have no occurences
             if female_value and e.msgid in female_map:
-                fe = female_map[e.msgid]
+                fe: polib.POEntry = female_map[e.msgid]
                 if fe and (fe.msgstr != female_value):
                     print("INFO: female translation change detected:")
                     print("  ORIG: {}".format(e.msgid))
@@ -554,6 +554,9 @@ def file2msgstr(
                             skip = True
                     if not skip:
                         fe.msgstr = female_value
+                        if "fuzzy" in fe.flags:
+                            print("    Unfuzzied female entry")
+                            fe.flags.remove("fuzzy")
 
             # translation is the same
             if e.msgstr == value and e.msgctxt == context:
@@ -588,11 +591,17 @@ def file2msgstr(
             if e.msgid == value and same:
                 print("INFO: string and translation are the same for {}. Using it regardless:".format(e.occurrences))
                 print("   {}".format(e.msgid))
-                e.msgstr = value
-                e.msgctxt = context
             else:
                 print("INFO: string and translation are the same for {}. Skipping:".format(e.occurrences))
                 print("   {}".format(e.msgid))
+                continue
+
+            # finally, all checks passed
+            e.msgstr = value
+            e.msgctxt = context
+            if "fuzzy" in e.flags:
+                print("    Unfuzzied entry")
+                fe.flags.remove("fuzzy")
 
     return po
 
