@@ -601,7 +601,7 @@ def file2msgstr(
             e.msgctxt = context
             if "fuzzy" in e.flags:
                 print("    Unfuzzied entry")
-                fe.flags.remove("fuzzy")
+                e.flags.remove("fuzzy")
 
     return po
 
