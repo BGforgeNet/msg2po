@@ -669,8 +669,6 @@ class TRANSFile:
         encoding = kwargs.get("encoding", CONFIG.encoding)
         fext = get_ext(filepath)
 
-        text = open(filepath, "r", encoding=encoding).read()
-
         self.fformat = FILE_FORMAT[fext]
         pattern = self.fformat["pattern"]
         dotall = self.fformat["dotall"]
@@ -679,10 +677,12 @@ class TRANSFile:
         except:
             pass
 
-        if dotall is True:
-            lines = re.findall(pattern, text, re.DOTALL)
-        else:
-            lines = re.findall(pattern, text)
+        with open(filepath, "r", encoding=encoding) as fh:
+            text = fh.read()
+            if dotall is True:
+                lines = re.findall(pattern, text, re.DOTALL)
+            else:
+                lines = re.findall(pattern, text)
 
         # protection again duplicate indexes, part 1
         seen = []
