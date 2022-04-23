@@ -16,6 +16,13 @@ parser.add_argument(
 )
 parser.add_argument("-e", dest="encoding", default="cp1252", help="source encoding")
 parser.add_argument("--no-overwrite", dest="no_overwrite", action="store_true", help="don't overwrite existing msgstrs")
+parser.add_argument(
+    "--same",
+    dest="same",
+    default=False,
+    action="store_true",
+    help="load translations that are identical to original strings",
+)
 args = parser.parse_args()
 
 input_file = args.INPUT_FILE
@@ -30,5 +37,5 @@ if args.no_overwrite:
     overwrite = False
 
 po = pofile(output_file)
-po = file2msgstr(input_file, po, path, encoding=encoding, overwrite=overwrite)
+po = file2msgstr(input_file, po, path, encoding=encoding, overwrite=overwrite, same=args.same)
 po.save(output_file, newline=CONFIG.newline)

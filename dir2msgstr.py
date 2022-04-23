@@ -16,6 +16,13 @@ parser.add_argument("-s", dest="src_dir", default=".", help="directory to load",
 parser.add_argument("-o", dest="output_file", help="existing PO file", required=True)
 parser.add_argument("--ext", dest="file_ext", help="load files with this extension", required=True)
 parser.add_argument("--no-overwrite", dest="no_overwrite", action="store_true", help="don't overwrite existing msgstrs")
+parser.add_argument(
+    "--same",
+    dest="same",
+    default=False,
+    action="store_true",
+    help="load translations that are identical to original strings",
+)
 args = parser.parse_args()
 
 # init vars
@@ -51,7 +58,7 @@ def dir2msgstr(src_dir: str, po: POFile, overwrite: bool = True):
 
                 enc = get_enc(src_dir, file_name)
                 print("processing {} with encoding {}".format(full_name, enc))
-                po = file2msgstr(full_name, po, full_name, enc, overwrite)
+                po = file2msgstr(full_name, po, full_name, enc, overwrite, args.same)
     po = po_make_unique(po)
     return po
 

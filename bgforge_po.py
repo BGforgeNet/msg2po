@@ -499,7 +499,9 @@ def copycreate(src_file, dst_file):
     shutil.copyfile(src_file, dst_file)
 
 
-def file2msgstr(input_file: str, po: polib.POFile, path: str, encoding=CONFIG.encoding, overwrite: bool = True):
+def file2msgstr(
+    input_file: str, po: polib.POFile, path: str, encoding=CONFIG.encoding, overwrite: bool = True, same: bool = False
+):
     """returns PO file object"""
 
     trans = TRANSFile(filepath=input_file, encoding=encoding)  # load translations
@@ -526,32 +528,42 @@ def file2msgstr(input_file: str, po: polib.POFile, path: str, encoding=CONFIG.en
             # map entries to occurrences for faster access, part 2
             e = entries_dict[(path, index)]
 
+            # translation is the same
+            if e.msgstr == value and e.msgctxt == context:
+                continue
+            else:
+                print("INFO: translation change detected for {}:{}:".format(path, index))
+                print("  ORIG: {}".format(e.msgid))
+                print("  OLD:  {}".format(e.msgstr))
+                print("  NEW:  {}".format(value))
+
             # if translation already exists and different
             if e.msgstr is not None and e.msgstr != "" and e.msgstr != value:
 
                 # if overwrite is disabled, cutoff
                 if not overwrite:
                     print(
-                        "INFO: overwrite disabled, translation already exists "
-                        "for {}, skipping:\n   ORIG: {}\n    OLD: {}\n    NEW: {}".format(
-                            e.occurrences[0], e.msgid, e.msgstr, value
+                        "INFO: translation already exists for {}, overwrite disabled, skipping:".format(
+                            e.occurrences[0]
                         )
                     )
+                    print("  ORIG: {}".format(e.msgid))
+                    print("  OLD:  {}".format(e.msgstr))
+                    print("  NEW:  {}".format(value))
                     continue
                 # else, overwrite
-                print(
-                    "WARN: inconsistent translation found for {}."
-                    "\n   Replacing old string with new:\n    ORIG: {}\n    OLD:  {}\n    NEW:  {}".format(
-                        e.occurrences, e.msgid, e.msgstr, value
-                    )
-                )
+                print("WARN: inconsistent translation found for {}.".format(e.occurrences))
+                print("  Replacing old string with new:")
+                print("    ORIG: {}".format(e.msgid))
+                print("    OLD:  {}".format(e.msgstr))
+                print("    NEW:  {}".format(value))
 
-            if e.msgid == value:
-                print(
-                    "INFO: string and translation are the same for {}. Using it regardless:\n   {}".format(
-                        e.occurrences, e.msgid
-                    )
-                )
+            if e.msgid == value and same:
+                print("INFO: string and translation are the same for {}. Using it regardless:".format(e.occurrences))
+                print("   {}".format(e.msgid))
+            else:
+                print("INFO: string and translation are the same for {}. Skipping:".format(e.occurrences))
+                print("   {}".format(e.msgid))
             e.msgstr = value
             e.msgctxt = context
 
