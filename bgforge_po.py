@@ -102,7 +102,7 @@ def strip_ext(filename):
     return filename.rsplit(".", 1)[0]
 
 
-def get_dir(path):
+def get_dir(path: str):
     return path.rsplit(os.sep, 1)[0]
 
 
@@ -247,22 +247,21 @@ def metadata(old_metadata=None, pot=False, po=False):
     return data
 
 
-def file2po(filepath, encoding=CONFIG.encoding):
+def file2po(filepath: str, po_path: str = "", encoding=CONFIG.encoding):
     """Returns PO file object"""
 
     trans = TRANSFile(filepath=filepath, is_source=True, encoding=encoding)  # load translations
 
-    po = polib.POFile()
-    po.metadata = metadata()
+    if po_path == "":
+        po = polib.POFile()
+        po.metadata = metadata()
+    else:
+        po = polib.pofile(po_path)
 
     trans_map = {}
     i = 0  # index in PO object
     for t in trans.entries:
-
-        # female entries don't have any context
         context = t.context
-        if t.female:
-            context = CONTEXT_FEMALE
 
         # append to occurrences if id and context match
         if (t.value, context) in trans_map:
@@ -461,7 +460,7 @@ def po2file(
 
 
 # nasty hack for sfall's female strings placement
-def get_female_filepath(path, dst_dir, same):
+def get_female_filepath(path: str, dst_dir: str, same: bool = True):
     # default: just add _female suffix
     female_path = path.replace(dst_dir + os.sep, dst_dir + CONFIG.female_dir_suffix + os.sep)
     if CONFIG.extract_format == "sfall":
@@ -504,21 +503,20 @@ def file2msgstr(
 ):
     """returns PO file object"""
 
-    trans = TRANSFile(filepath=input_file, encoding=encoding)  # load translations
+    trans = TRANSFile(filepath=input_file, is_source=False, encoding=encoding)  # load translations
 
     # map entries to occurrences for faster access, part 1
     entries_dict = OrderedDict()
     for e in po:
         for eo in e.occurrences:
             entries_dict[(eo[0], eo[1])] = e
+    female_map = female_entries(po)
 
     for t in trans.entries:
         index = t.index
         value = t.value
         context = t.context
-        female = t.female
-        if female:
-            context = CONTEXT_FEMALE
+        female_value = t.female
 
         if (value is None) or (value == ""):
             print("WARN: no msgid found for {}:{}, skipping string\n      {}".format(path, index, value))
@@ -527,6 +525,35 @@ def file2msgstr(
         if (path, index) in entries_dict:
             # map entries to occurrences for faster access, part 2
             e = entries_dict[(path, index)]
+
+            # female entries have no occurences
+            if female_value and e.msgid in female_map:
+                fe = female_map[e.msgid]
+                if fe and (fe.msgstr != female_value):
+                    print("INFO: female translation change detected:")
+                    print("  ORIG: {}".format(e.msgid))
+                    print("  OLD:  {}".format(fe.msgstr))
+                    print("  NEW: {}".format(female_value))
+                    skip = False
+                    if not overwrite:
+                        print("  Female translation already exists, overwrite disabled, skipping")
+                        skip = True
+                    if not skip and (e.msgid == female_value):
+                        if same:
+                            print("INFO: source and female translation are the same. Using it regardless.")
+                            print("   {}".format(e.msgid))
+                            print("   {}".format(female_value))
+                        else:
+                            print(
+                                "INFO: source and female translation are the same for {}. Skipping:".format(
+                                    e.occurrences
+                                )
+                            )
+                            print("   {}".format(e.msgid))
+                            print("   {}".format(female_value))
+                            skip = True
+                    if not skip:
+                        fe.msgstr = female_value
 
             # translation is the same
             if e.msgstr == value and e.msgctxt == context:
@@ -561,11 +588,11 @@ def file2msgstr(
             if e.msgid == value and same:
                 print("INFO: string and translation are the same for {}. Using it regardless:".format(e.occurrences))
                 print("   {}".format(e.msgid))
+                e.msgstr = value
+                e.msgctxt = context
             else:
                 print("INFO: string and translation are the same for {}. Skipping:".format(e.occurrences))
                 print("   {}".format(e.msgid))
-            e.msgstr = value
-            e.msgctxt = context
 
     return po
 
@@ -595,7 +622,7 @@ def sort_po(po: polib.POFile):
         e.occurrences = natsorted(e.occurrences, key=lambda k: (k[0], k[1]))
     metadata = po.metadata
     po = natsorted(
-        po, key=lambda k: k.occurrences[0] if len(k.occurrences) > 0 else ("zzz", "999")
+        po, key=lambda k: k.occurrences[0] if len(k.occurrences) > 0 else ("zzzzz", "99999")
     )  # female empty occurences hack
     po2 = polib.POFile()
     po2.metadata = metadata
@@ -656,38 +683,44 @@ class TRANSEntry:
 class TRANSFile:
     """
     Common translation class, holding translation entries of a single file
+    is_source: if set, adds EMPTY_COMMENT to all empty lines
+    This is because PO gettext format doesn't tolerate empty msgids
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, filepath: str, is_source: False, encoding=CONFIG.encoding):
         self.entries: list[TRANSEntry] = []
-        # the opened file handle
-        filepath = kwargs.get("filepath", None)
-        is_source = kwargs.get(
-            "is_source", False
-        )  # distinguish source TRAs to allow empty comment to be set on empty strings
-        # the file encoding
-        encoding = kwargs.get("encoding", CONFIG.encoding)
+        self.encoding = encoding
         fext = get_ext(filepath)
-
         self.fformat = FILE_FORMAT[fext]
-        pattern = self.fformat["pattern"]
-        dotall = self.fformat["dotall"]
+        self.pattern = self.fformat["pattern"]
+        self.dotall = self.fformat["dotall"]
+
         try:  # comment for all entries in file
             self.comment = self.fformat["comment"]
         except:
             pass
 
-        with open(filepath, "r", encoding=encoding) as fh:
-            text = fh.read()
-            if dotall is True:
-                lines = re.findall(pattern, text, re.DOTALL)
-            else:
-                lines = re.findall(pattern, text)
+        self.lines = self.load_lines(filepath)
+
+        # enabled for file2msgstr, disabled for file2po
+        if not is_source:
+            self.lines_female = None
+            if self.fformat["line_format"]["female"] == "separate":
+                female_dir = get_dir(filepath) + CONFIG.female_dir_suffix
+                female_file = os.path.join(female_dir, basename(filepath))
+                print("INFO: separate file format, looking for female file {}... ".format(female_file), end="")
+                if os.path.isfile(female_file):
+                    print("found")
+                    self.lines_female = self.load_lines(female_file)
+                else:
+                    print("didn't find")
+            if self.lines_female and self.lines_female == self.lines:
+                print("INFO: female lines are identical")
 
         # protection again duplicate indexes, part 1
         seen = []
 
-        for line in lines:
+        for line in self.lines:
             entry = TRANSEntry()
 
             # index and value
@@ -739,6 +772,14 @@ class TRANSFile:
                     print(line)
                     print(entry)
                     sys.exit(1)
+            # sfall female extraction
+            if not is_source and self.lines_female and not (self.lines_female == self.lines):
+                try:
+                    female_line = [fl for fl in self.lines_female if fl[self.fformat["index"]] == entry.index][0]
+                    entry.female = str(female_line[self.fformat["value"]])
+                    print("INFO: found alternative female string for line {}: {}".format(entry.index, entry.female))
+                except:
+                    pass
 
             # protection against duplicate indexes, part 2
             if entry.index in seen:
@@ -755,6 +796,15 @@ class TRANSFile:
             # produce the final list of strings
             if entry.value is not None and entry.value != "":
                 self.entries.append(entry)
+
+    def load_lines(self, filepath: str):
+        with open(filepath, "r", encoding=self.encoding) as fh:
+            text = fh.read()
+            if self.dotall:
+                lines = re.findall(self.pattern, text, re.DOTALL)
+            else:
+                lines = re.findall(self.pattern, text)
+        return lines
 
 
 def simple_lang_slug(po_filename):

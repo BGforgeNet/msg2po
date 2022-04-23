@@ -122,7 +122,7 @@ def poify(dir):  # relative path
                 bname = basename(full_name)
                 enc = get_enc(file_path=bname)
                 print("processing {} with encoding {}".format(full_name, enc))
-                po2 = file2po(full_name, encoding=enc)
+                po2 = file2po(full_name, encoding=args.enc)
                 for e2 in po2:
                     po.append(e2)
     po = po_make_unique(po)

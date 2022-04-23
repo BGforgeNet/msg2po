@@ -15,7 +15,9 @@ parser.add_argument(
     "--path", dest="path", help="load as filename (PO occurrence). If not specified, defaults to input filename"
 )
 parser.add_argument("-e", dest="encoding", default="cp1252", help="source encoding")
-parser.add_argument("--no-overwrite", dest="no_overwrite", action="store_true", help="don't overwrite existing msgstrs")
+parser.add_argument(
+    "overwrite", dest="overwrite", default=False, action="store_true", help="overwrite existing msgstr's"
+)
 parser.add_argument(
     "--same",
     dest="same",
@@ -31,11 +33,7 @@ if args.path is None:
     path = args.INPUT_FILE
 else:
     path = args.path
-encoding = args.encoding
-overwrite = True
-if args.no_overwrite:
-    overwrite = False
 
 po = pofile(output_file)
-po = file2msgstr(input_file, po, path, encoding=encoding, overwrite=overwrite, same=args.same)
+po = file2msgstr(input_file, po, path, encoding=args.encoding, overwrite=args.overwrite, same=args.same)
 po.save(output_file, newline=CONFIG.newline)

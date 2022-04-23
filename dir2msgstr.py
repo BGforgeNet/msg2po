@@ -9,13 +9,15 @@ from polib import pofile, POFile
 
 # parse args
 parser = argparse.ArgumentParser(
-    description="Load strings from files in selected dir into PO",
+    description="Load strings from files in selected dir into PO msgstr's",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 parser.add_argument("-s", dest="src_dir", default=".", help="directory to load", required=True)
 parser.add_argument("-o", dest="output_file", help="existing PO file", required=True)
 parser.add_argument("--ext", dest="file_ext", help="load files with this extension", required=True)
-parser.add_argument("--no-overwrite", dest="no_overwrite", action="store_true", help="don't overwrite existing msgstrs")
+parser.add_argument(
+    "--overwrite", dest="overwrite", default=False, action="store_true", help="overwrite existing msgstrs"
+)
 parser.add_argument(
     "--same",
     dest="same",
@@ -29,9 +31,7 @@ args = parser.parse_args()
 src_dir = args.src_dir
 ext = args.file_ext
 output_file = args.output_file
-overwrite = True
-if args.no_overwrite:
-    overwrite = False
+overwrite = args.overwrite
 
 devnull = open(os.devnull, "w")
 
@@ -51,9 +51,9 @@ def dir2msgstr(src_dir: str, po: POFile, overwrite: bool = True):
                 fext = get_ext(file_name)
                 if not fext == ext:
                     continue
-                if CONFIG.extract_format == "sfall":
-                    if dir_name.endswith(CONFIG.female_dir_suffix):
-                        print("{} is a file with female strings, skipping".format(full_name))
+                # if CONFIG.extract_format == "sfall":
+                if dir_name.endswith(CONFIG.female_dir_suffix):
+                    print("{} is a file with female strings, skipping".format(full_name))
                     continue
 
                 enc = get_enc(src_dir, file_name)

@@ -10,9 +10,9 @@ parser = argparse.ArgumentParser(
     description="Extract {} from gettext PO".format(formats), formatter_class=argparse.ArgumentDefaultsHelpFormatter
 )
 parser.add_argument("INPUT_FILE", help="input PO file")
-parser.add_argument("OUTPUT_FILE", help="output MSG file")
-parser.add_argument("-e", dest="encoding", help="output MSG encoding", default="cp1252")
-parser.add_argument("--path", dest="path", help="MSG occurrence in PO (relative path) - defaults to output MSG name")
+parser.add_argument("OUTPUT_FILE", help="output translation file")
+parser.add_argument("-e", dest="encoding", help="output encoding", default="cp1252")
+parser.add_argument("--path", dest="path", help="file occurrence in PO (relative path) - defaults to output name")
 args = parser.parse_args()
 
 if args.path is None:
