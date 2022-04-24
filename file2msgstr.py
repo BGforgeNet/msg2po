@@ -7,7 +7,7 @@ from polib import pofile
 
 formats = "/".join(VALID_EXTENSIONS)
 parser = argparse.ArgumentParser(
-    description="Load {}into gettext PO msgstr".format(formats), formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    description="Load {} into gettext PO msgstr".format(formats), formatter_class=argparse.ArgumentDefaultsHelpFormatter
 )
 parser.add_argument("INPUT_FILE", help="input file")
 parser.add_argument("OUTPUT_FILE", help="output PO file")
