@@ -6,7 +6,7 @@ import argparse
 import polib
 import shutil
 import re
-from bgforge_po import (
+from msg2po.core import (
     VALID_EXTENSIONS,
     dir_or_exit,
     get_enc,
@@ -75,6 +75,7 @@ def clean_po_dir(d):
 def poify(dir):  # relative path
     po_dir = CONFIG.po_dirname
     prepare_po_dir(po_dir)
+    tra_dir = tra_relpath(poify_dir)
     # process with po_tool
     with cd(dir):
         # Final PO
@@ -133,11 +134,20 @@ def poify(dir):  # relative path
     print("Processed directory {}, the result is in {}/{}/{}.pot".format(poify_dir, tra_dir, po_dir, lang))
 
 
-tra_dir = os.path.relpath(parent_dir(poify_dir))
+def tra_relpath(poify_dir: str) -> str:
+    return os.path.relpath(parent_dir(poify_dir))
 
-# lowercase if not disabled on cmd
-if not nolowercase:
-    lowercase_recursively(tra_dir)
 
-with cd(parent_dir(os.path.abspath(poify_dir))):
-    poify(basename(poify_dir))  # keeping relative occurrences in resulting po
+def main():
+    tra_dir = tra_relpath(poify_dir)
+
+    # lowercase if not disabled on cmd
+    if not nolowercase:
+        lowercase_recursively(tra_dir)
+
+    with cd(parent_dir(os.path.abspath(poify_dir))):
+        poify(basename(poify_dir))  # keeping relative occurrences in resulting po
+
+
+if __name__ == "__main__":
+    main()

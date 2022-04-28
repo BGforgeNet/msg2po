@@ -6,7 +6,7 @@ import argparse
 import sys
 from multiprocessing import Pool
 from polib import pofile
-from bgforge_po import (
+from msg2po.core import (
     CONFIG,
     dir_or_exit,
     cd,
@@ -35,9 +35,8 @@ def extract_po(pf: str):
     """
     pf is po file basename
     """
-    po_path = os.path.join(po_dir, pf)
+    po_path = os.path.join(CONFIG.po_dirname, pf)
     print("processing {}".format(po_path))
-
     po = pofile(po_path)  # open once
     trans_map = translation_entries(po)
     female_map = female_entries(po)
@@ -53,8 +52,8 @@ def extract_po(pf: str):
     print("Extracted {} into {} with encoding {}".format(po_path, dst_dir, enc))
 
 
-with cd(CONFIG.tra_dir):
-    po_dir = CONFIG.po_dirname  # "po"
+def main():
+    po_dir = CONFIG.po_dir
 
     # find PO files
     po_files = []
@@ -66,12 +65,18 @@ with cd(CONFIG.tra_dir):
         print("no PO files found in directory {}".format(po_dir))
         sys.exit(1)
 
-    # extract PO files
-    pool = Pool()
-    try:
-        pool.map_async(extract_po, po_files)
-        pool.close()
-    except KeyboardInterrupt:
-        pool.terminate()
-    finally:
-        pool.join()
+    with cd(CONFIG.tra_dir):
+        # extract PO files
+        pool = Pool()
+        try:
+            r = pool.map_async(extract_po, po_files)
+            pool.close()
+            codes = r.get()  # noqa: F841 - need to get results to see if there's an exception
+        except KeyboardInterrupt:
+            pool.terminate()
+        finally:
+            pool.join()
+
+
+if __name__ == "__main__":
+    main()

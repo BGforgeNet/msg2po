@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # coding: utf-8
+
 import argparse
-from bgforge_po import CONFIG, sort_po
+from msg2po.core import CONFIG, sort_po
 import csv
 from collections import OrderedDict
 import polib
@@ -24,11 +25,16 @@ def load_csv(path):
     return sorted_strings
 
 
-female_strings = load_csv(args.INPUT_CSV)
+def main():
+    female_strings = load_csv(args.INPUT_CSV)
 
-po = polib.pofile(args.OUTPUT_PO)
-for fs in female_strings:
-    entry = polib.POEntry(msgid=fs, msgstr=female_strings[fs], msgctxt="female")
-    po.append(entry)
-po = sort_po(po)
-po.save(args.OUTPUT_PO, newline=CONFIG.newline)
+    po = polib.pofile(args.OUTPUT_PO)
+    for fs in female_strings:
+        entry = polib.POEntry(msgid=fs, msgstr=female_strings[fs], msgctxt="female")
+        po.append(entry)
+    po = sort_po(po)
+    po.save(args.OUTPUT_PO, newline=CONFIG.newline)
+
+
+if __name__ == "__main__":
+    main()

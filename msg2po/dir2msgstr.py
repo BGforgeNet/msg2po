@@ -4,7 +4,7 @@
 import os
 import argparse
 import re
-from bgforge_po import cd, get_ext, get_enc, file2msgstr, po_make_unique, CONFIG
+from msg2po.core import cd, get_ext, get_enc, file2msgstr, po_make_unique, CONFIG
 from polib import pofile, POFile
 
 # parse args
@@ -27,16 +27,8 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-# init vars
-src_dir = args.src_dir
-ext = args.file_ext
-output_file = args.output_file
-overwrite = args.overwrite
 
-devnull = open(os.devnull, "w")
-
-
-def dir2msgstr(src_dir: str, po: POFile, overwrite: bool = True):
+def dir2msgstr(src_dir: str, po: POFile, overwrite: bool = True, extension: str = ""):
     """
     src_dir is relative
     overwrite means ovewrite existing entries if any
@@ -49,7 +41,7 @@ def dir2msgstr(src_dir: str, po: POFile, overwrite: bool = True):
                 full_name = os.path.join(dir_name, file_name)
                 full_name = re.sub("^\./", "", full_name)  # remove trailing './'
                 fext = get_ext(file_name)
-                if not fext == ext:
+                if fext != extension:
                     continue
                 if dir_name.endswith(CONFIG.female_dir_suffix):
                     print("{} is a file with female strings, skipping".format(full_name))
@@ -62,8 +54,13 @@ def dir2msgstr(src_dir: str, po: POFile, overwrite: bool = True):
     return po
 
 
-po = pofile(output_file)
-po = dir2msgstr(src_dir, po, overwrite)
+def main():
+    output_file = args.output_file
+    po = pofile(output_file)
+    po = dir2msgstr(args.src_dir, po, args.overwrite, args.file_ext)
+    po.save(output_file, newline=CONFIG.newline)
+    print("Processed directory {}, the result is in {}".format(args.src_dir, output_file))
 
-po.save(output_file, newline=CONFIG.newline)
-print("Processed directory {}, the result is in {}".format(src_dir, output_file))
+
+if __name__ == "__main__":
+    main()

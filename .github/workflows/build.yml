@@ -1,0 +1,95 @@
+name: build
+
+on: [push]
+
+defaults:
+  run:
+    shell: bash # snok/install-poetry requirement
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+          - os: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - uses: actions/checkout@v2
+
+      - name: Load cached Poetry installation | linux # windows doesn't work for some reason
+        uses: actions/cache@v2
+        with:
+          path: ~/.local  # the path depends on the OS
+          key: poetry-lin-3  # increment to reset cache
+        if: matrix.os != 'windows-latest'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1.3.1
+        with:
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Set dev version
+        if: "!startsWith(github.ref, 'refs/tags/')"
+        run: |
+          git_hash=$(git rev-parse --short "$GITHUB_SHA")
+          echo "VERSION = \"git$git_hash\"" > zax/version.py
+
+      - name: Set release version
+        if: "startsWith(github.ref, 'refs/tags/')"
+        run: |
+          git_hash=$(git rev-parse --short "$GITHUB_SHA")
+          version="$(echo $GITHUB_REF | sed 's|refs\/tags\/||')"
+          echo "VERSION = \"$version\"" > zax/version.py
+
+      - name: Build
+        run: |
+          set -xeu -o pipefail
+          poetry install
+          source $VENV
+          cd zax
+          pyinstaller zax.spec
+
+      - name: Upload | lin
+        uses: actions/upload-artifact@v2
+        if: "!startsWith(github.ref, 'refs/tags/') && (matrix.os == 'ubuntu-latest')"
+        with:
+          name: zax-linux
+          path: zax/dist/zax
+
+      - name: Upload | win
+        uses: actions/upload-artifact@v2
+        if: "!startsWith(github.ref, 'refs/tags/') && (matrix.os == 'windows-latest')"
+        with:
+          name: zax.exe
+          path: zax/dist/zax.exe
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            zax/dist/zax.exe
+            zax/dist/zax
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to PyPi
+        if: "startsWith(github.ref, 'refs/tags/') && (matrix.os == 'ubuntu-latest')"
+        run: |
+          set -xeu -o pipefail
+          poetry config pypi-token.pypi $PYPI_TOKEN
+          poetry build
+          poetry publish
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}

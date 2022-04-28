@@ -2,8 +2,8 @@
 # coding: utf-8
 
 import argparse
-from bgforge_po import po2file, VALID_EXTENSIONS
-from polib import POFile
+from msg2po.core import po2file, VALID_EXTENSIONS
+from polib import pofile
 
 formats = "/".join(VALID_EXTENSIONS)
 parser = argparse.ArgumentParser(
@@ -20,5 +20,11 @@ if args.path is None:
 else:
     path = args.path
 
-po = POFile(args.INPUT_FILE)
-po2file(po, args.OUTPUT_FILE, args.encoding, path)
+
+def main():
+    po = pofile(args.INPUT_FILE)
+    po2file(po, args.OUTPUT_FILE, args.encoding, path)
+
+
+if __name__ == "__main__":
+    main()

@@ -44,7 +44,7 @@ runs:
         fi
         pip3 install -r "$GITHUB_ACTION_PATH/requirements.txt"
         echo "{$GITHUB_ACTION_PATH}" >> $GITHUB_PATH
-        $GITHUB_ACTION_PATH/gha.sh
+        $GITHUB_ACTION_PATH/.github/action.sh
       shell: bash
       env:
         INPUT_POIFY: ${{ inputs.poify }}

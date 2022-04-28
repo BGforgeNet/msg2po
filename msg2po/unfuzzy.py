@@ -6,7 +6,7 @@ from polib import pofile
 import sys
 import ruamel.yaml
 import os
-from bgforge_po import CONFIG
+from msg2po.core import CONFIG
 
 parser = argparse.ArgumentParser(
     description="Unmark PO entries as fuzzy,"
@@ -42,23 +42,28 @@ def msgids_equal(id1, id2):
         return False
 
 
-i = 0
-for e in po.fuzzy_entries():
-    if e.previous_msgid:  # some fuzzies are assigned automatically on merge and don't have previous msgids
-        e1 = e.msgid
-        e2 = e.previous_msgid
-        if msgids_equal(e1, e2):
-            if write:
-                e.flags.remove("fuzzy")
-                e.previous_msgid = None
-                e.previous_msgid_plural = None
-                e.previous_msgctxt = None
-            else:  # preview
-                i = i + 1
-                print(e1)
-                print(e2)
+def main():
+    i = 0
+    for e in po.fuzzy_entries():
+        if e.previous_msgid:  # some fuzzies are assigned automatically on merge and don't have previous msgids
+            e1 = e.msgid
+            e2 = e.previous_msgid
+            if msgids_equal(e1, e2):
+                if write:
+                    e.flags.remove("fuzzy")
+                    e.previous_msgid = None
+                    e.previous_msgid_plural = None
+                    e.previous_msgctxt = None
+                else:  # preview
+                    i = i + 1
+                    print(e1)
+                    print(e2)
 
-if write:
-    po.save(input_file, newline=CONFIG.newline)
-else:
-    print(i)
+    if write:
+        po.save(input_file, newline=CONFIG.newline)
+    else:
+        print(i)
+
+
+if __name__ == "__main__":
+    main()

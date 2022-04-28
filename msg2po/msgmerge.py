@@ -13,7 +13,7 @@ import argparse
 import subprocess
 import sys
 from multiprocessing import Pool
-from bgforge_po import get_ext, sort_po, restore_female_entries, CONFIG
+from msg2po.core import get_ext, sort_po, restore_female_entries, CONFIG
 from polib import pofile
 
 # parse args
@@ -58,31 +58,36 @@ def find_files(dir: str, ext: str):
     return files
 
 
-# single file
-if (args.PO is not None) and (args.POT is not None):
-    res = merge(args.PO, args.POT)
-    if res != 0:
-        print("ERROR: msgmerge failed for {}".format(args.PO))
-        sys.exit(1)
-    sys.exit(0)
+def main():
+    # single file
+    if (args.PO is not None) and (args.POT is not None):
+        res = merge(args.PO, args.POT)
+        if res != 0:
+            print("ERROR: msgmerge failed for {}".format(args.PO))
+            sys.exit(1)
+        sys.exit(0)
 
-# multifile, read .bgforge.yml
-po_dir = CONFIG.po_dir
-po_files = find_files(po_dir, "po")
-pot_file = os.path.join(po_dir, CONFIG.src_lang + ".pot")
+    # multifile, read .bgforge.yml
+    po_dir = CONFIG.po_dir
+    po_files = find_files(po_dir, "po")
+    pot_file = os.path.join(po_dir, CONFIG.src_lang + ".pot")
 
-print("Merging PO files in {} with {}".format(po_dir, pot_file))
-pool = Pool()
-try:
-    r = pool.map_async(partial(merge, pot_path=pot_file), po_files)
-    pool.close()
-    codes = r.get()
-except KeyboardInterrupt:
-    pool.terminate()
-finally:
-    pool.join()
+    print("Merging PO files in {} with {}".format(po_dir, pot_file))
+    pool = Pool()
+    try:
+        r = pool.map_async(partial(merge, pot_path=pot_file), po_files)
+        pool.close()
+        codes = r.get()
+    except KeyboardInterrupt:
+        pool.terminate()
+    finally:
+        pool.join()
 
-for c in codes:
-    if c != 0:
-        print("ERROR: one of msgmerge invocations failed.")
-        sys.exit(1)
+    for c in codes:
+        if c != 0:
+            print("ERROR: one of msgmerge invocations failed.")
+            sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

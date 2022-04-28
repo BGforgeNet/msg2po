@@ -3,7 +3,7 @@
 
 import argparse
 from polib import pofile
-from bgforge_po import sort_po, restore_female_entries, CONFIG
+from msg2po.core import sort_po, restore_female_entries, CONFIG
 
 parser = argparse.ArgumentParser(
     description="Resave PO file using polib API, to correct formatting",
@@ -12,9 +12,13 @@ parser = argparse.ArgumentParser(
 parser.add_argument("INPUT_FILE", help="PO file to resave")
 args = parser.parse_args()
 
-po = pofile(args.INPUT_FILE)
 
-po = restore_female_entries(po)
-po2 = sort_po(po)
+def main():
+    po = pofile(args.INPUT_FILE)
+    po = restore_female_entries(po)
+    po2 = sort_po(po)
+    po2.save(args.INPUT_FILE, newline=CONFIG.newline)
 
-po2.save(args.INPUT_FILE, newline=CONFIG.newline)
+
+if __name__ == "__main__":
+    main()
