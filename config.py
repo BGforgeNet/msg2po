@@ -8,28 +8,29 @@ VERSION = "1.1.0"
 class Config:
     def __init__(self):
         yml = ".bgforge.yml"
-        defaults = {
+        translation_defaults = {
             "encoding": "cp1252",
             "tra_dir": ".",
             "src_lang": "english",
             "simple_languages": True,  # extract into language name, not language code. pt_BR.po -> portuguese/1.msg
             "skip_files": [],
             "extract_format": "",  # could be 'sfall'
-            "no_female": False,  # expllicitly disable female extraction?
+            "no_female": False,  # explicitly disable female extraction (TODO: reason unclear)
             "extract_fuzzy": False,
-            "lowercase": True
+            "lowercase": True,
         }
 
-        config = defaults
+        config = translation_defaults
         try:
             with open(yml) as yf:
                 yaml = ruamel.yaml.YAML()
                 config = yaml.load(yf)
-            translation_config = {**defaults, **config["translation"]}
+            translation_config = {**translation_defaults, **config["translation"]}
         except:
             print(yml + " not found, assuming defaults", file=sys.stderr)
-            translation_config = defaults
-        self._config = config  # for shell wrapper
+            translation_config = translation_defaults
+        config["translation"] = translation_config
+        self._config = config  # so that shell wrapper can get values from other stanzas too
 
         self.encoding = translation_config["encoding"]
         self.tra_dir = translation_config["tra_dir"]
