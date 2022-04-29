@@ -27,4 +27,10 @@ build-backend = "poetry.core.masonry.api"
 line-length = 120
 
 [tool.poetry.plugins."console_scripts"]
-"poify" = "msg2po.__main__:poify"
+"bgforge-config" = "msg2po.bgforge-config:main"
+"dir2msgstr" = "msg2po.dir2msgstr:main"
+"file2msgstr" = "msg2po.file2msgstr:main"
+"file2po" = "msg2po.file2po:main"
+"po2file" = "msg2po.po2file:main"
+"resave-po" = "msg2po.resave-po:main"
+"unpoify" = "msg2po.unpoify:main"
