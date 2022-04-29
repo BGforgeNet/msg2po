@@ -147,6 +147,18 @@ def dir_or_exit(d):
         sys.exit(1)
 
 
+def find_files(dir: str, ext: str):
+    """
+    Find files with extension ext in directory dir
+    """
+    files = []
+    for root, subdir_list, file_list in os.walk(dir):
+        for f in file_list:
+            if get_ext(f) == ext:
+                files.append((os.path.join(root, f)))
+    return files
+
+
 @contextmanager
 def cd(newdir):
     prevdir = os.getcwd()
@@ -157,9 +169,10 @@ def cd(newdir):
         os.chdir(prevdir)
 
 
-def get_enc(po_path: str = "", file_path: str = ""):
+def get_enc(lang_path: str = "", file_path: str = ""):
     """
-    Returns encoding based on PO and file path
+    Infers encoding based on dir/PO name and file path
+    lang_path can be PO path or translation path, only basename is used
     """
     ENCODINGS = {
         "schinese": "cp936",
@@ -201,8 +214,9 @@ def get_enc(po_path: str = "", file_path: str = ""):
     ]
 
     encoding = CONFIG.encoding
-    lang = strip_ext(basename(po_path))
+    lang = strip_ext(basename(lang_path))
     filename = basename(file_path)
+
     if lang in ENCODINGS:
         encoding = ENCODINGS[lang]
 
@@ -445,15 +459,15 @@ def po2file(
         female_file = get_female_filepath(output_file, dst_dir, same)
 
         if female_file is False:  # don't need to copy, automatic fallback
-            print("Female strings are same, not copying - sfall will fallback to male {}".format(output_file))
+            print("  Female strings are same, not copying - sfall will fallback to male {}".format(output_file))
             return True  # cutoff the rest of the function
 
         # If need to create the file
         if same:  # if female translation is the same?
-            print("Female strings are same, copying to {}".format(female_file))
+            print("  Female strings are same, copying to {}".format(female_file))
             copycreate(output_file, female_file)
         else:  # if it's different, extract separately
-            print("Also extracting female counterpart into {}".format(female_file))
+            print("  Also extracting female counterpart into {}".format(female_file))
             create_dir(get_dir(female_file))  # create dir if not exists
             with open(female_file, "w", encoding=encoding, newline=CONFIG.newline) as file2:
                 file2.writelines(lines_female)
@@ -561,42 +575,28 @@ def file2msgstr(
             # translation is the same
             if e.msgstr == value and e.msgctxt == context:
                 continue
-            else:
-                print("INFO: translation change detected for {}:{}:".format(path, index))
-                print("  ORIG: {}".format(e.msgid))
-                print("  OLD:  {}".format(e.msgstr))
-                print("  NEW:  {}".format(value))
 
-            # if translation already exists and different
-            if e.msgstr is not None and e.msgstr != "" and e.msgstr != value:
-
-                # if overwrite is disabled, cutoff
-                if not overwrite:
-                    print(
-                        "INFO: translation already exists for {}, overwrite disabled, skipping:".format(
-                            e.occurrences[0]
-                        )
-                    )
-                    print("  ORIG: {}".format(e.msgid))
-                    print("  OLD:  {}".format(e.msgstr))
-                    print("  NEW:  {}".format(value))
-                    continue
-                # else, overwrite
-                print("WARN: inconsistent translation found for {}.".format(e.occurrences))
-                print("  Replacing old string with new:")
-                print("    ORIG: {}".format(e.msgid))
-                print("    OLD:  {}".format(e.msgstr))
-                print("    NEW:  {}".format(value))
-
-            if e.msgid == value and same:
-                print("INFO: string and translation are the same for {}. Using it regardless:".format(e.occurrences))
-                print("   {}".format(e.msgid))
-            else:
-                print("INFO: string and translation are the same for {}. Skipping:".format(e.occurrences))
+            # translation is the same as source
+            if e.msgid == value and not same:
+                print("INFO: string and new translation are the same for {}. Skipping:".format(e.occurrences))
                 print("   {}".format(e.msgid))
                 continue
 
+            # if translation already exists and different
+            if e.msgstr is not None and e.msgstr != "" and e.msgstr != value:
+                # if overwrite is disabled, cutoff
+                if not overwrite:
+                    print(
+                        "INFO: translation already exists for {}, overwrite disabled, skipping:".format(e.occurrences)
+                    )
+                    continue
+
             # finally, all checks passed
+            print("INFO: translation update found for {}.".format(e.occurrences))
+            print("  Replacing old string with new:")
+            print("    ORIG: {}".format(e.msgid))
+            print("    OLD:  {}".format(e.msgstr))
+            print("    NEW:  {}".format(value))
             e.msgstr = value
             e.msgctxt = context
             if "fuzzy" in e.flags:
@@ -717,14 +717,16 @@ class TRANSFile:
             if self.fformat["line_format"]["female"] == "separate":
                 female_dir = get_dir(filepath) + CONFIG.female_dir_suffix
                 female_file = os.path.join(female_dir, basename(filepath))
-                print("INFO: separate file format, looking for female file {}... ".format(female_file), end="")
+                print("  separate file format, looking for female file {}... ".format(female_file), end="")
                 if os.path.isfile(female_file):
                     print("found")
                     self.lines_female = self.load_lines(female_file)
                 else:
                     print("didn't find")
             if self.lines_female and self.lines_female == self.lines:
-                print("INFO: female lines are identical")
+                print("  female lines are identical")
+            else:
+                print("  female lines are different")
 
         # protection again duplicate indexes, part 1
         seen = []
@@ -781,12 +783,14 @@ class TRANSFile:
                     print(line)
                     print(entry)
                     sys.exit(1)
+
             # sfall female extraction
             if not is_source and self.lines_female and not (self.lines_female == self.lines):
                 try:
                     female_line = [fl for fl in self.lines_female if fl[self.fformat["index"]] == entry.index][0]
                     entry.female = str(female_line[self.fformat["value"]])
-                    print("INFO: found alternative female string for line {}: {}".format(entry.index, entry.female))
+                    if entry.female != entry.value:
+                        print("  found alternative female string for line {}: {}".format(entry.index, entry.female))
                 except:
                     pass
 
@@ -797,7 +801,7 @@ class TRANSFile:
                         filepath, entry.index, entry.value
                     )
                 )
-                self[:] = [entry if x.index == entry.index else x for x in self]
+                self.entries = [entry if x.index == entry.index else x for x in self.entries]
                 continue
             else:
                 seen.append(index)

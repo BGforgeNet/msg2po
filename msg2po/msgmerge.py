@@ -13,7 +13,7 @@ import argparse
 import subprocess
 import sys
 from multiprocessing import Pool
-from msg2po.core import get_ext, sort_po, restore_female_entries, CONFIG
+from msg2po.core import sort_po, restore_female_entries, CONFIG, find_files
 from polib import pofile
 
 # parse args
@@ -47,15 +47,6 @@ def merge(po_path: str, pot_path: str):
     po2 = sort_po(po2)
     po2.save(fpath=po_path, newline=CONFIG.newline)
     return exit_code
-
-
-def find_files(dir: str, ext: str):
-    files = []
-    for root, subdir_list, file_list in os.walk(dir):
-        for f in file_list:
-            if get_ext(f) == ext:
-                files.append((os.path.join(root, f)))
-    return files
 
 
 def main():

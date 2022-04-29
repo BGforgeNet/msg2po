@@ -4,7 +4,19 @@
 import os
 import argparse
 import re
-from msg2po.core import cd, get_ext, get_enc, file2msgstr, po_make_unique, CONFIG
+import sys
+from msg2po.core import (
+    VALID_EXTENSIONS,
+    basename,
+    cd,
+    find_files,
+    get_ext,
+    get_enc,
+    file2msgstr,
+    po_make_unique,
+    CONFIG,
+    strip_ext,
+)
 from polib import pofile, POFile
 
 # parse args
@@ -12,12 +24,17 @@ parser = argparse.ArgumentParser(
     description="Load strings from files in selected dir into PO msgstr's",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
-parser.add_argument("-s", dest="src_dir", default=".", help="directory to load", required=True)
-parser.add_argument("-o", dest="output_file", help="existing PO file", required=True)
-parser.add_argument("--ext", dest="file_ext", help="load files with this extension", required=True)
 parser.add_argument(
-    "--overwrite", dest="overwrite", default=False, action="store_true", help="overwrite existing msgstrs"
+    "--auto",
+    dest="auto",
+    default=False,
+    action="store_true",
+    help="automatically find POs and language dirs, process all valid extensions",
+    required=False,
 )
+parser.add_argument("-s", dest="src_dir", default=".", help="directory to load", required=False)
+parser.add_argument("-o", dest="output_file", default=None, help="existing PO file", required=False)
+parser.add_argument("--ext", dest="file_ext", default=None, help="load files with this extension", required=False)
 parser.add_argument(
     "--same",
     dest="same",
@@ -25,10 +42,13 @@ parser.add_argument(
     action="store_true",
     help="load translations that are identical to original strings",
 )
+parser.add_argument(
+    "--overwrite", dest="overwrite", default=False, action="store_true", help="overwrite existing translations"
+)
 args = parser.parse_args()
 
 
-def dir2msgstr(src_dir: str, po: POFile, overwrite: bool = True, extension: str = ""):
+def dir2msgstr(src_dir: str, po: POFile, po_path: str = "", overwrite: bool = True, extension: str = ""):
     """
     src_dir is relative
     overwrite means ovewrite existing entries if any
@@ -47,7 +67,7 @@ def dir2msgstr(src_dir: str, po: POFile, overwrite: bool = True, extension: str 
                     print("{} is a file with female strings, skipping".format(full_name))
                     continue
 
-                enc = get_enc(src_dir, file_name)
+                enc = get_enc(po_path, file_name)
                 print("processing {} with encoding {}".format(full_name, enc))
                 po = file2msgstr(full_name, po, full_name, enc, overwrite, args.same)
     po = po_make_unique(po)
@@ -55,11 +75,29 @@ def dir2msgstr(src_dir: str, po: POFile, overwrite: bool = True, extension: str 
 
 
 def main():
-    output_file = args.output_file
-    po = pofile(output_file)
-    po = dir2msgstr(args.src_dir, po, args.overwrite, args.file_ext)
-    po.save(output_file, newline=CONFIG.newline)
-    print("Processed directory {}, the result is in {}".format(args.src_dir, output_file))
+    if not args.auto and ((args.output_file is None) or (args.file_ext is None)):
+        print("ERROR: you must either use auto mode or specify output PO and file extension")
+        sys.exit(1)
+
+    if not args.auto:
+        output_file = args.output_file
+        po = pofile(output_file)
+        po = dir2msgstr(
+            src_dir=args.src_dir, po=po, po_path=output_file, overwrite=args.overwrite, extension=args.file_ext
+        )
+        po.save(output_file, newline=CONFIG.newline)
+        print("Processed directory {}, the result is in {}".format(args.src_dir, output_file))
+
+    if args.auto:
+        with cd(CONFIG.tra_dir):
+            po_files = find_files(CONFIG.po_dirname, "po")
+            for pf in po_files:
+                lang_dir = strip_ext(basename(pf))
+                po = pofile(pf)
+                for ve in VALID_EXTENSIONS:
+                    po = dir2msgstr(src_dir=lang_dir, po=po, po_path=pf, overwrite=args.overwrite, extension=ve)
+                    po.save(pf, newline=CONFIG.newline)
+                    print("Processed {} files in directory {}, the result is in {}".format(ve, lang_dir, pf))
 
 
 if __name__ == "__main__":

@@ -34,7 +34,7 @@ parser.add_argument(
     default="{}".format(CONFIG.poify_dir),
     help="source language directory",
 )
-parser.add_argument("-e", dest="enc", help="source encoding", default="cp1252")
+parser.add_argument("-e", dest="enc", help="source encoding", default="{}".format(CONFIG.encoding))
 parser.add_argument(
     "--no-lowercase",
     dest="nolowercase",
