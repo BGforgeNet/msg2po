@@ -1,5 +1,5 @@
 name: BGforge poify/unpoify
-description: Updates Gettext POT template from source language, extracts translations from PO files, commits and pushes the files.
+description: Update Gettext POT template from source language, extract translations from PO files, commit and push the files.
 branding:
   icon: message-circle
   color: green
@@ -7,29 +7,39 @@ branding:
 inputs:
   poify:
     description: run poify
-    default: 'true'
+    default: "false"
     required: false
-  msgmerge:
-    description: update PO files from POT
-    default: 'true'
+  poify_commit:
+    description: commit poify result
+    default: "false"
     required: false
   unpoify:
     description: run unpoify
-    default: 'true'
+    default: "false"
     required: false
-  commit:
-    description: commit and push poify/unpoify results
-    default: 'true'
+  unpoify_commit:
+    description: commit unpoify result
+    default: "false"
     required: false
-  separate_commits:
-    description: use separate commits for poify and unpoify, or a single one
-    default: 'true'
+  dir2msgstr:
+    description: load manually updated translations into POs
+    default: "false"
+    required: false
+  dir2msgstr_commit:
+    description: commit dir2msgstr result
+    default: "false"
+    required: false
+  push:
+    description: push commits
+    default: "false"
     required: false
 
 runs:
   using: "composite"
   steps:
-    - run: |
+    - name: Initialize environment
+      shell: bash
+      run: |
         set -xeu -o pipefail
         if [ "$RUNNER_OS" == "Linux" ]; then
           apt install gettext
@@ -44,11 +54,44 @@ runs:
         fi
         pip3 install -r "$GITHUB_ACTION_PATH/requirements.txt"
         echo "{$GITHUB_ACTION_PATH}" >> $GITHUB_PATH
-        $GITHUB_ACTION_PATH/.github/action.sh
+
+    # smart filters https://github.com/dorny/paths-filter
+    - name: Get path filters for checking changes
       shell: bash
+      run: bgforge-config.py dorny-paths > ../filters.yml # not sure how to get tmp dir
+
+    - name: Check changes
+      uses: dorny/paths-filter@v2
+      id: changes
+      with:
+        filters: ../filters.yml
+
+    - name: Poify
+      if: steps.changes.outputs.poify == 'true'
+      shell: bash
+      run: $GITHUB_ACTION_PATH/action/poify.sh
       env:
         INPUT_POIFY: ${{ inputs.poify }}
+        INPUT_POIFY_COMMIT: ${{ inputs.poify_commit }}
+
+    - name: Unpoify
+      if: steps.changes.outputs.unpoify == 'true'
+      shell: bash
+      run: $GITHUB_ACTION_PATH/action/unpoify.sh
+      env:
         INPUT_UNPOIFY: ${{ inputs.unpoify }}
-        INPUT_COMMIT: ${{ inputs.commit }}
-        INPUT_SEPARATE_COMMITS: ${{ inputs.separate_commits }}
-        INPUT_MSGMERGE: ${{ inputs.msgmerge }}
+        INPUT_UNPOIFY_COMMIT: ${{ inputs.unpoify_commit }}
+
+    - name: Load manual translation changes
+      if: steps.changes.outputs.dir2msgstr == 'true'
+      shell: bash
+      run: $GITHUB_ACTION_PATH/action/dir2msgstr.sh
+      env:
+        INPUT_DIR2MSGSTR: ${{ inputs.dir2msgstr }}
+        INPUT_DIR2MSGSTR_COMMIT: ${{ inputs.dir2msgstr_commit }}
+
+    - name: Push
+      shell: bash
+      run: $GITHUB_ACTION_PATH/action/push.sh
+      env:
+        INPUT_PUSH: ${{ inputs.push }}
