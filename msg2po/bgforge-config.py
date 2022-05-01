@@ -4,7 +4,7 @@
 # this script is needed for shell wrappers
 
 import sys
-from config import CONFIG
+from msg2po.config import CONFIG
 
 stanza = sys.argv[1]
 key = sys.argv[2]
