@@ -6,7 +6,7 @@ import os
 import shutil
 from contextlib import contextmanager
 from natsort import natsorted
-from config import CONFIG
+from msg2po.config import CONFIG
 from datetime import datetime
 
 # extensions recognized by file2po, etc
