@@ -36,9 +36,8 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           set -xeu -o pipefail
-          poetry config repositories.testpypi https://test.pypi.org
-          poetry config pypi-token.testpypi $PYPI_TOKEN
+          poetry config pypi-token.pypi $PYPI_TOKEN
           poetry build
-          poetry publish -r testpypi
+          poetry publish
         env:
           PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
