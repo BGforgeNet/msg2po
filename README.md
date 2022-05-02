@@ -17,3 +17,9 @@ po2file -h
 file2msgstr -h
 dir2msgstr -h
 ```
+
+## Action
+Github [action](docs/action.md) is available for automatic processing.
+
+---
+[Changelog](docs/changelog.md)
