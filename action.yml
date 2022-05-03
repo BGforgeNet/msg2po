@@ -53,7 +53,7 @@ runs:
           exit 1
         fi
         pip3 install -r "$GITHUB_ACTION_PATH/requirements.txt"
-        echo "{$GITHUB_ACTION_PATH}" >> $GITHUB_PATH
+        echo "$GITHUB_ACTION_PATH" >> $GITHUB_PATH
         echo "$PATH"
 
     # smart filters https://github.com/dorny/paths-filter
