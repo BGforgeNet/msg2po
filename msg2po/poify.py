@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import os
+import sys
 import argparse
 import polib
 import shutil
@@ -82,7 +83,6 @@ def poify(dir):  # relative path
         lang = basename(dir)
         dst_file = os.path.join(po_dir, lang + ".pot")
         po = polib.POFile()
-        po.metadata = metadata(pot=True)
 
         # skip female cuts, they are built from male ones
         extract_format = CONFIG.extract_format
@@ -128,9 +128,18 @@ def poify(dir):  # relative path
                     po.append(e2)
     po = po_make_unique(po)
     po = sort_po(po)
+    clean_po_dir(po_dir)
+
+    old_po = polib.pofile(dst_file)
+    po.metadata = old_po.metadata
+    if po == old_po:
+        print("No change in source directory {}".format(poify_dir))
+        sys.exit(0)
+    else:
+        po.metadata = metadata(pot=True)
+
     po.save(dst_file, newline=CONFIG.newline)
 
-    clean_po_dir(po_dir)
     print("Processed directory {}, the result is in {}/{}/{}.pot".format(poify_dir, tra_dir, po_dir, lang))
 
 
