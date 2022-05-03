@@ -52,16 +52,17 @@ runs:
           echo "$RUNNER_OS not supported"
           exit 1
         fi
-        pip3 install -r "$GITHUB_ACTION_PATH/requirements.txt"
-        echo "${GITHUB_ACTION_PATH}/msg2po"
+        virtualenv "${GITHUB_ACTION_PATH}/.venv"
+        source "${GITHUB_ACTION_PATH}/.venv/bin/activate"
+        pip3 install -r "$GITHUB_ACTION_PATH/requirements.txt" --quiet
         echo "${GITHUB_ACTION_PATH}/msg2po" >> $GITHUB_PATH
-        echo "$PATH"
 
     # smart filters https://github.com/dorny/paths-filter
     - name: Get path filters for checking changes
       shell: bash
       run: |
         echo "$PATH"
+        source "${GITHUB_ACTION_PATH}/.venv/bin/activate"
         bgforge-config.py dorny-paths > ../filters.yml # not sure how to get tmp dir
 
     - name: Check changes
