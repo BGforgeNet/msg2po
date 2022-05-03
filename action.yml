@@ -54,7 +54,7 @@ runs:
         fi
         pip3 install -r "$GITHUB_ACTION_PATH/requirements.txt" --quiet
         echo "${GITHUB_ACTION_PATH}/msg2po" >> $GITHUB_PATH
-        echo "PYTHONPATH=$PYTHONPATH:${GITHUB_ACTION_PATH}/msg2po" >> $GITHUB_ENV
+        echo "PYTHONPATH=${GITHUB_ACTION_PATH}/msg2po" >> $GITHUB_ENV
 
     # smart filters https://github.com/dorny/paths-filter
     - name: Get path filters for checking changes
