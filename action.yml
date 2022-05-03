@@ -42,7 +42,7 @@ runs:
       run: |
         set -xeu -o pipefail
         if [ "$RUNNER_OS" == "Linux" ]; then
-          apt install gettext
+          sudo apt -y install gettext
         elif [ "$RUNNER_OS" == "Windows" ]; then
           wget https://github.com/mlocati/gettext-iconv-windows/releases/download/v0.21-v1.16/gettext0.21-iconv1.16-static-32.zip -O gettext.zip
           7z e gettext.zip bin/msgmerge.exe
