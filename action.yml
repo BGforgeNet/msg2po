@@ -61,6 +61,7 @@ runs:
       shell: bash
       run: |
         echo "$PATH"
+        ls $GITHUB_ACTION_PATH
         bgforge-config.py dorny-paths > ../filters.yml # not sure how to get tmp dir
 
     - name: Check changes
