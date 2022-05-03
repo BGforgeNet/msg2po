@@ -455,17 +455,18 @@ def po2file(
         same = False
         if lines_female == lines:
             same = True
+
         # what's out path?
         female_file = get_female_filepath(output_file, dst_dir, same)
 
-        if female_file is False:  # don't need to copy, automatic fallback
-            print("  Female strings are same, not copying - sfall will fallback to male {}".format(output_file))
-            return True  # cutoff the rest of the function
-
         # If need to create the file
         if same:  # if female translation is the same?
-            print("  Female strings are same, copying to {}".format(female_file))
-            copycreate(output_file, female_file)
+            if female_file is False:  # don't need to copy, automatic fallback
+                print("  Female strings are same, not copying - sfall will fallback to male {}".format(output_file))
+                return True  # cutoff the rest of the function
+            else:
+                print("  Female strings are same, copying to {}".format(female_file))
+                copycreate(output_file, female_file)
         else:  # if it's different, extract separately
             print("  Also extracting female counterpart into {}".format(female_file))
             create_dir(get_dir(female_file))  # create dir if not exists
@@ -483,6 +484,10 @@ def get_female_filepath(path: str, dst_dir: str, same: bool = True):
             female_path = path.replace(os.sep + "cuts" + os.sep, os.sep + "cuts_female" + os.sep)
         if "dialog" in path.split(os.sep) and not same:  # dialog, female translation differs
             female_path = path.replace(os.sep + "dialog" + os.sep, os.sep + "dialog_female" + os.sep)
+
+        # TODO: we're extracting game files for female, but sfall doesn't support them
+        if "game" in path.split(os.sep) and not same:  # dialog, female translation differs
+            female_path = path.replace(os.sep + "game" + os.sep, os.sep + "game_female" + os.sep)
     return female_path
 
 
