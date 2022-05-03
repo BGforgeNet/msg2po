@@ -53,6 +53,7 @@ runs:
           exit 1
         fi
         pip3 install -r "$GITHUB_ACTION_PATH/requirements.txt"
+        echo "${GITHUB_ACTION_PATH}/msg2po"
         echo "${GITHUB_ACTION_PATH}/msg2po" >> $GITHUB_PATH
         echo "$PATH"
 
@@ -61,7 +62,6 @@ runs:
       shell: bash
       run: |
         echo "$PATH"
-        ls $GITHUB_ACTION_PATH
         bgforge-config.py dorny-paths > ../filters.yml # not sure how to get tmp dir
 
     - name: Check changes
