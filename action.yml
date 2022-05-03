@@ -52,10 +52,9 @@ runs:
           echo "$RUNNER_OS not supported"
           exit 1
         fi
-        virtualenv "${GITHUB_ACTION_PATH}/.venv"
-        source "${GITHUB_ACTION_PATH}/.venv/bin/activate"
         pip3 install -r "$GITHUB_ACTION_PATH/requirements.txt" --quiet
         echo "${GITHUB_ACTION_PATH}/msg2po" >> $GITHUB_PATH
+        echo "PYTHONPATH=$PYTHONPATH:${GITHUB_ACTION_PATH}/msg2po" >> $GITHUB_ENV
 
     # smart filters https://github.com/dorny/paths-filter
     - name: Get path filters for checking changes
