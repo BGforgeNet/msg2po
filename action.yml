@@ -61,7 +61,6 @@ runs:
       shell: bash
       run: |
         echo "$PATH"
-        source "${GITHUB_ACTION_PATH}/.venv/bin/activate"
         bgforge-config.py dorny-paths > ../filters.yml # not sure how to get tmp dir
 
     - name: Check changes
