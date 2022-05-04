@@ -547,7 +547,7 @@ def file2msgstr(
 
         if (path, index) in entries_dict:
             # map entries to occurrences for faster access, part 2
-            e = entries_dict[(path, index)]
+            e: polib.POEntry = entries_dict[(path, index)]
 
             # female entries have no occurences
             if female_value and e.msgid in female_map:
@@ -580,6 +580,7 @@ def file2msgstr(
                         if "fuzzy" in fe.flags:
                             print("    Unfuzzied female entry")
                             fe.flags.remove("fuzzy")
+                            fe.previous_msgid = None
 
             # translation is the same
             if e.msgstr == value and e.msgctxt == context:
@@ -611,6 +612,7 @@ def file2msgstr(
             if "fuzzy" in e.flags:
                 print("    Unfuzzied entry")
                 e.flags.remove("fuzzy")
+                e.previous_msgid = None
 
     return po
 
@@ -881,4 +883,23 @@ def restore_female_entries(po: polib.POFile):
             if "fuzzy" not in e.flags:
                 e.flags.append("fuzzy")
             e.obsolete = False
+    return po
+
+
+def unfuzzy_exact_matches(po: polib.POFile):
+    """
+    For some reason msgmerge won't clear fuzzy flag if source string is changed, then changed back:
+    #: game/g_map_hotkey.msg:1
+    #, fuzzy
+    #| msgid "Nah... I think I'm gonna take the ladder."
+    msgid "Nah... I think I'm gonna take the ladder."
+    msgstr "Naa... Penso che prendero' la scala."
+
+    This function unfuzzies such entries.
+    """
+    for e in po.fuzzy_entries():
+        if e.previous_msgid == e.msgid:
+            print("    Unfuzzied entry {}, msgid is the same as previous_msgid".format(e.occurrences))
+            e.flags.remove("fuzzy")
+            e.previous_msgid = None
     return po

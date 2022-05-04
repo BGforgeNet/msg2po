@@ -2,7 +2,7 @@
 # coding: utf-8
 
 import argparse
-from msg2po.core import CONFIG, sort_po
+from msg2po.core import CONFIG, sort_po, unfuzzy_exact_matches
 import csv
 from collections import OrderedDict
 import polib
@@ -33,6 +33,7 @@ def main():
         entry = polib.POEntry(msgid=fs, msgstr=female_strings[fs], msgctxt="female")
         po.append(entry)
     po = sort_po(po)
+    po = unfuzzy_exact_matches(po)
     po.save(args.OUTPUT_PO, newline=CONFIG.newline_po)
 
 

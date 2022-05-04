@@ -13,7 +13,7 @@ import argparse
 import subprocess
 import sys
 from multiprocessing import Pool
-from msg2po.core import sort_po, restore_female_entries, CONFIG, find_files
+from msg2po.core import sort_po, restore_female_entries, CONFIG, find_files, unfuzzy_exact_matches
 from polib import pofile
 
 # parse args
@@ -45,6 +45,7 @@ def merge(po_path: str, pot_path: str):
     po2 = pofile(po_path)
     po2 = restore_female_entries(po2)
     po2 = sort_po(po2)
+    po2 = unfuzzy_exact_matches(po2)
     po2.save(fpath=po_path, newline=CONFIG.newline_po)
     return exit_code
 
