@@ -15,7 +15,7 @@ from msg2po.core import (
     file2msgstr,
     po_make_unique,
     CONFIG,
-    basename
+    basename,
 )
 from polib import pofile, POFile
 
@@ -70,7 +70,14 @@ def dir2msgstr(src_dir: str, po: POFile, po_path: str = "", overwrite: bool = Tr
 
                 enc = get_enc(po_path, file_name)
                 print("processing {} with encoding {}".format(full_name, enc))
-                po = file2msgstr(full_name, po, full_name, enc, overwrite, args.same)
+                po = file2msgstr(
+                    input_file=full_name,
+                    po=po,
+                    occurence_path=full_name,
+                    encoding=enc,
+                    overwrite=overwrite,
+                    same=args.same,
+                )
     po = po_make_unique(po)
     return po
 
@@ -94,6 +101,7 @@ def main():
         with cd(CONFIG.tra_dir):
             po_paths = find_files(CONFIG.po_dirname, "po")
             for pf in po_paths:
+                print("Loading into {}".format(pf))
                 lang_dir = language_map.po2slug[basename(pf)]
                 po = pofile(pf)
                 for ve in VALID_EXTENSIONS:

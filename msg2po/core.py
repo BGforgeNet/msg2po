@@ -80,6 +80,7 @@ CONTEXT_FEMALE = "female"
 # file and dir manipulation
 #################################
 
+
 def basename(path):
     if path.endswith(os.sep):
         path = path[:-1]
@@ -196,7 +197,7 @@ def get_enc(lang_path: str = "", file_path: str = ""):
     ]
 
     encoding = CONFIG.encoding
-    lang = strip_ext(basename(lang_path))
+    lang = language_slug(lang_path)
     filename = basename(file_path)
 
     if lang in ENCODINGS:
@@ -504,7 +505,12 @@ def copycreate(src_file, dst_file):
 
 
 def file2msgstr(
-    input_file: str, po: polib.POFile, path: str, encoding=CONFIG.encoding, overwrite: bool = True, same: bool = False
+    input_file: str,
+    po: polib.POFile,
+    occurence_path: str,
+    encoding=CONFIG.encoding,
+    overwrite: bool = True,
+    same: bool = False,
 ):
     """returns PO file object"""
 
@@ -524,12 +530,12 @@ def file2msgstr(
         female_value = t.female
 
         if (value is None) or (value == ""):
-            print("WARN: no msgid found for {}:{}, skipping string\n      {}".format(path, index, value))
+            print("WARN: no msgid found for {}:{}, skipping string\n      {}".format(occurence_path, index, value))
             continue
 
-        if (path, index) in entries_dict:
+        if (occurence_path, index) in entries_dict:
             # map entries to occurrences for faster access, part 2
-            e: polib.POEntry = entries_dict[(path, index)]
+            e: polib.POEntry = entries_dict[(occurence_path, index)]
 
             # female entries have no occurences
             if female_value and e.msgid in female_map:
@@ -829,7 +835,7 @@ def language_slug(po_filename):
         "ru": "russian",
         "uk": "ukrainian",
     }
-    slug = strip_ext(po_filename).lower()
+    slug = strip_ext(basename(po_filename)).lower()
     if CONFIG.simple_languages:
         try:
             slug = slug_map[slug]
