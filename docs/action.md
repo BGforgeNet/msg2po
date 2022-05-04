@@ -29,12 +29,8 @@ jobs:
         uses: BGforgeNet/msg2po@v1.1.0  # version subject to change
         with:
           poify: "true"
-          poify_commit: "true"
           unpoify: "true"
-          unpoify_commit: "true"
-          push: "true"
           # dir2msgstr: "false"
-          # dir2msgstr_commit: "false"
 ```
 
 `dir2msgstr` settings are for [power users](#dir2msgstr). Enable them only if you're sure that you understand what they do and how they work.

@@ -6,12 +6,20 @@ branding:
 
 inputs:
   poify:
-    description: run poify
+    description: run poify and msgmerge
     default: "false"
     required: false
   poify_commit:
     description: commit poify result
-    default: "false"
+    default: "true"
+    required: false
+  poify_trigger_unpoify_on_change:
+    description: |
+      Actions cannot self-trigger.
+      If poify+msgmerge resulted in PO update, which was commited into the repository, it will not trigger unpoify.
+      That gets translation files out of sync with POs for some time.
+      This setting enables instant unpoify after poify+merge, keeping translation files synced.
+    default: "true"
     required: false
   unpoify:
     description: run unpoify
@@ -19,7 +27,7 @@ inputs:
     required: false
   unpoify_commit:
     description: commit unpoify result
-    default: "false"
+    default: "true"
     required: false
   dir2msgstr:
     description: load manually updated translations into POs
@@ -27,11 +35,11 @@ inputs:
     required: false
   dir2msgstr_commit:
     description: commit dir2msgstr result
-    default: "false"
+    default: "true"
     required: false
   push:
     description: push commits
-    default: "false"
+    default: "true"
     required: false
 
 runs:
@@ -77,6 +85,8 @@ runs:
       env:
         INPUT_POIFY: ${{ inputs.poify }}
         INPUT_POIFY_COMMIT: ${{ inputs.poify_commit }}
+        INPUT_POIFY_TRIGGER_UNPOIFY: ${{ inputs.poify_trigger_unpoify_on_change }}
+        INPUT_UNPOIFY_COMMIT: ${{ inputs.unpoify_commit }}
 
     - name: Unpoify
       if: steps.changes.outputs.unpoify == 'true'

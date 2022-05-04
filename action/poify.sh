@@ -16,6 +16,12 @@ if [[ "$(git status --porcelain $po_dir_path | wc -l)" != "0" ]]; then
   echo "poify: changes found, committing"
   git add "$po_dir_path"
   git commit -m "$commit_name: poify and merge"
+
+  if [[ "$INPUT_POIFY_TRIGGER_UNPOIFY" == 'true' ]]; then
+    echo 'Instant unpoify'
+    INPUT_UNPOIFY="true" "$(dirname "$0")"/unpoify.sh
+  fi
+
 else
   echo "poify: no changes found, pass"
 fi
