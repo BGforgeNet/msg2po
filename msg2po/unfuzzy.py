@@ -60,7 +60,7 @@ def main():
                     print(e2)
 
     if write:
-        po.save(input_file, newline=CONFIG.newline)
+        po.save(input_file, newline=CONFIG.newline_po)
     else:
         print(i)
 

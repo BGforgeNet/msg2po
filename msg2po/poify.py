@@ -138,7 +138,7 @@ def poify(dir):  # relative path
     else:
         po.metadata = metadata(pot=True)
 
-    po.save(dst_file, newline=CONFIG.newline)
+    po.save(dst_file, newline=CONFIG.newline_po)
 
     print("Processed directory {}, the result is in {}/{}/{}.pot".format(poify_dir, tra_dir, po_dir, lang))
 

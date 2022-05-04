@@ -444,7 +444,7 @@ def po2file(
             lines_female.append(female_line.encode(encoding, "replace").decode(encoding))
 
     # write main package
-    with open(output_file, "w", encoding=encoding, newline=CONFIG.newline) as file:
+    with open(output_file, "w", encoding=encoding, newline=CONFIG.newline_tra) as file:
         file.writelines(lines)
 
     # explicitly disabled female?
@@ -469,12 +469,16 @@ def po2file(
                 copycreate(output_file, female_file)
         else:  # if it's different, extract separately
             if female_file is False:
-                print("  WARN: female strings are different, but female file is not supported for path {}".format(output_file))
+                print(
+                    "  WARN: female strings are different, but female file is not supported for path {}".format(
+                        output_file
+                    )
+                )
                 return True
             else:
                 print("  Also extracting female counterpart into {}".format(female_file))
                 create_dir(get_dir(female_file))  # create dir if not exists
-                with open(female_file, "w", encoding=encoding, newline=CONFIG.newline) as file2:
+                with open(female_file, "w", encoding=encoding, newline=CONFIG.newline_tra) as file2:
                     file2.writelines(lines_female)
 
 

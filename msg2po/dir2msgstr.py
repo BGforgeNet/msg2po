@@ -85,7 +85,7 @@ def main():
         po = dir2msgstr(
             src_dir=args.src_dir, po=po, po_path=output_file, overwrite=args.overwrite, extension=args.file_ext
         )
-        po.save(output_file, newline=CONFIG.newline)
+        po.save(output_file, newline=CONFIG.newline_po)
         print("Processed directory {}, the result is in {}".format(args.src_dir, output_file))
 
     if args.auto:
@@ -96,7 +96,7 @@ def main():
                 po = pofile(pf)
                 for ve in VALID_EXTENSIONS:
                     po = dir2msgstr(src_dir=lang_dir, po=po, po_path=pf, overwrite=args.overwrite, extension=ve)
-                    po.save(pf, newline=CONFIG.newline)
+                    po.save(pf, newline=CONFIG.newline_po)
                     print("Processed {} files in directory {}, the result is in {}".format(ve, lang_dir, pf))
 
 

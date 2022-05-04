@@ -33,7 +33,7 @@ def main():
         entry = polib.POEntry(msgid=fs, msgstr=female_strings[fs], msgctxt="female")
         po.append(entry)
     po = sort_po(po)
-    po.save(args.OUTPUT_PO, newline=CONFIG.newline)
+    po.save(args.OUTPUT_PO, newline=CONFIG.newline_po)
 
 
 if __name__ == "__main__":

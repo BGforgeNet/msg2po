@@ -17,7 +17,7 @@ args = parser.parse_args()
 
 def main():
     po = file2po(args.INPUT_SOURCE, args.OUTPUT_PO, args.enc)
-    po.save(args.OUTPUT_PO, newline=CONFIG.newline)
+    po.save(args.OUTPUT_PO, newline=CONFIG.newline_po)
 
 
 if __name__ == "__main__":

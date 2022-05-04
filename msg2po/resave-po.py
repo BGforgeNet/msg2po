@@ -17,7 +17,7 @@ def main():
     po = pofile(args.INPUT_FILE)
     po = restore_female_entries(po)
     po2 = sort_po(po)
-    po2.save(args.INPUT_FILE, newline=CONFIG.newline)
+    po2.save(args.INPUT_FILE, newline=CONFIG.newline_po)
 
 
 if __name__ == "__main__":
