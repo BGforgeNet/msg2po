@@ -7,7 +7,7 @@ import re
 import sys
 from msg2po.core import (
     VALID_EXTENSIONS,
-    basename,
+    LanguageMap,
     cd,
     find_files,
     get_ext,
@@ -15,7 +15,7 @@ from msg2po.core import (
     file2msgstr,
     po_make_unique,
     CONFIG,
-    strip_ext,
+    basename
 )
 from polib import pofile, POFile
 
@@ -54,6 +54,7 @@ def dir2msgstr(src_dir: str, po: POFile, po_path: str = "", overwrite: bool = Tr
     overwrite means ovewrite existing entries if any
     """
     print("overwrite is " + str(overwrite))
+
     with cd(src_dir):
 
         for dir_name, subdir_list, file_list in os.walk(".", topdown=False, followlinks=True):
@@ -89,10 +90,11 @@ def main():
         print("Processed directory {}, the result is in {}".format(args.src_dir, output_file))
 
     if args.auto:
+        language_map = LanguageMap()
         with cd(CONFIG.tra_dir):
-            po_files = find_files(CONFIG.po_dirname, "po")
-            for pf in po_files:
-                lang_dir = strip_ext(basename(pf))
+            po_paths = find_files(CONFIG.po_dirname, "po")
+            for pf in po_paths:
+                lang_dir = language_map.po2slug[basename(pf)]
                 po = pofile(pf)
                 for ve in VALID_EXTENSIONS:
                     po = dir2msgstr(src_dir=lang_dir, po=po, po_path=pf, overwrite=args.overwrite, extension=ve)

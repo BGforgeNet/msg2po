@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from natsort import natsorted
 from msg2po.config import CONFIG
 from datetime import datetime
+from msg2po.common import find_files, get_ext
 
 # extensions recognized by file2po, etc
 VALID_EXTENSIONS = ["msg", "txt", "sve", "tra"]
@@ -78,13 +79,6 @@ CONTEXT_FEMALE = "female"
 
 # file and dir manipulation
 #################################
-def get_ext(path):
-    try:
-        ext = path.rsplit(".", 1)[1].lower()
-    except:
-        ext = None
-    return ext
-
 
 def basename(path):
     if path.endswith(os.sep):
@@ -145,18 +139,6 @@ def dir_or_exit(d):
     else:
         print("Directory {} does not exist, cannot continue!".format(d))
         sys.exit(1)
-
-
-def find_files(dir: str, ext: str):
-    """
-    Find files with extension ext in directory dir
-    """
-    files = []
-    for root, subdir_list, file_list in os.walk(dir):
-        for f in file_list:
-            if get_ext(f) == ext:
-                files.append((os.path.join(root, f)))
-    return files
 
 
 @contextmanager
@@ -831,7 +813,7 @@ class TRANSFile:
         return lines
 
 
-def simple_lang_slug(po_filename):
+def language_slug(po_filename):
     """
     Allows to extract PO files into simplified language names: pt_BR.po -> portuguese/1.msg.
     Working with language codes is not convenient in mods.
@@ -903,3 +885,20 @@ def unfuzzy_exact_matches(po: polib.POFile):
             e.flags.remove("fuzzy")
             e.previous_msgid = None
     return po
+
+
+class LanguageMap:
+    """
+    map PO basenames to language dir names, for unpoify and dir2msgstr
+    This is because languages added through Weblate use codes like pt_BR, see find_files
+    """
+
+    def __init__(self):
+        po_files = find_files(CONFIG.po_dir, "po")
+        self.slug2po = {}
+        self.po2slug = {}
+        for pf in po_files:
+            pf = basename(pf)
+            slug = language_slug(pf)
+            self.slug2po[slug] = pf
+            self.po2slug[pf] = slug

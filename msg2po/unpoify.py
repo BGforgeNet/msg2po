@@ -6,13 +6,14 @@ import argparse
 import sys
 from multiprocessing import Pool
 from polib import pofile
+from functools import partial
 from msg2po.core import (
     CONFIG,
+    LanguageMap,
     dir_or_exit,
     cd,
     female_entries,
     translation_entries,
-    simple_lang_slug,
     get_enc,
     po2file,
     get_ext,
@@ -31,7 +32,7 @@ po_dir = args.DIR
 dir_or_exit(po_dir)
 
 
-def extract_po(pf: str):
+def extract_po(pf: str, language_map: LanguageMap):
     """
     pf is po file basename
     """
@@ -41,7 +42,7 @@ def extract_po(pf: str):
     trans_map = translation_entries(po)
     female_map = female_entries(po)
 
-    dst_dir = simple_lang_slug(pf)  # lang
+    dst_dir = language_map.po2slug[pf]
 
     for ef in sorted(trans_map):
         enc = get_enc(po_path, ef)
@@ -54,6 +55,7 @@ def extract_po(pf: str):
 
 def main():
     po_dir = CONFIG.po_dir
+    language_map = LanguageMap()
 
     # find PO files
     po_files = []
@@ -69,7 +71,7 @@ def main():
         # extract PO files
         pool = Pool()
         try:
-            r = pool.map_async(extract_po, po_files)
+            r = pool.map_async(partial(extract_po, language_map=language_map), po_files)
             pool.close()
             codes = r.get()  # noqa: F841 - need to get results to see if there's an exception
         except KeyboardInterrupt:
