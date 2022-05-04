@@ -468,10 +468,14 @@ def po2file(
                 print("  Female strings are same, copying to {}".format(female_file))
                 copycreate(output_file, female_file)
         else:  # if it's different, extract separately
-            print("  Also extracting female counterpart into {}".format(female_file))
-            create_dir(get_dir(female_file))  # create dir if not exists
-            with open(female_file, "w", encoding=encoding, newline=CONFIG.newline) as file2:
-                file2.writelines(lines_female)
+            if female_file is False:
+                print("  WARN: female strings are different, but female file is not supported for path {}".format(output_file))
+                return True
+            else:
+                print("  Also extracting female counterpart into {}".format(female_file))
+                create_dir(get_dir(female_file))  # create dir if not exists
+                with open(female_file, "w", encoding=encoding, newline=CONFIG.newline) as file2:
+                    file2.writelines(lines_female)
 
 
 # nasty hack for sfall's female strings placement
@@ -484,10 +488,6 @@ def get_female_filepath(path: str, dst_dir: str, same: bool = True):
             female_path = path.replace(os.sep + "cuts" + os.sep, os.sep + "cuts_female" + os.sep)
         if "dialog" in path.split(os.sep) and not same:  # dialog, female translation differs
             female_path = path.replace(os.sep + "dialog" + os.sep, os.sep + "dialog_female" + os.sep)
-
-        # TODO: we're extracting game files for female, but sfall doesn't support them
-        if "game" in path.split(os.sep) and not same:  # dialog, female translation differs
-            female_path = path.replace(os.sep + "game" + os.sep, os.sep + "game_female" + os.sep)
     return female_path
 
 
