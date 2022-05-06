@@ -161,6 +161,7 @@ def get_enc(lang_path: str = "", file_path: str = ""):
         "schinese": "cp936",
         "tchinese": "cp950",
         "czech": "cp1250",
+        "hungarian": "cp1250",
         "japanese": "cp932",
         "korean": "cp949",
         "polish": "cp1250",
