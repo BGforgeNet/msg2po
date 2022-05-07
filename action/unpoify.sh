@@ -11,7 +11,7 @@ fi
 if [[ "$(git status --porcelain $tra_dir | wc -l)" != "0" ]]; then
   echo "unpoify: changes found, committing"
   git add "$tra_dir"
-  git commit -m "$commit_name: unpoify"
+  git commit -m "unpoify"
 else
   echo "unpoify: no changes found, pass"
 fi

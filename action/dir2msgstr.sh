@@ -11,7 +11,7 @@ fi
 if [[ "$(git status --porcelain $tra_dir | wc -l)" != "0" ]]; then
   echo "dir2msgstr: changes found, committing"
   git add "$tra_dir"
-  git commit -m "$commit_name: load external translations"
+  git commit -m "load external translations"
 else
   echo "dir2msgstr: no changes found, pass"
 fi

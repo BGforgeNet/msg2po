@@ -7,6 +7,5 @@ src_lang="$(bgforge-config.py translation src_lang)"
 po_dir_path="$tra_dir/po"
 pot_path="$tra_dir/po/$src_lang.pot"
 
-commit_name="BGforge GHA"
-git config user.name "BGforgeNet/msg2po action"
-git config user.email "weblate@bgforge.net"
+git config user.name "BGforgeNet/msg2po"
+git config user.email "hive@bgforge.net"
