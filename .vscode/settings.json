@@ -1,0 +1,5 @@
+{
+    "yaml.schemas": {
+        "https://json.schemastore.org/github-workflow.json": "json-schema://json.schemastore.org/github-workflow.json#https%3A%2F%2Fjson.schemastore.org%2Fgithub-workflow.json"
+    }
+}

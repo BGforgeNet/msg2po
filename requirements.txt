@@ -1,5 +1,7 @@
-configparser
-natsort>=6,<7
-oyaml
-polib
-python-dateutil
+configparser==5.2.0; python_version >= "3.6"
+natsort==6.2.1; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.4.0")
+polib==1.1.1
+python-dateutil==2.8.2; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.3.0")
+ruamel.yaml.clib==0.2.6; platform_python_implementation == "CPython" and python_version < "3.11" and python_version >= "3.5"
+ruamel.yaml==0.17.21; python_version >= "3"
+six==1.16.0; python_version >= "2.7" and python_full_version < "3.0.0" or python_full_version >= "3.3.0"

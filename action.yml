@@ -1,0 +1,111 @@
+name: BGforge poify/unpoify
+description: Update Gettext POT template from source language, extract translations from PO files, commit and push the files.
+branding:
+  icon: message-circle
+  color: green
+
+inputs:
+  poify:
+    description: run poify and msgmerge
+    default: "false"
+    required: false
+  poify_commit:
+    description: commit poify result
+    default: "true"
+    required: false
+  poify_trigger_unpoify_on_change:
+    description: |
+      Actions cannot self-trigger.
+      If poify+msgmerge resulted in PO update, which was commited into the repository, it will not trigger unpoify.
+      That gets translation files out of sync with POs for some time.
+      This setting enables instant unpoify after poify+merge, keeping translation files synced.
+    default: "true"
+    required: false
+  unpoify:
+    description: run unpoify
+    default: "false"
+    required: false
+  unpoify_commit:
+    description: commit unpoify result
+    default: "true"
+    required: false
+  dir2msgstr:
+    description: load manually updated translations into POs
+    default: "false"
+    required: false
+  dir2msgstr_commit:
+    description: commit dir2msgstr result
+    default: "true"
+    required: false
+  push:
+    description: push commits
+    default: "true"
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Initialize environment
+      shell: bash
+      run: |
+        set -xeu -o pipefail
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt-get install -y -qq -o=Dpkg::Use-Pty=0 gettext
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          wget https://github.com/mlocati/gettext-iconv-windows/releases/download/v0.21-v1.16/gettext0.21-iconv1.16-static-32.zip -O gettext.zip
+          7z e gettext.zip bin/msgmerge.exe
+          mv msgmerge.exe "${GITHUB_ACTION_PATH}/msg2po/"
+          rm gettext.zip
+        else
+          echo "$RUNNER_OS not supported"
+          exit 1
+        fi
+        pip3 install -r "$GITHUB_ACTION_PATH/requirements.txt" --quiet
+        echo "${GITHUB_ACTION_PATH}/msg2po" >> $GITHUB_PATH
+        echo "PYTHONPATH=${GITHUB_ACTION_PATH}" >> $GITHUB_ENV
+
+    # smart filters https://github.com/dorny/paths-filter
+    - name: Get path filters for checking changes
+      shell: bash
+      run: |
+        echo "$PATH"
+        echo "$PYTHONPATH"
+        bgforge-config.py dorny-paths > ../filters.yml # not sure how to get tmp dir
+
+    - name: Check changes
+      uses: AurorNZ/paths-filter@v3.0.0
+      id: changes
+      with:
+        filters: ../filters.yml
+
+    - name: Poify
+      if: steps.changes.outputs.poify == 'true'
+      shell: bash
+      run: $GITHUB_ACTION_PATH/action/poify.sh
+      env:
+        INPUT_POIFY: ${{ inputs.poify }}
+        INPUT_POIFY_COMMIT: ${{ inputs.poify_commit }}
+        INPUT_POIFY_TRIGGER_UNPOIFY: ${{ inputs.poify_trigger_unpoify_on_change }}
+        INPUT_UNPOIFY_COMMIT: ${{ inputs.unpoify_commit }}
+
+    - name: Unpoify
+      if: steps.changes.outputs.unpoify == 'true'
+      shell: bash
+      run: $GITHUB_ACTION_PATH/action/unpoify.sh
+      env:
+        INPUT_UNPOIFY: ${{ inputs.unpoify }}
+        INPUT_UNPOIFY_COMMIT: ${{ inputs.unpoify_commit }}
+
+    - name: Load manual translation changes
+      if: steps.changes.outputs.dir2msgstr == 'true'
+      shell: bash
+      run: $GITHUB_ACTION_PATH/action/dir2msgstr.sh
+      env:
+        INPUT_DIR2MSGSTR: ${{ inputs.dir2msgstr }}
+        INPUT_DIR2MSGSTR_COMMIT: ${{ inputs.dir2msgstr_commit }}
+
+    - name: Push
+      shell: bash
+      run: $GITHUB_ACTION_PATH/action/push.sh
+      env:
+        INPUT_PUSH: ${{ inputs.push }}
