@@ -692,10 +692,12 @@ class TRANSFile:
                     self.lines_female = self.load_lines(female_file)
                 else:
                     print("didn't find")
-            if self.lines_female and self.lines_female == self.lines:
-                print("  female lines are identical")
-            else:
-                print("  female lines are different")
+
+            if self.lines_female is not None:
+                if self.lines_female == self.lines:
+                    print("  female lines are identical")
+                else:
+                    print("  female lines are different")
 
         # protection again duplicate indexes, part 1
         seen = []
@@ -754,7 +756,7 @@ class TRANSFile:
                     sys.exit(1)
 
             # sfall female extraction
-            if not is_source and self.lines_female and not (self.lines_female == self.lines):
+            if not is_source and (self.lines_female is not None) and not (self.lines_female == self.lines):
                 try:
                     female_line = [fl for fl in self.lines_female if fl[self.fformat["index"]] == entry.index][0]
                     entry.female = str(female_line[self.fformat["value"]])
