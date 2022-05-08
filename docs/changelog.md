@@ -1,5 +1,9 @@
 ## Changelog
 
+### 1.1.2
+- Fixed version in po generator.
+- Moved lowercasing into a separate script.
+
 ### 1.1.1
 - Action:
     - Works
