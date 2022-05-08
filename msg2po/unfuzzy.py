@@ -3,7 +3,6 @@
 
 import argparse
 from polib import pofile
-import sys
 import ruamel.yaml
 import os
 from msg2po.core import CONFIG
@@ -17,7 +16,8 @@ parser.add_argument("INPUT_FILE", help="input PO file")
 parser.add_argument("-w", default=False, dest="WRITE", action="store_true", help="save PO file?")
 args = parser.parse_args()
 
-yml = os.path.abspath(sys.argv[0]) + ".yml"  # replaces list
+yml = os.path.join(os.path.dirname(os.path.realpath(__file__)), "unfuzzy.yml")
+
 input_file = args.INPUT_FILE
 write = args.WRITE
 po = pofile(input_file)
