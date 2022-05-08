@@ -56,8 +56,10 @@ def main():
                     e.previous_msgctxt = None
                 else:  # preview
                     i = i + 1
-                    print(e1)
-                    print(e2)
+                    print("OLD SOURCE:  {}".format(e1))
+                    print("NEW SOURCE:  {}".format(e2))
+                    print("TRANSLATION: {}".format(e.msgstr))
+                    print("")
 
     if write:
         po.save(input_file, newline=CONFIG.newline_po)
