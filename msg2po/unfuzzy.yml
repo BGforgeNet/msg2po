@@ -15,12 +15,11 @@
 - ["\\n", ""]
 - ["\r", ""]
 - ["\n", ""]
+# double space
 - ["  ", " "]
-
 
 # article
 - [" a ", " 1 "]
-
 
 # words
 - ["All-In-One", "All-N-One"]
@@ -47,6 +46,8 @@
 - ["jet", 'Jet']
 
 - ["master", "Master"]
+
+- ["naïve", "naive"]
 
 - ["OK", "okay"]
 - ["OK", "Okay"]
