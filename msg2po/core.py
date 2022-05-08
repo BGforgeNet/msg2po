@@ -71,9 +71,6 @@ FILE_FORMAT = {
 # used for determining empty strings, which are invalid by PO spec
 EMPTY_COMMENT = "LEAVE empty space in translation"
 
-# po: new translations added through weblate use case sensitive code: pt_BR.po. Keeping them.
-LOWERCASE_EXCLUDE = [".git", ".svn", ".hg", "README.md", "po"]
-
 CONTEXT_FEMALE = "female"
 
 
@@ -104,34 +101,6 @@ def get_dir(path: str):
 def create_dir(path):
     if not os.path.isdir(path):
         os.makedirs(path)
-
-
-# lowercase directory
-def lowercase_rename(root_dir, items):
-    for item in items:
-        old_name = os.path.join(root_dir, item)
-        new_name = os.path.join(root_dir, item.lower())
-        if new_name != old_name:
-            print("renaming {} to {}".format(old_name, new_name))
-            os.rename(old_name, new_name)
-
-
-def lowercase_recursively(dir):  # this is the function that is actually used
-    for dir_name, subdir_list, file_list in os.walk(dir, topdown=False):
-        subdir_list[:] = [d for d in subdir_list if d not in LOWERCASE_EXCLUDE]
-        for sd in subdir_list:
-            for dname, sdir_list, file_list in os.walk(sd, topdown=False):
-                lowercase_rename(dir_name, file_list)
-                lowercase_rename(dir_name, sdir_list)
-    # why is this separate?
-    children = os.listdir(dir)
-    children[:] = [c for c in children if c not in LOWERCASE_EXCLUDE]
-    with cd(dir):
-        for c in children:
-            new_c = c.lower()
-            if c != new_c:
-                print("renaming {} to {}".format(c, new_c))
-                os.rename(c, new_c)
 
 
 def dir_or_exit(d):

@@ -20,7 +20,6 @@ from msg2po.core import (
     sort_po,
     parent_dir,
     is_indexed,
-    lowercase_recursively,
     CONFIG,
 )
 import natsort
@@ -36,13 +35,6 @@ parser.add_argument(
     help="source language directory",
 )
 parser.add_argument("-e", dest="enc", help="source encoding", default="{}".format(CONFIG.encoding))
-parser.add_argument(
-    "--no-lowercase",
-    dest="nolowercase",
-    default=False,
-    action="store_true",
-    help="don't lowercase filenames before poifying",
-)
 args = parser.parse_args()
 
 
@@ -50,9 +42,6 @@ args = parser.parse_args()
 poify_dir = args.DIR
 dir_or_exit(poify_dir)
 enc = get_enc(args.DIR)
-nolowercase = args.nolowercase
-if nolowercase is False:
-    nolowercase = not (CONFIG.lowercase)
 
 devnull = open(os.devnull, "w")
 
@@ -148,12 +137,6 @@ def tra_relpath(poify_dir: str) -> str:
 
 
 def main():
-    tra_dir = tra_relpath(poify_dir)
-
-    # lowercase if not disabled on cmd
-    if not nolowercase:
-        lowercase_recursively(tra_dir)
-
     with cd(parent_dir(os.path.abspath(poify_dir))):
         poify(basename(poify_dir))  # keeping relative occurrences in resulting po
 

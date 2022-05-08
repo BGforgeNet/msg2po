@@ -36,3 +36,4 @@ line-length = 120
 "po2file" = "msg2po.po2file:main"
 "resave-po" = "msg2po.resave-po:main"
 "unpoify" = "msg2po.unpoify:main"
+"lowercase" = "msg2po.lowercase:main"
