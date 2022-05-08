@@ -203,7 +203,7 @@ def metadata(old_metadata=None, pot=False, po=False):
             "MIME-Version": "1.0",
             "Content-Type": "text/plain; charset=UTF-8",
             "Content-Transfer-Encoding": "8bit",
-            "X-Generator": "bgforge_po v.{}".format(CONFIG.version),
+            "X-Generator": "BGforge/msg2po v.{}".format(CONFIG.version),
         }
         if pot:
             data["POT-Creation-Date"] = datetime.today().strftime("%Y-%m-%d-%H:%M") + "+0000"
