@@ -481,6 +481,7 @@ def file2msgstr(
     encoding=CONFIG.encoding,
     overwrite: bool = True,
     same: bool = False,
+    female_map=None,
 ):
     """returns PO file object"""
 
@@ -491,7 +492,8 @@ def file2msgstr(
     for e in po:
         for eo in e.occurrences:
             entries_dict[(eo[0], eo[1])] = e
-    female_map = female_entries(po)
+    if female_map is None:
+        female_map = female_entries(po)
 
     for t in trans.entries:
         index = t.index

@@ -9,6 +9,7 @@ from msg2po.core import (
     VALID_EXTENSIONS,
     LanguageMap,
     cd,
+    female_entries,
     find_files,
     get_ext,
     get_enc,
@@ -56,6 +57,7 @@ def dir2msgstr(src_dir: str, po: POFile, po_path: str = "", overwrite: bool = Tr
     print("overwrite is " + str(overwrite))
 
     with cd(src_dir):
+        female_map = female_entries(po)
 
         for dir_name, subdir_list, file_list in os.walk(".", topdown=False, followlinks=True):
             for file_name in file_list:
@@ -77,6 +79,7 @@ def dir2msgstr(src_dir: str, po: POFile, po_path: str = "", overwrite: bool = Tr
                     encoding=enc,
                     overwrite=overwrite,
                     same=args.same,
+                    female_map=female_map
                 )
     po = po_make_unique(po)
     return po
