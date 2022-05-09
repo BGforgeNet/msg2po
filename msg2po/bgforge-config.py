@@ -45,10 +45,10 @@ def dorny_paths():
             "!{}/{}/*/*.txt".format(tra_dir, src_lang),
         ]
     else:
-        poify = ["{}/{}/**.tra".format(tra_dir, src_lang)]
+        poify = ["{}/{}/**/*.tra".format(tra_dir, src_lang)]
         dir2msgstr = [
-            "{}/**.tra".format(tra_dir),
-            "!{}/{}/**.tra".format(tra_dir, src_lang),
+            "{}/**/*.tra".format(tra_dir),
+            "!{}/{}/**/*.tra".format(tra_dir, src_lang),
         ]
     paths = {"poify": poify, "unpoify": unpoify, "dir2msgstr": dir2msgstr}
     yaml.dump(paths, sys.stdout)
