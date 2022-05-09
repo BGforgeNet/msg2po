@@ -71,6 +71,7 @@ runs:
         echo "$PATH"
         echo "$PYTHONPATH"
         bgforge-config.py dorny-paths > ../filters.yml # not sure how to get tmp dir
+        cat ../filters.yml # for debug
 
     - name: Check changes
       uses: AurorNZ/paths-filter@v3.0.0
