@@ -505,42 +505,51 @@ def file2msgstr(
             print("WARN: no msgid found for {}:{}, skipping string\n      {}".format(occurence_path, index, value))
             continue
 
+        new_female_enties = []
         if (occurence_path, index) in entries_dict:
             # map entries to occurrences for faster access, part 2
             e: polib.POEntry = entries_dict[(occurence_path, index)]
 
-            # female entries have no occurences
-            if female_value and e.msgid in female_map:
-                fe: polib.POEntry = female_map[e.msgid]
-                if fe and (fe.msgstr != female_value):
-                    print("INFO: female translation change detected:")
-                    print("  ORIG: {}".format(e.msgid))
-                    print("  OLD:  {}".format(fe.msgstr))
-                    print("  NEW: {}".format(female_value))
-                    skip = False
-                    if not overwrite:
-                        print("  Female translation already exists, overwrite disabled, skipping")
-                        skip = True
-                    if not skip and (e.msgid == female_value):
-                        if same:
-                            print("INFO: source and female translation are the same. Using it regardless.")
-                            print("   {}".format(e.msgid))
-                            print("   {}".format(female_value))
-                        else:
-                            print(
-                                "INFO: source and female translation are the same for {}. Skipping:".format(
-                                    e.occurrences
-                                )
-                            )
-                            print("   {}".format(e.msgid))
-                            print("   {}".format(female_value))
+            if female_value:
+                # female entries have no occurences, checking if female translation already present
+                if e.msgid in female_map:
+                    fe: polib.POEntry = female_map[e.msgid]
+                    if fe and (fe.msgstr != female_value):
+                        print("INFO: female translation change detected:")
+                        print("  ORIG: {}".format(e.msgid))
+                        print("  OLD:  {}".format(fe.msgstr))
+                        print("  NEW:  {}".format(female_value))
+                        skip = False
+                        if not overwrite:
+                            print("  Female translation already exists, overwrite disabled, skipping")
                             skip = True
-                    if not skip:
-                        fe.msgstr = female_value
-                        if "fuzzy" in fe.flags:
-                            print("    Unfuzzied female entry")
-                            fe.flags.remove("fuzzy")
-                            fe.previous_msgid = None
+                        if not skip and (e.msgid == female_value):
+                            if same:
+                                print("INFO: source and female translation are the same. Using it regardless.")
+                                print("   {}".format(e.msgid))
+                                print("   {}".format(female_value))
+                            else:
+                                print(
+                                    "INFO: source and female translation are the same for {}. Skipping:".format(
+                                        e.occurrences
+                                    )
+                                )
+                                print("   {}".format(e.msgid))
+                                print("   {}".format(female_value))
+                                skip = True
+                        if not skip:
+                            fe.msgstr = female_value
+                            if "fuzzy" in fe.flags:
+                                print("    Unfuzzied female entry")
+                                fe.flags.remove("fuzzy")
+                                fe.previous_msgid = None
+                elif e.msgstr != female_value:
+                    print("INFO: new female translation detected:")
+                    print("  ORIG:   {}".format(e.msgid))
+                    print("  MALE:   {}".format(e.msgstr))
+                    print("  FEMALE: {}".format(female_value))
+                    fe = polib.POEntry(msgid=e.msgid, msgstr=female_value, msgctxt=CONTEXT_FEMALE)
+                    new_female_enties.append(fe)
 
             # translation is the same
             if e.msgstr == value and e.msgctxt == context:
@@ -573,6 +582,10 @@ def file2msgstr(
                 print("    Unfuzzied entry")
                 e.flags.remove("fuzzy")
                 e.previous_msgid = None
+
+    # add newly found female entries
+    for nfe in new_female_enties:
+        po.append(nfe)
 
     return po
 
@@ -658,6 +671,7 @@ class TRANSEntry:
         self.context = None
         self.female = None
         self.comment = None
+        self.occurence = None
 
 
 class TRANSFile:
@@ -674,6 +688,7 @@ class TRANSFile:
         self.fformat = FILE_FORMAT[fext]
         self.pattern = self.fformat["pattern"]
         self.dotall = self.fformat["dotall"]
+        self.filepath = filepath
 
         try:  # comment for all entries in file
             self.comment = self.fformat["comment"]
@@ -709,6 +724,7 @@ class TRANSFile:
 
             # index and value
             index = line[self.fformat["index"]]
+            entry.occurence = (filepath, str(index))
             entry.value = str(line[self.fformat["value"]])
 
             # skip invalid '000' entries in MSG files
