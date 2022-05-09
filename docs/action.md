@@ -107,3 +107,5 @@ jobs:
           dir2msgstr: "true"
           dir2msgstr_commit: "true"
 ```
+
+If your translation files are not in utf-8 (classic Fallouts, IE games), it's recommended to keep source strings in ASCII, or close to it, to avoid issues with characters missing in some charsets.
