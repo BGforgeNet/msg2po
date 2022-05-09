@@ -1,5 +1,13 @@
 ## Changelog
 
+### 1.1.3
+- `dir2msgstr` works faster on translations with many female entries.
+- Fixed spurious "different female lines" message in`*msgstr`.
+- `*msgstr` loads changed female values too.
+- `unfuzzy` can use local config.
+- Action filters are shown in output for easier debug.
+- Action `tra` paths are fixed.
+
 ### 1.1.2
 - Fixed version in po generator.
 - Moved lowercasing into a separate script.
