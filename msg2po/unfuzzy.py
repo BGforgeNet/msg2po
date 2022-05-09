@@ -16,15 +16,20 @@ parser.add_argument("INPUT_FILE", help="input PO file")
 parser.add_argument("-w", default=False, dest="WRITE", action="store_true", help="save PO file?")
 args = parser.parse_args()
 
-yml = os.path.join(os.path.dirname(os.path.realpath(__file__)), "unfuzzy.yml")
-
 input_file = args.INPUT_FILE
 write = args.WRITE
 po = pofile(input_file)
 
-with open(yml) as yf:
-    yaml = ruamel.yaml.YAML()
-    replace_list = yaml.load(yf)
+
+def load_replacements():
+    if os.path.isfile("unfuzzy.yml"):
+        yml = "unfuzzy.yml"
+    else:
+        yml = os.path.join(os.path.dirname(os.path.realpath(__file__)), "unfuzzy.yml")
+    with open(yml) as yf:
+        yaml = ruamel.yaml.YAML()
+        replace_list = yaml.load(yf)
+    return replace_list
 
 
 def make_replaces(line, replace_list):
@@ -33,7 +38,7 @@ def make_replaces(line, replace_list):
     return line
 
 
-def msgids_equal(id1, id2):
+def msgids_equal(id1, id2, replace_list):
     id1 = make_replaces(id1, replace_list)
     id2 = make_replaces(id2, replace_list)
     if id1 == id2:
@@ -44,11 +49,12 @@ def msgids_equal(id1, id2):
 
 def main():
     i = 0
+    replace_list = load_replacements()
     for e in po.fuzzy_entries():
         if e.previous_msgid:  # some fuzzies are assigned automatically on merge and don't have previous msgids
             e1 = e.msgid
             e2 = e.previous_msgid
-            if msgids_equal(e1, e2):
+            if msgids_equal(e1, e2, replace_list):
                 if write:
                     e.flags.remove("fuzzy")
                     e.previous_msgid = None
