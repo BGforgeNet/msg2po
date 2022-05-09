@@ -553,6 +553,9 @@ def file2msgstr(
 
             # translation is the same
             if e.msgstr == value and e.msgctxt == context:
+                print("  translation is the same for {}".format(e.msgid))
+                if 'fuzzy' in e.flags:
+                    print("  {}  is fuzzy. Keeping fuzzy flag.".format(e.msgid))
                 continue
 
             # translation is the same as source
