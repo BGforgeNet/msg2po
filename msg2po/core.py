@@ -554,7 +554,7 @@ def file2msgstr(
             # translation is the same
             if e.msgstr == value and e.msgctxt == context:
                 print("  translation is the same for {}".format(e.msgid))
-                if 'fuzzy' in e.flags:
+                if "fuzzy" in e.flags:
                     print("  {}  is fuzzy. Keeping fuzzy flag.".format(e.msgid))
                 continue
 
@@ -837,13 +837,20 @@ def language_slug(po_filename):
     return slug
 
 
-def restore_female_entries(po: polib.POFile):
+def update_female_entries(po: polib.POFile):
     """
-    Unobsoletes and if necessary (un)fuzzies female strings that have a corresponding male counterpart.
+    (Un)obsoletes and if necessary (un)fuzzies female strings that have a corresponding male counterpart.
     (Male = no context)
     """
-    male_entries = {x.msgid: x for x in po if not x.previous_msgid and (x.msgctxt != CONTEXT_FEMALE)}
-    fuzzy_male_entries = {x.previous_msgid: x for x in po if x.previous_msgid and (x.msgctxt != CONTEXT_FEMALE)}
+    # this also includes fuzzies
+    male_entries = {x.msgid: x for x in po if ((x.msgctxt != CONTEXT_FEMALE) and (not x.obsolete))}
+    # and this is for matching male strings that were changed
+    fuzzy_male_entries = {
+        x.previous_msgid: x
+        for x in po
+        if ((x.previous_msgid is not None) and (x.msgctxt != CONTEXT_FEMALE) and (not x.obsolete))
+    }
+
     for e in po.obsolete_entries():
         if e.msgctxt != CONTEXT_FEMALE:
             continue
@@ -856,15 +863,23 @@ def restore_female_entries(po: polib.POFile):
             e.flags = male_entry.flags
             e.obsolete = False
 
-        # if a fuzzy male string was found, fixing female to have the same attributes
-        if (e.msgid not in male_entries) and (e.msgid in fuzzy_male_entries):
+        # else, check if a fuzzy male match exists, and fix female to have the same attributes
+        elif e.msgid in fuzzy_male_entries:
             male_entry = fuzzy_male_entries[e.msgid]
             e.msgid = male_entry.msgid
             e.previous_msgid = male_entry.previous_msgid
             if "fuzzy" not in e.flags:
                 e.flags.append("fuzzy")
             e.obsolete = False
-    return po
+
+    # and delete female entries with no non-obsolete male match
+    new_entries = [x for x in po if not (x.obsolete and (x.msgctxt == CONTEXT_FEMALE))]
+    meta = po.metadata
+    po2 = polib.POFile()
+    po2.metadata = meta
+    for e in new_entries:
+        po2.append(e)
+    return po2
 
 
 def unfuzzy_exact_matches(po: polib.POFile):
@@ -879,10 +894,11 @@ def unfuzzy_exact_matches(po: polib.POFile):
     This function unfuzzies such entries.
     """
     for e in po.fuzzy_entries():
-        if e.previous_msgid == e.msgid:
-            print("    Unfuzzied entry {}, msgid is the same as previous_msgid".format(e.occurrences))
+        if (e.previous_msgid == e.msgid) and (e.previous_msgctxt == e.msgctxt):
+            print("    Unfuzzied entry {}, exact match with previous".format(e.occurrences))
             e.flags.remove("fuzzy")
             e.previous_msgid = None
+            e.previous_msgctxt = None
     return po
 
 
