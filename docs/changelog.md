@@ -1,5 +1,9 @@
 ## Changelog
 
+### 1.1.4
+- Fixed `msgmerge` sometimes obsoleting female entries that have a fuzzy male match.
+- `msgmerge` now deletes obsolete female entries.
+
 ### 1.1.3
 - `dir2msgstr` works faster on translations with many female entries.
 - Fixed spurious "different female lines" message in`*msgstr`.
