@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "msg2po"
-version = "1.1.4"
+version = "1.1.5"
 description = "A set of helper tools to convert Fallout 1/2 MSG and WeiDU TRA into GNU gettext PO and back"
 authors = ["BGforge <dev@bgforge.net>"]
 keywords = ["Fallout", "Fallout 2", "Baldur's Gate", "Infinity Engine", "WeiDU"]
