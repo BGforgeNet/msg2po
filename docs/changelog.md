@@ -1,7 +1,7 @@
 ## Changelog
 
 ### 1.1.5
-- Fixed `poify` mangling utf-8 characters in source strings.
+- Fixed `poify` processing utf-8 characters in EE source tra's.
 
 ### 1.1.4
 - Fixed `msgmerge` sometimes obsoleting female entries that have a fuzzy male match.
