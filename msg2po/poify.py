@@ -24,27 +24,6 @@ from msg2po.core import (
 )
 import natsort
 
-# parse args
-parser = argparse.ArgumentParser(
-    description="Poify files in selected directory", formatter_class=argparse.ArgumentDefaultsHelpFormatter
-)
-parser.add_argument(
-    "DIR",
-    nargs="?",
-    default="{}".format(CONFIG.poify_dir),
-    help="source language directory",
-)
-parser.add_argument("-e", dest="enc", help="source encoding", default="{}".format(CONFIG.encoding))
-args = parser.parse_args()
-
-
-# init vars
-poify_dir = args.DIR
-dir_or_exit(poify_dir)
-enc = get_enc(args.DIR)
-
-devnull = open(os.devnull, "w")
-
 
 # prepare po dir
 def prepare_po_dir(d):
@@ -62,14 +41,18 @@ def clean_po_dir(d):
     shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
-def poify(dir):  # relative path
+def poify(poify_dir: str, encoding: str = CONFIG.encoding):
+    """
+    poify_dir is path to source language directory
+    """
+    language_dir = os.path.basename(poify_dir)
     po_dir = CONFIG.po_dirname
     prepare_po_dir(po_dir)
     tra_dir = tra_relpath(poify_dir)
     # process with po_tool
-    with cd(dir):
+    with cd(language_dir):
         # Final PO
-        lang = basename(dir)
+        lang = basename(language_dir)
         dst_file = os.path.join(po_dir, lang + ".pot")
         po = polib.POFile()
 
@@ -110,9 +93,13 @@ def poify(dir):  # relative path
                         continue
 
                 bname = basename(full_name)
-                enc = get_enc(file_path=bname)
+                # non-default encoding?
+                if encoding == CONFIG.encoding:
+                    enc = get_enc(file_path=bname)
+                else:
+                    enc = encoding
                 print("processing {} with encoding {}".format(full_name, enc))
-                po2 = file2po(full_name, encoding=args.enc)
+                po2 = file2po(full_name, encoding=enc)
                 for e2 in po2:
                     po.append(e2)
     po = po_make_unique(po)
@@ -137,8 +124,26 @@ def tra_relpath(poify_dir: str) -> str:
 
 
 def main():
+    # parse args
+    parser = argparse.ArgumentParser(
+        description="Poify files in selected directory", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument(
+        "DIR",
+        nargs="?",
+        default="{}".format(CONFIG.poify_dir),
+        help="source language directory",
+    )
+    parser.add_argument("-e", dest="enc", help="source encoding", default="{}".format(CONFIG.encoding))
+    args = parser.parse_args()
+
+    # init vars
+    poify_dir = args.DIR
+    dir_or_exit(poify_dir)
+
+    # so that resulting po has relative occurences
     with cd(parent_dir(os.path.abspath(poify_dir))):
-        poify(basename(poify_dir))  # keeping relative occurrences in resulting po
+        poify(poify_dir)
 
 
 if __name__ == "__main__":
