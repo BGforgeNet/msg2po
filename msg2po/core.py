@@ -826,6 +826,7 @@ def language_slug(po_filename):
         "pl": "polish",
         "es": "spanish",
         "ru": "russian",
+        "sv": "swedish",
         "uk": "ukrainian",
     }
     slug = strip_ext(basename(po_filename)).lower()
