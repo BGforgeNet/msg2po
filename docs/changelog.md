@@ -1,5 +1,8 @@
 ## Changelog
 
+### 1.1.7
+- Bumped version.
+
 ### 1.1.6
 - Added `sv` slug for Swedish language.
 
