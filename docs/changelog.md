@@ -1,5 +1,8 @@
 ## Changelog
 
+### 1.1.6
+- Added `sv` slug for Swedish language.
+
 ### 1.1.5
 - Fixed `poify` processing utf-8 characters in EE source tra's.
 
