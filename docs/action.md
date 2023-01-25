@@ -31,14 +31,21 @@ jobs:
           poify: "true"
           unpoify: "true"
           # dir2msgstr: "false"
+          # single_commit: "false"
 ```
 
 `dir2msgstr` settings are for [power users](#dir2msgstr). Enable them only if you're sure that you understand what they do and how they work.
 
 ### Advanced
+
 If for some reason standard configuration doesn't fit your workflow, check the following examples to see how else the action can be used.
 
-### Poify
+#### Single commit
+
+`single_commit: true` supercedes all other `*_commit` options. All changes made by the action in a single run will be put together into a single commit.
+
+#### Poify
+
 **Poify** scans source language strings and regenerates POT file. Then it merges POs with updated POT, which allows translators to see new and changed strings.
 
 ```yaml
@@ -46,9 +53,9 @@ name: poify
 on:
   push:
     paths:
-      - 'data/text/english/*/*.msg'
-      - 'data/text/english/*/*.sve'
-      - 'data/text/english/*/*.txt'
+      - "data/text/english/*/*.msg"
+      - "data/text/english/*/*.sve"
+      - "data/text/english/*/*.txt"
 
 jobs:
   build:
@@ -60,7 +67,8 @@ jobs:
           poify_commit: "true"
 ```
 
-### Unpoify
+#### Unpoify
+
 **Unpoify** extracts translations from PO files into `msg`/`tra`, etc.
 
 ```yaml
@@ -68,7 +76,7 @@ name: unpoify
 on:
   push:
     paths:
-      - 'data/text/po/*.po'
+      - "data/text/po/*.po"
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -79,7 +87,7 @@ jobs:
           unpoify_commit: "true"
 ```
 
-### Dir2msgstr
+#### Dir2msgstr
 
 **Dir2msgstr** scans translation files for strings changed outside of translation system and attempts to load them into PO files.
 
@@ -92,12 +100,12 @@ name: dir2msgstr
 on:
   push:
     paths:
-      - 'data/text/*/*/*.msg'
-      - 'data/text/*/*/*.sve'
-      - 'data/text/*/*/*.txt'
-      - '!data/text/english/*/*.msg' # exclude source language, since we don't need to update POs in that case
-      - '!data/text/english/*/*.sve'
-      - '!data/text/english/*/*.txt'
+      - "data/text/*/*/*.msg"
+      - "data/text/*/*/*.sve"
+      - "data/text/*/*/*.txt"
+      - "!data/text/english/*/*.msg" # exclude source language, since we don't need to update POs in that case
+      - "!data/text/english/*/*.sve"
+      - "!data/text/english/*/*.txt"
 jobs:
   build:
     runs-on: ubuntu-latest

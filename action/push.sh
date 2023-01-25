@@ -4,7 +4,17 @@ set -xeu -o pipefail
 
 source "$(dirname "$0")/init.sh"
 
-if [[ "$INPUT_PUSH" == 'true' ]]; then
+if [[ "$INPUT_SINGLE_COMMIT" == "true" ]]; then
+  if [[ "$(git status --porcelain "$tra_dir" | wc -l)" == "0" ]]; then
+    echo "single commit: no changes found"
+  else
+    echo "single commit: changes found"
+    git add .
+    git commit -m "poify/unpoify: full chain"
+  fi
+fi
+
+if [[ "$INPUT_PUSH" == "true" ]]; then
   if git status --porcelain --branch | grep ahead; then
     echo "Pushing changes"
     git push

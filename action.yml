@@ -41,6 +41,10 @@ inputs:
     description: push commits
     default: "true"
     required: false
+  single_commit:
+    description: make just one commit combining all changes made by the action
+    default: "false"
+    required: false
 
 runs:
   using: "composite"
@@ -88,6 +92,7 @@ runs:
         INPUT_POIFY_COMMIT: ${{ inputs.poify_commit }}
         INPUT_POIFY_TRIGGER_UNPOIFY: ${{ inputs.poify_trigger_unpoify_on_change }}
         INPUT_UNPOIFY_COMMIT: ${{ inputs.unpoify_commit }}
+        INPUT_SINGLE_COMMIT: ${{ inputs.single_commit }}
 
     - name: Unpoify
       if: steps.changes.outputs.unpoify == 'true'
@@ -96,6 +101,7 @@ runs:
       env:
         INPUT_UNPOIFY: ${{ inputs.unpoify }}
         INPUT_UNPOIFY_COMMIT: ${{ inputs.unpoify_commit }}
+        INPUT_SINGLE_COMMIT: ${{ inputs.single_commit }}
 
     - name: Load manual translation changes
       if: steps.changes.outputs.dir2msgstr == 'true'
@@ -104,9 +110,11 @@ runs:
       env:
         INPUT_DIR2MSGSTR: ${{ inputs.dir2msgstr }}
         INPUT_DIR2MSGSTR_COMMIT: ${{ inputs.dir2msgstr_commit }}
+        INPUT_SINGLE_COMMIT: ${{ inputs.single_commit }}
 
-    - name: Push
+    - name: Commit and push
       shell: bash
       run: $GITHUB_ACTION_PATH/action/push.sh
       env:
         INPUT_PUSH: ${{ inputs.push }}
+        INPUT_SINGLE_COMMIT: ${{ inputs.single_commit }}

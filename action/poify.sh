@@ -7,15 +7,24 @@ source "$(dirname "$0")/init.sh"
 if [[ "$INPUT_POIFY" == 'true' ]]; then
   echo 'Updating POT'
   poify.py
-  if [[ "$(git status --porcelain $pot_path | wc -l)" != "0" ]]; then
+  if [[ "$(git status --porcelain "$pot_path" | wc -l)" != "0" ]]; then
     echo 'Updating POs from pot'
     msgmerge.py
   fi
 fi
-if [[ "$(git status --porcelain $po_dir_path | wc -l)" != "0" ]]; then
-  echo "poify: changes found, committing"
-  git add "$po_dir_path"
-  git commit -m "poify and merge"
+
+if [[ "$(git status --porcelain "$po_dir_path" | wc -l)" != "0" ]]; then
+  echo "poify: changes found"
+
+  if [[ "$INPUT_SINGLE_COMMIT" == "true" ]]; then
+    echo "single commit enabled, no commit"
+  else
+    if [[ "$INPUT_POIFY_COMMIT" == "true" ]]; then
+      echo "poify: committing"
+      git add "$po_dir_path"
+      git commit -m "poify and merge"
+    fi
+  fi
 
   if [[ "$INPUT_POIFY_TRIGGER_UNPOIFY" == 'true' ]]; then
     echo 'Instant unpoify'
