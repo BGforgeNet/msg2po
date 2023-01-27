@@ -14,14 +14,19 @@ pip install msg2po
 ```
 
 ## Usage
-```
-poify -h
-unpoify -h
-msgmerge-female -h
-file2po -h
-po2file -h
-file2msgstr -h
-dir2msgstr -h
+```bash
+$ poify.py -h
+.bgforge.yml not found, assuming defaults
+usage: poify.py [-h] [-e ENC] [DIR]
+
+Poify files in selected directory
+
+positional arguments:
+  DIR         source language directory (default: ./english)
+
+options:
+  -h, --help  show this help message and exit
+  -e ENC      source encoding (default: cp1252)
 ```
 
 ## Action
