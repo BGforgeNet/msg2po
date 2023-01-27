@@ -18,7 +18,7 @@ if [[ "$(git status --porcelain "$tra_dir" | wc -l)" != "0" ]]; then
     if [[ "$INPUT_UNPOIFY_COMMIT" == "true" ]]; then
       echo "unpoify: committing"
       git add "$tra_dir"
-      git commit -m "unpoify"
+      git commit -m "$commit_message_base unpoify"
     fi
   fi
 

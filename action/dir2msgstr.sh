@@ -18,7 +18,7 @@ if [[ "$(git status --porcelain "$tra_dir" | wc -l)" != "0" ]]; then
     if [[ "$INPUT_DIR2MSGSTR_COMMIT" == "true" ]]; then
       echo "dir2msgstr: committing"
       git add "$tra_dir"
-      git commit -m "load external translations"
+      git commit -m "$commit_message_base load external translations"
     fi
   fi
 

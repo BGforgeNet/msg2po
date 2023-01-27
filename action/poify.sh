@@ -22,7 +22,7 @@ if [[ "$(git status --porcelain "$po_dir_path" | wc -l)" != "0" ]]; then
     if [[ "$INPUT_POIFY_COMMIT" == "true" ]]; then
       echo "poify: committing"
       git add "$po_dir_path"
-      git commit -m "poify and merge"
+      git commit -m "$commit_message_base poify and merge"
     fi
   fi
 

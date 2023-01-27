@@ -10,7 +10,7 @@ if [[ "$INPUT_SINGLE_COMMIT" == "true" ]]; then
   else
     echo "single commit: changes found"
     git add .
-    git commit -m "poify/unpoify: full chain"
+    git commit -m "$commit_message_base full chain"
   fi
 fi
 
