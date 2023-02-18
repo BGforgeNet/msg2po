@@ -1,5 +1,8 @@
 ## Changelog
 
+### 1.1.8
+- Renamed some files to get rid of dash to fix pip install.
+
 ### 1.1.7
 - Bumped version.
 

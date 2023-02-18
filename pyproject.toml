@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "msg2po"
-version = "1.1.7"
+version = "1.1.8"
 description = "A set of helper tools to convert Fallout 1/2 MSG and WeiDU TRA into GNU gettext PO and back"
 authors = ["BGforge <dev@bgforge.net>"]
 keywords = ["Fallout", "Fallout 2", "Baldur's Gate", "Infinity Engine", "WeiDU"]
@@ -28,12 +28,12 @@ build-backend = "poetry.core.masonry.api"
 line-length = 120
 
 [tool.poetry.plugins."console_scripts"]
-"bgforge-config" = "msg2po.bgforge-config:main"
+"bgforge-config" = "msg2po.bgforge_config:main"
 "dir2msgstr" = "msg2po.dir2msgstr:main"
 "file2msgstr" = "msg2po.file2msgstr:main"
 "file2po" = "msg2po.file2po:main"
 "lowercase" = "msg2po.lowercase:main"
 "msgmerge-female" = "msg2po.msgmerge:main"
 "po2file" = "msg2po.po2file:main"
-"resave-po" = "msg2po.resave-po:main"
+"resave-po" = "msg2po.resave_po:main"
 "unpoify" = "msg2po.unpoify:main"
