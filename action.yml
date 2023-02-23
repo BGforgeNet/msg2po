@@ -72,9 +72,7 @@ runs:
     - name: Get path filters for checking changes
       shell: bash
       run: |
-        echo "$PATH"
-        echo "$PYTHONPATH"
-        bgforge-config.py dorny-paths > ../filters.yml # not sure how to get tmp dir
+        bgforge_config.py dorny-paths > ../filters.yml # not sure how to get tmp dir
         cat ../filters.yml # for debug
 
     - name: Check changes
