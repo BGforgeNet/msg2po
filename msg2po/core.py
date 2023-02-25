@@ -553,10 +553,16 @@ def file2msgstr(
 
             # translation is the same
             if e.msgstr == value and e.msgctxt == context:
-                print("  translation is the same for {}".format(e.msgid))
+                print("  translation is the same for {}".format(e.occurrences))
                 if "fuzzy" in e.flags:
-                    print("  {}  is fuzzy. Keeping fuzzy flag.".format(e.msgid))
-                continue
+                    if CONFIG.extract_fuzzy:
+                        print("  {}  is fuzzy. Keeping fuzzy flag.".format(e.occurrences))
+                        continue
+                    else:
+                        print(
+                            f"  {e.occurrences} is fuzzy, but extract_fuzzy is not set. "
+                            "Assuming manual translation change to the same value, clearing fuzzy flag."
+                        )
 
             # translation is the same as source
             if e.msgid == value and not same:
@@ -581,10 +587,11 @@ def file2msgstr(
             print("    NEW:  {}".format(value))
             e.msgstr = value
             e.msgctxt = context
-            if "fuzzy" in e.flags:
+            if "fuzzy" in e.flags or e.previous_msgid:
                 print("    Unfuzzied entry")
-                e.flags.remove("fuzzy")
                 e.previous_msgid = None
+                if "fuzzy" in e.flags:
+                    e.flags.remove("fuzzy")
 
     # add newly found female entries
     for nfe in new_female_enties:
