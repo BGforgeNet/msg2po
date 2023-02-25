@@ -1,5 +1,8 @@
 ## Changelog
 
+### 1.1.10
+Allow to load manual translation change to the same value that existing `msgstr` is set to in PO, when `extract_fuzzy` is not set, clearing `fuzzy` flag.
+
 ### 1.1.9
 - Renamed some files to get rid of dash to fix pip install.
 
