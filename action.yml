@@ -162,4 +162,3 @@ runs:
       env:
         INPUT_PUSH: ${{ inputs.push }}
         INPUT_SINGLE_COMMIT: ${{ inputs.single_commit }}
-        INPUT_HANDLE_CHARSETS: ${{ inputs.handle_charsets }}
