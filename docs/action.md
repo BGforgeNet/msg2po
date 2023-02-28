@@ -7,7 +7,7 @@ Using this action requires proper directory structure and configured `.bgforge.y
   - [Poify](#poify)
   - [Unpoify](#unpoify)
   - [Dir2msgstr](#dir2msgstr)
-  - [Handle charsets](#handle-charsets)
+- [Handle charsets](#handle-charsets)
 
 ### Standard
 
