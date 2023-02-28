@@ -46,6 +46,32 @@ inputs:
     default: "false"
     required: false
 
+  # https://github.com/BGforgeNet/handle-charsets
+  handle_charsets:
+    description: run handle-charsets
+    default: false
+    required: false
+  handle_charsets_tra_path:
+    description: handle-charsets source tra path
+    default: ""
+    required: false
+  handle_charsets_out_path:
+    description: handle-charsets converted tra path
+    default: ""
+    required: false
+  handle_charsets_from_utf8:
+    description: handle-charsets from_utf8
+    default: false
+    required: false
+  handle_charsets_split_console:
+    description: handle-charsets split_console
+    default: false
+    required: false
+  handle_charsets_commit:
+    description: handle-charsets commit
+    default: true
+    required: false
+
 runs:
   using: "composite"
   steps:
@@ -110,9 +136,30 @@ runs:
         INPUT_DIR2MSGSTR_COMMIT: ${{ inputs.dir2msgstr_commit }}
         INPUT_SINGLE_COMMIT: ${{ inputs.single_commit }}
 
+    - name: Handle charsets - separate commit
+      if: inputs.handle_charsets == 'true' && inputs.single_commit == 'false'
+      uses: BGforgeNet/handle-charsets@master
+      with:
+        tra_path: ${{ inputs.handle_charsets_tra_path }}
+        out_path: ${{ inputs.handle_charsets_out_path }}
+        from_utf8: ${{ inputs.handle_charsets_from_utf8 }}
+        split_console: ${{ inputs.handle_charsets_split_console }}
+        commit: true
+
+    - name: Handle charsets - single commit
+      if: inputs.handle_charsets == 'true' && inputs.single_commit == 'true'
+      uses: BGforgeNet/handle-charsets@master
+      with:
+        tra_path: ${{ inputs.handle_charsets_tra_path }}
+        out_path: ${{ inputs.handle_charsets_out_path }}
+        from_utf8: ${{ inputs.handle_charsets_from_utf8 }}
+        split_console: ${{ inputs.handle_charsets_split_console }}
+        commit: false
+
     - name: Commit and push
       shell: bash
       run: $GITHUB_ACTION_PATH/action/push.sh
       env:
         INPUT_PUSH: ${{ inputs.push }}
         INPUT_SINGLE_COMMIT: ${{ inputs.single_commit }}
+        INPUT_HANDLE_CHARSETS: ${{ inputs.handle_charsets }}

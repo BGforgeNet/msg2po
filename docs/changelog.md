@@ -1,5 +1,9 @@
 ## Changelog
 
+### 1.1.12
+
+Action: added [handle-charsets](https://github.com/BGforgeNet/handle-charsets) capability.
+
 ### 1.1.11
 
 Action: force unpoify if dir2msgstr found changes.

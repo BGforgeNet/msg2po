@@ -5,7 +5,7 @@ set -xeu -o pipefail
 source "$(dirname "$0")/init.sh"
 
 if [[ "$INPUT_SINGLE_COMMIT" == "true" ]]; then
-  if [[ "$(git status --porcelain "$tra_dir" | wc -l)" == "0" ]]; then
+  if [[ "$(git status --porcelain | wc -l)" == "0" ]]; then
     echo "single commit: no changes found"
   else
     echo "single commit: changes found"

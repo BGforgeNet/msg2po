@@ -7,6 +7,7 @@ Using this action requires proper directory structure and configured `.bgforge.y
   - [Poify](#poify)
   - [Unpoify](#unpoify)
   - [Dir2msgstr](#dir2msgstr)
+  - [Handle charsets](#handle-charsets)
 
 ### Standard
 
@@ -24,14 +25,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Poify/Unpoify
         uses: BGforgeNet/msg2po@master
         with:
-          poify: "true"
-          unpoify: "true"
-          # dir2msgstr: "false"
-          # single_commit: "false"
+          poify: true
+          unpoify: true
+          # dir2msgstr: false
+          # single_commit: false
+          # handle_charsets: false
 ```
 
 `dir2msgstr` settings are for [power users](#dir2msgstr). Enable them only if you're sure that you understand what they do and how they work.
@@ -117,3 +119,15 @@ jobs:
 ```
 
 Also, if your translation files are not in utf-8 (classic Fallouts, IE games), it's recommended to keep source strings in ASCII, or close to it, to avoid issues with characters missing in some charsets when extracting incomplete translations.
+
+#### Handle charsets
+
+You can also run [handle-charsets](https://github.com/BGforgeNet/handle-charsets) in the same job, set `handle_charsets: true` for that. Same parameters, same defaults. Prepend prefix `handle_charsets_` to parameter names:
+
+- `handle_charsets_tra_path`
+- `handle_charsets_out_path`
+- `handle_charsets_from_utf8`
+- `handle_charsets_split_console`
+- `handle_charsets_commit`
+
+If `single_commit` is enabled, it'll also include handle-charsets changes.
