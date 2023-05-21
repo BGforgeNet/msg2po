@@ -3,11 +3,14 @@
 Using this action requires proper directory structure and configured `.bgforge.yml`. Reference for [Fallout](https://forums.bgforge.net/viewtopic.php?f=9&t=331), [Infinity Engine](https://forums.bgforge.net/viewtopic.php?f=9&t=26).
 
 - [Standard](#standard)
+- [Options](#options)
+  - [Main](#main)
+  - [Additional](#additional)
 - [Advanced](#advanced)
   - [Poify](#poify)
   - [Unpoify](#unpoify)
   - [Dir2msgstr](#dir2msgstr)
-  - [Handle charsets](#handle-charsets)
+- [Handle charsets](#handle-charsets)
 
 ### Standard
 
@@ -31,20 +34,36 @@ jobs:
         with:
           poify: true
           unpoify: true
-          # dir2msgstr: false
-          # single_commit: false
-          # handle_charsets: false
 ```
 
-`dir2msgstr` settings are for [power users](#dir2msgstr). Enable them only if you're sure that you understand what they do and how they work.
+## Options
+
+### Main
+
+Commonly used options.
+
+| name            | default | description                                                                                                                        |
+| --------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `poify`         | `false` | Run `poify.py`.                                                                                                                    |
+| `unpoify`       | `false` | Run `unpoify.py`.                                                                                                                  |
+| `split_console` | `false` | Generate OS-specific files for console messages, see below.                                                                        |
+| `single_commit` | `false` | All changes made by the action in a single run will be put together into a single commit. Supercedes all other `*_commit` options. |
+
+### Additional
+
+Usually you don't need to change these options, but in some workflows that may be desirable.
+
+| name                | default | description                                                                                                        |
+| ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
+| `poify_commit`      | `true`  | Commit `poify.py` result.                                                                                          |
+| `unpoify_commit`    | `true`  | Commit `unpoify.py` result.                                                                                        |
+| `dir2msgstr`        | `false` | For [power users](#dir2msgstr). Enable this only if you're sure that you understand what it does and how it works. |
+| `dir2msgstr_commit` | `true`  | Commit `dir2msgstr.py` result.                                                                                     |
+| `push`              | `true`  | Push the changes.                                                                                                  |
 
 ### Advanced
 
 If for some reason standard configuration doesn't fit your workflow, check the following examples to see how else the action can be used.
-
-#### Single commit
-
-`single_commit: true` supercedes all other `*_commit` options. All changes made by the action in a single run will be put together into a single commit.
 
 #### Poify
 
