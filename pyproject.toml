@@ -35,5 +35,6 @@ line-length = 120
 "lowercase" = "msg2po.lowercase:main"
 "msgmerge-female" = "msg2po.msgmerge:main"
 "po2file" = "msg2po.po2file:main"
+"poify" = "msg2po.poify:main"
 "resave-po" = "msg2po.resave_po:main"
 "unpoify" = "msg2po.unpoify:main"
