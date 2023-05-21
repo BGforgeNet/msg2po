@@ -84,8 +84,8 @@ jobs:
     steps:
       - uses: BGforgeNet/msg2po@master
         with:
-          poify: "true"
-          poify_commit: "true"
+          poify: true
+          poify_commit: true
 ```
 
 #### Unpoify
@@ -104,8 +104,8 @@ jobs:
     steps:
       - uses: BGforgeNet/msg2po@master
         with:
-          unpoify: "true"
-          unpoify_commit: "true"
+          unpoify: true
+          unpoify_commit: true
 ```
 
 #### Dir2msgstr
@@ -133,8 +133,8 @@ jobs:
     steps:
       - uses: BGforgeNet/msg2po@master
         with:
-          dir2msgstr: "true"
-          dir2msgstr_commit: "true"
+          dir2msgstr: true
+          dir2msgstr_commit: true
 ```
 
 Also, if your translation files are not in utf-8 (classic Fallouts, IE games), it's recommended to keep source strings in ASCII, or close to it, to avoid issues with characters missing in some charsets when extracting incomplete translations.
