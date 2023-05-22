@@ -111,9 +111,9 @@ jobs:
 
 **Dir2msgstr** scans translation files for strings changed outside of translation system and attempts to load them into PO files.
 
-This is an experimental step. It is recommended to submit translations only through the system.
+This is an experimental step. For local translation, consider [working with PO files directly](https://forums.bgforge.net/viewtopic.php?f=9&t=404) instead.
 
-If you choose to use it, you might run into merge conflicts or other irregularities - as in any case when there are multiple sources of truth. You might have to resolve them manually.
+If you choose to use `dir2msgstr`, you might run into merge conflicts or other irregularities - as in any case when there are multiple sources of truth. You might have to resolve them manually.
 
 ```yaml
 name: dir2msgstr
