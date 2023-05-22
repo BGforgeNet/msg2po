@@ -46,7 +46,6 @@ Commonly used options.
 | --------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `poify`         | `false` | Run `poify.py`.                                                                                                                    |
 | `unpoify`       | `false` | Run `unpoify.py`.                                                                                                                  |
-| `split_console` | `false` | Generate OS-specific files for console messages, see below.                                                                        |
 | `single_commit` | `false` | All changes made by the action in a single run will be put together into a single commit. Supercedes all other `*_commit` options. |
 
 ### Additional
