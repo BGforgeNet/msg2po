@@ -114,6 +114,7 @@ jobs:
 This is an experimental step. For local translation, consider [working with PO files directly](https://forums.bgforge.net/viewtopic.php?f=9&t=404) instead.
 
 If you choose to use `dir2msgstr`, you might run into merge conflicts or other irregularities - as in any case when there are multiple sources of truth. You might have to resolve them manually.
+To reduce the chance of that happening, do not push changes to multiple sources of truth (e.g both source and translation files) at the same time.
 
 ```yaml
 name: dir2msgstr
