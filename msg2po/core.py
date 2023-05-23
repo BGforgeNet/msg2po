@@ -495,6 +495,9 @@ def file2msgstr(
     if female_map is None:
         female_map = female_entries(po)
 
+    # newly added female entries, without PO counterpart
+    new_female_enties = []
+
     for t in trans.entries:
         index = t.index
         value = t.value
@@ -505,7 +508,6 @@ def file2msgstr(
             print("WARN: no msgid found for {}:{}, skipping string\n      {}".format(occurence_path, index, value))
             continue
 
-        new_female_enties = []
         if (occurence_path, index) in entries_dict:
             # map entries to occurrences for faster access, part 2
             e: polib.POEntry = entries_dict[(occurence_path, index)]
