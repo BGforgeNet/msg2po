@@ -563,6 +563,8 @@ def file2msgstr(
                             f"  {e.occurrences} is fuzzy, but extract_fuzzy is not set. "
                             "Assuming manual translation change to the same value, clearing fuzzy flag."
                         )
+                else:
+                    continue
 
             # translation is the same as source
             if e.msgid == value and not same:
