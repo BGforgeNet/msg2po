@@ -71,7 +71,7 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
 
                 # convert windows paths to linux style, for consistency in POs
                 if os.path.sep == "\\":
-                    full_name = re.sub("\\", "/", full_name)
+                    full_name = full_name.replace("\\", "/")
 
                 full_name = re.sub("^\./", "", full_name)  # remove trailing './'
 
