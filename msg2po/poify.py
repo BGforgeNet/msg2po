@@ -68,6 +68,11 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
             file_list = natsort.natsorted(file_list, alg=natsort.PATH)
             for file_name in file_list:
                 full_name = os.path.join(dir_name, file_name)
+
+                # convert windows paths to linux style, for consistency in POs
+                if os.path.sep == "\\":
+                    full_name = re.sub("\\", "/", full_name)
+
                 full_name = re.sub("^\./", "", full_name)  # remove trailing './'
 
                 # skip female cuts
