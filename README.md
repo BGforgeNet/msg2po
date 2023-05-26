@@ -13,6 +13,8 @@ This is a set of tools to convert Fallout 1/2 MSG and WeiDU TRA into GNU gettext
 pip install msg2po
 ```
 
+Also install [Gettext tools](https://www.gnu.org/software/gettext/), and make sure they are in PATH.
+
 ## Usage
 ```bash
 $ poify.py -h
