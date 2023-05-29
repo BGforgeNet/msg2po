@@ -2,7 +2,11 @@
 
 ### 1.1.13
 
-Added missing console entry point for `poify.py`, it can now be called as `poify`.
+- Added missing console entry point for `poify.py`, it can now be called as `poify`.
+- Fixed spurious [change messages](#5) for lines that are the same.
+- Fixed `dir2msgstr` [missing](#7) new female entries.
+- Fixed `poify` to always use [Linux style paths](#4) in occurrences, even on Windows.
+- POlib updated to 1.2.0.
 
 ### 1.1.12
 
