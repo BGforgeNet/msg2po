@@ -8,13 +8,13 @@ from msg2po.config import CONFIG
 import ruamel.yaml
 
 stanza = sys.argv[1]
-if stanza != "dorny-paths":
+if stanza != "paths-filter":
     key = sys.argv[2]
 
 
 def main():
-    if stanza == "dorny-paths":
-        dorny_paths()
+    if stanza == "paths-filter":
+        paths_filter()
         sys.exit(0)
     try:
         value = CONFIG._config[stanza][key]
@@ -24,8 +24,8 @@ def main():
         sys.exit(1)
 
 
-# for github action https://github.com/dorny/paths-filter
-def dorny_paths():
+# for github action https://github.com/AurorNZ/paths-filter
+def paths_filter():
     yaml = ruamel.yaml.YAML()
     tra_dir = CONFIG.tra_dir
     src_lang = CONFIG.src_lang
