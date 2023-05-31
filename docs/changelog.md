@@ -1,5 +1,9 @@
 ## Changelog
 
+### 1.1.14
+
+Action: upgraded [paths-filter](https://github.com/AurorNZ/paths-filter) to 3.0.1.
+
 ### 1.1.13
 
 - Added missing console entry point for `poify.py`, it can now be called as `poify`.
