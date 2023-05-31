@@ -94,7 +94,7 @@ runs:
         echo "${GITHUB_ACTION_PATH}/msg2po" >> $GITHUB_PATH
         echo "PYTHONPATH=${GITHUB_ACTION_PATH}" >> $GITHUB_ENV
 
-    # smart filters https://github.com/dorny/paths-filter
+    # smart filters https://github.com/AurorNZ/paths-filter
     - name: Get path filters for checking changes
       shell: bash
       run: |
@@ -102,7 +102,7 @@ runs:
         cat ../filters.yml # for debug
 
     - name: Check changes
-      uses: AurorNZ/paths-filter@v3.0.0
+      uses: AurorNZ/paths-filter@v3.0.1
       id: changes
       with:
         filters: ../filters.yml
