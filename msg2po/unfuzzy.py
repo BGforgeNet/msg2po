@@ -26,7 +26,7 @@ def load_replacements():
         yml = "unfuzzy.yml"
     else:
         yml = os.path.join(os.path.dirname(os.path.realpath(__file__)), "unfuzzy.yml")
-    with open(yml) as yf:
+    with open(yml, encoding="utf-8") as yf:
         yaml = ruamel.yaml.YAML()
         replace_list = yaml.load(yf)
     return replace_list
