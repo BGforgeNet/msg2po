@@ -22,7 +22,7 @@ class Config:
 
         config = translation_defaults
         try:
-            with open(yml) as yf:
+            with open(yml, encoding="utf-8") as yf:
                 yaml = ruamel.yaml.YAML()
                 config = yaml.load(yf)
             translation_config = {**translation_defaults, **config["translation"]}

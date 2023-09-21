@@ -17,7 +17,7 @@ args = parser.parse_args()
 
 def load_csv(path):
     female_strings = OrderedDict()
-    with open(path, "r") as csvfile:
+    with open(path, "r", encoding="utf-8") as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
             female_strings[row[0]] = row[1]

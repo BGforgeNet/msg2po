@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# diffs male vs female PO and saves the result into CSV suitable for BGforge Weblate
+# diffs male vs female PO and saves the result into CSV suitable for BGforge Hive
 # PO files MUST be identical - except for msgstr's (translations)
 
 import polib
@@ -21,7 +21,7 @@ def main():
 
     rows = sorted(rows, key=lambda k: k[0])
 
-    with open(female_csv, "w") as csvfile:
+    with open(female_csv, "w", encoding="utf-8") as csvfile:
         writer = csv.writer(csvfile, quoting=csv.QUOTE_ALL)
         writer.writerows(rows)
 
