@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 import argparse
 from polib import pofile
@@ -9,7 +8,7 @@ from msg2po.core import CONFIG
 
 parser = argparse.ArgumentParser(
     description="Unmark PO entries as fuzzy,"
-    "if replacing string 1 with string2 in previous msgid results in current msgid",
+    "if replacing string1 with string2 in previous msgid results in current msgid",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 parser.add_argument("INPUT_FILE", help="input PO file")
