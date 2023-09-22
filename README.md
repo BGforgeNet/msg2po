@@ -8,14 +8,16 @@
 
 This is a set of tools to convert Fallout 1/2 MSG and WeiDU TRA into GNU gettext PO and back, used in [BGforge Hive](https://hive.bgforge.net/). Ask questions [here](https://forums.bgforge.net/viewforum.php?f=9).
 
-## Installation
+### Installation
+
 ```bash
 pip install msg2po
 ```
 
 Also install [Gettext tools](https://www.gnu.org/software/gettext/), and make sure they are in PATH.
 
-## Usage
+### Poify
+
 ```bash
 $ poify.py -h
 .bgforge.yml not found, assuming defaults
@@ -31,8 +33,27 @@ options:
   -e ENC      source encoding (default: cp1252)
 ```
 
-## Action
+### Action
+
 Github [action](docs/action.md) is available for automatic processing.
 
 ---
+
 [Changelog](docs/changelog.md)
+
+### Unfuzzy
+
+Unfuzzy removes fuzzy flag and previous msgid from PO entries, if after all replacements current msgid and previous msgid match exactly. Usually it is run after spelling changes in source language, to reduce diff noise and avoid extra review burden.
+
+The comparison is case sensitive. The replacements are read from `unfuzzy.yml` in current directory, example:
+
+```yaml
+- ["Nuka Cola", "Nuka-Cola"]
+- ["nuka cola", "Nuka-Cola"]
+```
+
+Run
+
+```bash
+unfuzzy.py -w data/text/po/french.po
+```
