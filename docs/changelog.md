@@ -1,5 +1,9 @@
 ## Changelog
 
+### 1.1.16
+
+Fixed file2msgstr invocation.
+
 ### 1.1.15
 
 Fixed unfuzzy not working on Windows due to different default encoding.
