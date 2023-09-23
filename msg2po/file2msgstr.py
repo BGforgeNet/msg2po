@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# coding: utf-8
 
 import argparse
 from msg2po.core import file2msgstr, CONFIG, VALID_EXTENSIONS
@@ -15,9 +14,7 @@ parser.add_argument(
     "--path", dest="path", help="load as filename (PO occurrence). If not specified, defaults to input filename"
 )
 parser.add_argument("-e", dest="encoding", default="cp1252", help="source encoding")
-parser.add_argument(
-    "overwrite", dest="overwrite", default=False, action="store_true", help="overwrite existing msgstr's"
-)
+parser.add_argument("overwrite", default=False, action="store_true", help="overwrite existing msgstr's")
 parser.add_argument(
     "--same",
     dest="same",
