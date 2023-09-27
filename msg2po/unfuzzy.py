@@ -7,7 +7,7 @@ import os
 from msg2po.core import CONFIG
 
 parser = argparse.ArgumentParser(
-    description="Unmark PO entries as fuzzy,"
+    description="Unmark PO entries as fuzzy, "
     "if replacing string1 with string2 in previous msgid results in current msgid",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
