@@ -166,7 +166,7 @@ def get_enc(lang_path: str = "", file_path: str = ""):
         "ee.tra",
     ]
 
-    if CONFIG.all_utf8_yes_really_all is True:
+    if CONFIG.all_utf8_also_console is True:
         return 'utf-8'
 
     encoding = CONFIG.encoding
