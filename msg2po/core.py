@@ -166,6 +166,9 @@ def get_enc(lang_path: str = "", file_path: str = ""):
         "ee.tra",
     ]
 
+    if CONFIG.all_utf8_yes_really_all is True:
+        return 'utf-8'
+
     encoding = CONFIG.encoding
     lang = language_slug(lang_path)
     filename = basename(file_path)
@@ -176,8 +179,12 @@ def get_enc(lang_path: str = "", file_path: str = ""):
     if filename in DOS_FILENAMES:
         try:
             encoding = DOS_ENCODINGS[lang]
+            return encoding
         except:
             pass
+
+    if CONFIG.all_utf8 is True:
+        return 'utf-8'
 
     if filename in UTF_FILENAMES:
         encoding = "utf-8"

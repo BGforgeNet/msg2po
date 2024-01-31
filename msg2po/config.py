@@ -18,6 +18,10 @@ class Config:
             "no_female": False,  # explicitly disable female extraction (TODO: reason unclear)
             "extract_fuzzy": False,
             "lowercase": True,
+            # work with all files in utf-8
+            "all_utf8": False,
+            # and even console files (DOS_FILENAMES)
+            "all_utf8_yes_really_all": False,
         }
 
         config = translation_defaults
@@ -41,6 +45,8 @@ class Config:
         self.no_female = translation_config["no_female"]
         self.extract_fuzzy = translation_config["extract_fuzzy"]
         self.lowercase = translation_config["lowercase"]
+        self.all_utf8 = translation_config["all_utf8"]
+        self.all_utf8_yes_really_all = translation_config["all_utf8_yes_really_all"]
 
         self.po_dirname = "po"
         self.female_dir_suffix = "_female"
