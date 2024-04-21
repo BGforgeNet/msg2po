@@ -27,7 +27,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Poify/Unpoify
         uses: BGforgeNet/msg2po@master
         with:
@@ -80,7 +80,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: BGforgeNet/msg2po@master
         with:
           poify: true
@@ -101,7 +101,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: BGforgeNet/msg2po@master
         with:
           unpoify: true
@@ -132,7 +132,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: BGforgeNet/msg2po@master
         with:
           dir2msgstr: true
