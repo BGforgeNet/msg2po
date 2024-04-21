@@ -49,7 +49,7 @@ inputs:
   # https://github.com/BGforgeNet/handle-charsets
   handle_charsets:
     description: run handle-charsets
-    default: false
+    default: "false"
     required: false
   handle_charsets_tra_path:
     description: handle-charsets source tra path
@@ -61,15 +61,15 @@ inputs:
     required: false
   handle_charsets_from_utf8:
     description: handle-charsets from_utf8
-    default: false
+    default: "false"
     required: false
   handle_charsets_split_console:
     description: handle-charsets split_console
-    default: false
+    default: "false"
     required: false
   handle_charsets_commit:
     description: handle-charsets commit
-    default: true
+    default: "true"
     required: false
 
 runs:
