@@ -1,5 +1,9 @@
 ## Changelog
 
+### 1.2.0
+
+Added support for `all_utf8`, `all_utf8_yes_really_all` parameters to `.bgforge.yml`. Use first one to consider all files except DOS_FILENAMES in UTF-8, add second one to consider even DOS_FILENAMES UTF-8.
+
 ### 1.1.16
 
 Fixed file2msgstr invocation.
