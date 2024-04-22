@@ -33,7 +33,7 @@ jobs:
         uses: psf/black@stable
 
       - name: Run mypy
-        uses: sasanquaneuf/mypy-github-action@releases/v1
+        uses: sasanquaneuf/mypy-github-action@9d43a0bf65fc419f7aa493ac24af5e2226edffbb
         with:
           checkName: 'lint'   # NOTE: this needs to be the same as the job name
         env:
