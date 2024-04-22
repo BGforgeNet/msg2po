@@ -167,7 +167,7 @@ def get_enc(lang_path: str = "", file_path: str = ""):
     ]
 
     if CONFIG.all_utf8_yes_really_all is True:
-        return 'utf-8'
+        return "utf-8"
 
     encoding = CONFIG.encoding
     lang = language_slug(lang_path)
@@ -184,7 +184,7 @@ def get_enc(lang_path: str = "", file_path: str = ""):
             pass
 
     if CONFIG.all_utf8 is True:
-        return 'utf-8'
+        return "utf-8"
 
     if filename in UTF_FILENAMES:
         encoding = "utf-8"

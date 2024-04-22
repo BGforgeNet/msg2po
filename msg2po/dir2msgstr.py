@@ -79,7 +79,7 @@ def dir2msgstr(src_dir: str, po: POFile, po_path: str = "", overwrite: bool = Tr
                     encoding=enc,
                     overwrite=overwrite,
                     same=args.same,
-                    female_map=female_map
+                    female_map=female_map,
                 )
     po = po_make_unique(po)
     return po
