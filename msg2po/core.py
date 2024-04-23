@@ -846,6 +846,7 @@ def language_slug(po_filename):
         "ru": "russian",
         "sv": "swedish",
         "uk": "ukrainian",
+        "vi": "vietnamese",
     }
     slug = strip_ext(basename(po_filename)).lower()
     if CONFIG.simple_languages:
