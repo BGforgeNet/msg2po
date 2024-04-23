@@ -2,7 +2,7 @@ import ruamel.yaml
 import sys
 import os
 
-VERSION = "1.2.0"
+VERSION = "1.2.1"
 
 
 class Config:
