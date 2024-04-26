@@ -108,7 +108,7 @@ on:
       - "data/text/**"
 
 jobs:
-  msg2po:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
