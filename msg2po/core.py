@@ -137,6 +137,7 @@ def get_enc(lang_path: str = "", file_path: str = ""):
         "polski": "cp1250",
         "russian": "cp1251",
         "ukrainian": "cp1251",
+        "vietnamese": "cp1258",
     }
 
     DOS_ENCODINGS = {
