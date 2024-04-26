@@ -115,7 +115,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Poify/Unpoify
-        uses: BGforgeNet/msg2po@dev
+        uses: BGforgeNet/msg2po@master
         with:
           poify: true
           unpoify: true
