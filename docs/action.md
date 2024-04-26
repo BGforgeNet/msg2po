@@ -2,19 +2,44 @@
 
 Using this action requires proper directory structure and configured `.bgforge.yml`. Reference for [Fallout](https://forums.bgforge.net/viewtopic.php?f=9&t=331), [Infinity Engine](https://forums.bgforge.net/viewtopic.php?f=9&t=26).
 
-- [Standard](#standard)
 - [Options](#options)
   - [Main](#main)
   - [Additional](#additional)
+- [Simple](#simple)
+- [Standard](#standard)
 - [Advanced](#advanced)
   - [Poify](#poify)
   - [Unpoify](#unpoify)
   - [Dir2msgstr](#dir2msgstr)
 - [Handle charsets](#handle-charsets)
 
-### Standard
+### Options
 
-This is the recommended configuration and should work for pretty much everyone.
+#### Main
+
+Commonly used options.
+
+| name            | default | description                                                                                                                        |
+| --------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `poify`         | `false` | Run `poify.py`.                                                                                                                    |
+| `unpoify`       | `false` | Run `unpoify.py`.                                                                                                                  |
+| `single_commit` | `false` | All changes made by the action in a single run will be put together into a single commit. Supercedes all other `*_commit` options. |
+
+#### Additional
+
+Usually you don't need to change these options, but in some workflows that may be desirable.
+
+| name                | default | description                                                                                                        |
+| ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
+| `poify_commit`      | `true`  | Commit `poify.py` result.                                                                                          |
+| `unpoify_commit`    | `true`  | Commit `unpoify.py` result.                                                                                        |
+| `dir2msgstr`        | `false` | For [power users](#dir2msgstr). Enable this only if you're sure that you understand what it does and how it works. |
+| `dir2msgstr_commit` | `true`  | Commit `dir2msgstr.py` result.                                                                                     |
+| `push`              | `true`  | Push the changes.                                                                                                  |
+
+### Simple
+
+This is a simple configuration that should work for most use cases.
 
 ```yaml
 name: Poify/Unpoify
@@ -33,35 +58,76 @@ jobs:
         with:
           poify: true
           unpoify: true
+          single_commit: true
 ```
 
-## Options
+### Standard
 
-### Main
+In this configuration, there are 2 workflows:
 
-Commonly used options.
+Actual run with commit and push, launched only commits to `master` branch:
 
-| name            | default | description                                                                                                                        |
-| --------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `poify`         | `false` | Run `poify.py`.                                                                                                                    |
-| `unpoify`       | `false` | Run `unpoify.py`.                                                                                                                  |
-| `single_commit` | `false` | All changes made by the action in a single run will be put together into a single commit. Supercedes all other `*_commit` options. |
+```yaml
+# poify.yml
 
-### Additional
+name: Poify/Unpoify
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "data/text/**"
 
-Usually you don't need to change these options, but in some workflows that may be desirable.
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Poify/Unpoify
+        uses: BGforgeNet/msg2po@master
+        with:
+          poify: true
+          unpoify: true
+          single_commit: true
+```
 
-| name                | default | description                                                                                                        |
-| ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------ |
-| `poify_commit`      | `true`  | Commit `poify.py` result.                                                                                          |
-| `unpoify_commit`    | `true`  | Commit `unpoify.py` result.                                                                                        |
-| `dir2msgstr`        | `false` | For [power users](#dir2msgstr). Enable this only if you're sure that you understand what it does and how it works. |
-| `dir2msgstr_commit` | `true`  | Commit `dir2msgstr.py` result.                                                                                     |
-| `push`              | `true`  | Push the changes.                                                                                                  |
+And test run, launched on non-master branches and pull requests. It just checks changes to translation files for well-formedness.
+
+```yaml
+# poify-test.yml
+
+name: Poify/Unpoify test
+on:
+  push:
+    branches-ignore:
+      - master
+    paths:
+      - "data/text/**"
+  pull_request:
+    paths:
+      - "data/text/**"
+
+jobs:
+  msg2po:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Poify/Unpoify
+        uses: BGforgeNet/msg2po@dev
+        with:
+          poify: true
+          unpoify: true
+          dir2msgstr: true
+          push: false
+```
+
+This combination allows to reduce commit noise in repositories with a lot of activity.
 
 ### Advanced
 
-If for some reason standard configuration doesn't fit your workflow, check the following examples to see how else the action can be used.
+If for some reason standard configurations don't fit your workflow, check the following examples to see how else the action can be used.
 
 #### Poify
 
