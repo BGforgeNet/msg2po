@@ -1,5 +1,9 @@
 ## Changelog
 
+### 1.2.2
+
+Set charset to cp1258 for Vietnamese.
+
 ### 1.2.1
 
 Added `vi`/`vietnamese` language slug.
