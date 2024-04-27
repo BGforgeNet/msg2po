@@ -65,42 +65,18 @@ jobs:
 
 In this configuration, there are 2 workflows:
 
-Actual run with commit and push, launched only commits to `master` branch:
+- Actual run with commit and push, launched only commits to `master` branch.
+- Test run, launched on push to non-master branches and pull requests. It just checks changes to translation files for well-formedness.
+
+This combination allows to reduce commit noise in repositories with a lot of activity.
 
 ```yaml
 # poify.yml
 
 name: Poify/Unpoify
+
 on:
   push:
-    branches:
-      - master
-    paths:
-      - "data/text/**"
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Poify/Unpoify
-        uses: BGforgeNet/msg2po@master
-        with:
-          poify: true
-          unpoify: true
-          single_commit: true
-```
-
-And test run, launched on non-master branches and pull requests. It just checks changes to translation files for well-formedness.
-
-```yaml
-# poify-test.yml
-
-name: Poify/Unpoify test
-on:
-  push:
-    branches-ignore:
-      - master
     paths:
       - "data/text/**"
   pull_request:
@@ -114,7 +90,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Poify/Unpoify
+      - name: Poify/Unpoify run
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        uses: BGforgeNet/msg2po@master
+        with:
+          poify: true
+          unpoify: true
+          single_commit: true
+
+      - name: Poify/Unpoify test
+        if: (github.ref != 'refs/heads/master' && github.event_name == 'push') || github.event_name == 'pull_request'
         uses: BGforgeNet/msg2po@master
         with:
           poify: true
@@ -122,8 +107,6 @@ jobs:
           dir2msgstr: true
           push: false
 ```
-
-This combination allows to reduce commit noise in repositories with a lot of activity.
 
 ### Advanced
 
