@@ -63,7 +63,7 @@ jobs:
 
 ### Standard
 
-In this configuration, there are 2 workflows:
+In this configuration, there are 2 steps:
 
 - Actual run with commit and push, launched only commits to `master` branch.
 - Test run, launched on push to non-master branches and pull requests. It just checks changes to translation files for well-formedness.
