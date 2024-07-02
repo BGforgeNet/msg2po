@@ -1,5 +1,9 @@
 ## Changelog
 
+### 1.2.3
+
+Added [special handling](https://github.com/BGforgeNet/Fallout2_Restoration_Project/issues/301) for cp1258 Vietnamese encoding.
+
 ### 1.2.2
 
 Set charset to cp1258 for Vietnamese.
