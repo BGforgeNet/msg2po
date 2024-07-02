@@ -4,6 +4,7 @@ from collections import OrderedDict
 import polib
 import os
 import shutil
+import unicodedata
 from contextlib import contextmanager
 from natsort import natsorted
 from msg2po.config import CONFIG
@@ -73,6 +74,29 @@ EMPTY_COMMENT = "LEAVE empty space in translation"
 
 CONTEXT_FEMALE = "female"
 
+TRANSLITERATION_RULES_VIETNAMESE = {
+    "a\u0306": "\u0103",  # ă
+    "A\u0306": "\u0102",  # Ă
+    "a\u0323\u0306": "\u0103\u0323",  # ặ
+    "A\u0323\u0306": "\u0102\u0323",  # Ặ
+    "a\u0302": "\u00E2",  # â
+    "A\u0302": "\u00C2",  # Â
+    "a\u0323\u0302": "\u00E2\u0323",  # ậ
+    "A\u0323\u0302": "\u00C2\u0323",  # Ậ
+    "e\u0302": "\u00EA",  # ê
+    "E\u0302": "\u00CA",  # Ê
+    "e\u0323\u0302": "\u00EA\u0323",  # ệ
+    "E\u0323\u0302": "\u00CA\u0323",  # Ệ
+    "o\u0302": "\u00F4",  # ô
+    "O\u0302": "\u00D4",  # Ô
+    "o\u0323\u0302": "\u00F4\u0323",  # ộ
+    "O\u0323\u0302": "\u00D4\u0323",  # Ộ
+    "o\u031B": "\u01A1",  # ơ
+    "O\u031B": "\u01A0",  # Ơ
+    "u\u031B": "\u01B0",  # ư
+    "U\u031B": "\u01AF",  # Ư
+}
+
 
 # file and dir manipulation
 #################################
@@ -95,7 +119,12 @@ def strip_ext(filename):
 
 
 def get_dir(path: str):
-    return path.rsplit(os.sep, 1)[0]
+    path_parts = path.rsplit(os.sep, 1)
+    # return directory if it's present in path
+    if len(path_parts) > 1:
+        return path_parts[0]
+    # if not, return current directory
+    return "."
 
 
 def create_dir(path):
@@ -317,6 +346,47 @@ def female_entries(po: polib.POFile) -> "dict[str: polib.POEntry]":
     return entries
 
 
+def transliterate(text, rules):
+    """
+    For Vietnamese encoding handling.
+    """
+    text = unicodedata.normalize("NFD", text)
+    for decomposed, precomposed in rules.items():
+        text = text.replace(decomposed, precomposed)
+    return text
+
+
+# Not sure if this works correctly.
+# Linked answer uses PyICU, but that requires building c++ extensions, might be hard on windows.
+# So we're using transliterate instead.
+def encode_vietnamese(text: str) -> bytes:
+    """
+    Vietnamese requires special handling.
+    See https://stackoverflow.com/questions/58661415/python-how-can-i-print-cp1258-vietnamese-characters-correctly/78176520#78176520
+    """
+    text = transliterate(text, TRANSLITERATION_RULES_VIETNAMESE)
+    return text.encode("cp1258", "replace").decode("cp1258")
+
+
+def encode_custom(text: str, encoding: str = "utf-8") -> bytes:
+    """
+    Encodes the given text using the specified encoding.
+    If encoding is 'cp1258', it uses the encode_vietnamese function.
+
+    Args:
+    text (str): The text to be encoded.
+    encoding (str): The encoding to use.
+
+    Returns:
+    bytes: The encoded text.
+    """
+    if encoding == "cp1258":
+        return encode_vietnamese(text)
+    else:
+        # Gracefull fallback for replace, can't really protect against invalid characters being entered in Weblate?
+        return text.encode(encoding, "replace").decode(encoding)
+
+
 def po2file(
     po: polib.POFile,
     output_file: str,
@@ -329,7 +399,7 @@ def po2file(
     """
     Extract and write to disk a single file from POFile
     output_file is path relative to dst_dir
-    dst_dir is actually dst language. Used only in unpoify
+    dst_dir is actually dst language. Used in unpoify and po2file.
     """
     if trans_map is None:  # when extracting single file with po2tra/po2msg, etc
         # check if file is present in po, exit if not
@@ -394,7 +464,7 @@ def po2file(
         # add line to common/male package
         line = lfrm.format(index=res["index"], value=res["value"], context=res["context"], female=res["female"])
         # TODO: get rid of replace, handle improper characters in weblate
-        lines.append(line.encode(encoding, "replace").decode(encoding))
+        lines.append(encode_custom(line, encoding))
 
         # add string to female package if needed
         if "female" in line_format and line_format["female"] == "separate":
@@ -402,7 +472,7 @@ def po2file(
                 female_line = lfrm.format(index=res["index"], value=res["female"], context=res["context"])
             else:
                 female_line = lfrm.format(index=res["index"], value=res["value"], context=res["context"])
-            lines_female.append(female_line.encode(encoding, "replace").decode(encoding))
+            lines_female.append(encode_custom(female_line, encoding))
 
     # write main package
     with open(output_file, "w", encoding=encoding, newline=CONFIG.newline_tra) as file:
