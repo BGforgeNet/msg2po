@@ -90,6 +90,10 @@ runs:
           echo "$RUNNER_OS not supported"
           exit 1
         fi
+        echo "VIRTUALENV_PATH=${GITHUB_ACTION_PATH}/venv" >> $GITHUB_ENV
+        virtualenv "$VIRTUALENV_PATH"
+        # Very verbose
+        source "$VIRTUALENV_PATH/bin/activate" >/dev/null 2>&1 || true
         pip3 install -r "$GITHUB_ACTION_PATH/requirements.txt" --quiet
         echo "${GITHUB_ACTION_PATH}/msg2po" >> $GITHUB_PATH
         echo "PYTHONPATH=${GITHUB_ACTION_PATH}" >> $GITHUB_ENV
@@ -98,6 +102,7 @@ runs:
     - name: Get path filters for checking changes
       shell: bash
       run: |
+        source "$VIRTUALENV_PATH/bin/activate" >/dev/null 2>&1 || true
         bgforge_config.py paths-filter > ../filters.yml # not sure how to get tmp dir
         cat ../filters.yml # for debug
 
