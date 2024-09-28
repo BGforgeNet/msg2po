@@ -90,7 +90,8 @@ runs:
           echo "$RUNNER_OS not supported"
           exit 1
         fi
-        echo "VIRTUALENV_PATH=${GITHUB_ACTION_PATH}/venv" >> $GITHUB_ENV
+        echo "VIRTUALENV_PATH=${GITHUB_ACTION_PATH}/venv" >> $GITHUB_ENV  # Next steps
+        export VIRTUALENV_PATH="${GITHUB_ACTION_PATH}/venv"  # This step
         virtualenv "$VIRTUALENV_PATH"
         # Very verbose
         source "$VIRTUALENV_PATH/bin/activate" >/dev/null 2>&1 || true
