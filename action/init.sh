@@ -2,6 +2,9 @@
 
 set -xeu -o pipefail
 
+# shellcheck source=/dev/null  # Nothing interesting here
+source "$VIRTUALENV_PATH/bin/activate" >/dev/null 2>&1 || true
+
 tra_dir="$(bgforge_config.py translation tra_dir)"
 src_lang="$(bgforge_config.py translation src_lang)"
 export po_dir_path="$tra_dir/po"

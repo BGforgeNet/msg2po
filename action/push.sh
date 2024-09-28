@@ -4,8 +4,6 @@ set -xeu -o pipefail
 
 # shellcheck source=/dev/null  # for some reason source=init.sh doesn't work
 source "$(dirname "$0")/init.sh"
-# shellcheck source=/dev/null  # Nothing interesting here
-source "$VIRTUALENV_PATH/bin/activate" >/dev/null 2>&1 || true
 
 if [[ "$INPUT_SINGLE_COMMIT" == "true" ]]; then
     if [[ "$(git status --porcelain | wc -l)" == "0" ]]; then
