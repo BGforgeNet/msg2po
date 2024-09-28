@@ -2,7 +2,7 @@
 
 ### 1.3.0
 
-Added support for Python 3.12.
+Added support for Python 3.12. Action now uses a virtual environment.
 
 ### 1.2.3
 
