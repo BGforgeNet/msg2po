@@ -12,6 +12,3 @@ git config user.email "github-actions[bot]@users.noreply.github.com"
 git config core.autocrlf false
 
 export commit_message_base="BGforgeNet/msg2po:"
-
-# shellcheck source=/dev/null  # Nothing interesting here
-source "$VIRTUALENV_PATH/bin/activate" >/dev/null 2>&1 || true
