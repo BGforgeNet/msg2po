@@ -1,5 +1,9 @@
 ## Changelog
 
+### 1.3.0
+
+Added support for Python 3.12.
+
 ### 1.2.3
 
 Added [special handling](https://github.com/BGforgeNet/Fallout2_Restoration_Project/issues/301) for cp1258 Vietnamese encoding.
