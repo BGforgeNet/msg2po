@@ -111,8 +111,11 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
     po = sort_po(po)
     clean_po_dir(po_dir)
 
-    old_po = polib.pofile(dst_file)
-    po.metadata = old_po.metadata
+    if os.path.exists(dst_file):
+        old_po = polib.pofile(dst_file)
+        po.metadata = old_po.metadata
+    else:
+        old_po = polib.POFile()
     if po == old_po:
         print("No change in source directory {}".format(poify_dir))
         sys.exit(0)

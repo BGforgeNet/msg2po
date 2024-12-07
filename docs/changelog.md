@@ -1,5 +1,9 @@
 ## Changelog
 
+### 1.3.1
+
+Fixed initial poify not working.
+
 ### 1.3.0
 
 Added support for Python 3.12. Action now uses a virtual environment.
