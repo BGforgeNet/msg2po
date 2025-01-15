@@ -30,9 +30,11 @@ jobs:
           key: poetry-1 # increment to reset cache
 
       - name: Install Poetry
-        uses: snok/install-poetry@v1.3.4
+        uses: snok/install-poetry@v1.4.1
         with:
           virtualenvs-in-project: true
+          plugins: |
+            poetry-plugin-export
 
       - name: Update requirements.txt
         run: |
