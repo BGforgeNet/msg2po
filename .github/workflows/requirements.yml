@@ -5,8 +5,9 @@ name: Update requirements.txt
 on:
   push:
     paths:
-      - "poetry.lock"
-      - "pyproject.toml"
+      - poetry.lock
+      - pyproject.toml
+      - .github/workflows/requirements.yml
 
 defaults:
   run:
