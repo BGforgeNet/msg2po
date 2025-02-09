@@ -1,5 +1,11 @@
 ## Changelog
 
+### 1.3.2
+
+- Removed unused `lowercase` setting.
+- Replaced `all_utf8_yes_really_all` with `ansi_console`.
+- Console files are in utf-8 by default now.
+
 ### 1.3.1
 
 Fixed initial poify not working.
@@ -10,7 +16,8 @@ Added support for Python 3.12. Action now uses a virtual environment.
 
 ### 1.2.3
 
-Added [special handling](https://github.com/BGforgeNet/Fallout2_Restoration_Project/issues/301) for cp1258 Vietnamese encoding.
+Added [special handling](https://github.com/BGforgeNet/Fallout2_Restoration_Project/issues/301) for cp1258 Vietnamese
+encoding.
 
 ### 1.2.2
 
@@ -22,8 +29,8 @@ Added `vi`/`vietnamese` language slug.
 
 ### 1.2.0
 
-Added support for `all_utf8`, `all_utf8_yes_really_all` parameters to `.bgforge.yml`.
-Use the first one to consider all files except DOS_FILENAMES in UTF-8, add the second one to consider even DOS_FILENAMES UTF-8.
+Added support for `all_utf8`, `all_utf8_yes_really_all` parameters to `.bgforge.yml`. Use the first one to consider all
+files except DOS_FILENAMES in UTF-8, add the second one to consider even DOS_FILENAMES UTF-8.
 
 ### 1.1.16
 
@@ -42,7 +49,8 @@ Action: upgraded [paths-filter](https://github.com/AurorNZ/paths-filter) to 3.0.
 - Added missing console entry point for `poify.py`, it can now be called as `poify`.
 - Fixed spurious [change messages](https://github.com/BGforgeNet/msg2po/issues/5) for lines that are the same.
 - Fixed `dir2msgstr` [missing](https://github.com/BGforgeNet/msg2po/issues/7) new female entries.
-- Fixed `poify` to always use [Linux style paths](https://github.com/BGforgeNet/msg2po/issues/4) in occurrences, even on Windows.
+- Fixed `poify` to always use [Linux style paths](https://github.com/BGforgeNet/msg2po/issues/4) in occurrences, even on
+  Windows.
 - POlib updated to 1.2.0.
 
 ### 1.1.12
@@ -55,7 +63,8 @@ Action: force unpoify if dir2msgstr found changes.
 
 ### 1.1.10
 
-Allow to load manual translation change to the same value that existing `msgstr` is set to in PO, when `extract_fuzzy` is not set, clearing `fuzzy` flag.
+Allow to load manual translation change to the same value that existing `msgstr` is set to in PO, when `extract_fuzzy`
+is not set, clearing `fuzzy` flag.
 
 ### 1.1.9
 
