@@ -34,8 +34,6 @@ jobs:
         with:
           version: 1.8.5
           virtualenvs-in-project: true
-          plugins: |
-            poetry-plugin-export
 
       - name: Update requirements.txt
         run: |
