@@ -50,6 +50,7 @@ def extract_po(pf: str, language_map: LanguageMap):
         print("Extracting {} from {} into {} with encoding {}".format(ef, po_path, ef_extract_path, enc))
         po2file(po, ef_extract_path, enc, ef, dst_dir=dst_dir, trans_map=trans_map, female_map=female_map)
 
+    enc = get_enc(po_path)
     print("Extracted {} into {} with encoding {}".format(po_path, dst_dir, enc))
 
 

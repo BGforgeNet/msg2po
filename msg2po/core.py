@@ -169,7 +169,7 @@ def get_enc(lang_path: str = "", file_path: str = ""):
         "vietnamese": "cp1258",
     }
 
-    DOS_ENCODINGS = {
+    ANSI_ENCODINGS = {
         #  'czech': 'cp852',
         #  'polish': 'cp852',
         #  'polski': 'cp852',
@@ -187,7 +187,7 @@ def get_enc(lang_path: str = "", file_path: str = ""):
         #  'castellano': 'cp850',
     }
 
-    DOS_FILENAMES = [
+    CONSOLE_FILENAMES = [
         "setup.tra",
         "install.tra",
     ]
@@ -196,25 +196,33 @@ def get_enc(lang_path: str = "", file_path: str = ""):
         "ee.tra",
     ]
 
-    if CONFIG.all_utf8_yes_really_all is True:
-        return "utf-8"
-
-    encoding = CONFIG.encoding
-    lang = language_slug(lang_path)
     filename = basename(file_path)
 
+    # All utf-8, maybe except console
+    if CONFIG.all_utf8 is True:
+        if not CONFIG.ansi_console:
+            return "utf-8"
+        if filename not in CONSOLE_FILENAMES:
+            return "utf-8"
+
+    # Configured encoding
+    encoding = CONFIG.encoding
+    lang = language_slug(lang_path)
+
+    # Try known encodings
     if lang in ENCODINGS:
         encoding = ENCODINGS[lang]
 
-    if filename in DOS_FILENAMES:
+    if filename in CONSOLE_FILENAMES:
+        # Always utf-8 for console, unless explicitly disabled
+        if not CONFIG.ansi_console:
+            return "utf-8"
+        # Otherwise, try known ansi encodings
         try:
-            encoding = DOS_ENCODINGS[lang]
+            encoding = ANSI_ENCODINGS[lang]
             return encoding
         except:
             pass
-
-    if CONFIG.all_utf8 is True:
-        return "utf-8"
 
     if filename in UTF_FILENAMES:
         encoding = "utf-8"
