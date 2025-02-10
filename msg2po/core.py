@@ -21,7 +21,7 @@ VALID_EXTENSIONS = ["msg", "txt", "sve", "tra"]
 # dotall - whether file entries are multiline
 FILE_FORMAT = {
     "msg": {
-        "pattern": "{(\d+)}{([^}]*)}{([^}]*)}",
+        "pattern": r"{(\d+)}{([^}]*)}{([^}]*)}",
         "dotall": True,
         "index": 0,
         "value": 2,
@@ -33,7 +33,7 @@ FILE_FORMAT = {
         },
     },
     "sve": {
-        "pattern": "(\d+):(.*)",
+        "pattern": r"(\d+):(.*)",
         "dotall": False,
         "index": 0,
         "value": 1,
@@ -43,7 +43,7 @@ FILE_FORMAT = {
         },
     },
     "txt": {
-        "pattern": "(\d+):(.*)",
+        "pattern": r"(\d+):(.*)",
         "dotall": False,
         "index": 0,
         "value": 1,
@@ -54,7 +54,7 @@ FILE_FORMAT = {
         },
     },
     "tra": {
-        "pattern": "@(\d+)\s*?=\s*?~([^~]*?)~(?:\s)?(?:\[([^]]*)\])?(?:~([^~]*)~)?",
+        "pattern": r"@(\d+)\s*?=\s*?~([^~]*?)~(?:\s)?(?:\[([^]]*)\])?(?:~([^~]*)~)?",
         "dotall": True,
         "index": 0,
         "value": 1,
