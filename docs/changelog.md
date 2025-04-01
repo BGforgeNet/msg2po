@@ -1,5 +1,10 @@
 ## Changelog
 
+### 1.4.0
+
+Disallow to use curly brackets in msg files, to avoid
+[breaking translations](https://github.com/BGforgeNet/Fallout2_Restoration_Project/issues/336) in game.
+
 ### 1.3.2
 
 - Removed unused `lowercase` setting.
