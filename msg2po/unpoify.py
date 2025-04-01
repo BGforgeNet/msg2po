@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
-# coding: utf-8
 
 import os
 import argparse
 import sys
-from multiprocessing import Pool
+import concurrent.futures
 from polib import pofile
-from functools import partial
 from msg2po.core import (
     CONFIG,
     LanguageMap,
@@ -37,8 +35,9 @@ def extract_po(pf: str, language_map: LanguageMap):
     pf is po file basename
     """
     po_path = os.path.join(CONFIG.po_dirname, pf)
-    print("processing {}".format(po_path))
-    po = pofile(po_path)  # open once
+    print(f"processing {po_path}")
+    # Open PO once, it's a heavy op
+    po = pofile(po_path)
     trans_map = translation_entries(po)
     female_map = female_entries(po)
 
@@ -47,38 +46,44 @@ def extract_po(pf: str, language_map: LanguageMap):
     for ef in sorted(trans_map):
         enc = get_enc(po_path, ef)
         ef_extract_path = os.path.join(dst_dir, ef)
-        print("Extracting {} from {} into {} with encoding {}".format(ef, po_path, ef_extract_path, enc))
+        print(f"Extracting {ef} from {po_path} into {ef_extract_path} with encoding {enc}")
         po2file(po, ef_extract_path, enc, ef, dst_dir=dst_dir, trans_map=trans_map, female_map=female_map)
 
     enc = get_enc(po_path)
-    print("Extracted {} into {} with encoding {}".format(po_path, dst_dir, enc))
+    print(f"Extracted {po_path} into {dst_dir} with encoding {enc}")
 
 
 def main():
     po_dir = CONFIG.po_dir
     language_map = LanguageMap()
 
-    # find PO files
-    po_files = []
-    for dir_name, subdir_list, file_list in os.walk(po_dir):
-        for f in file_list:
-            if get_ext(f) == "po":
-                po_files.append(f)
-    if po_files == []:
-        print("no PO files found in directory {}".format(po_dir))
+    # Find PO files
+    po_files = [f for _, _, files in os.walk(po_dir) for f in files if get_ext(f) == "po"]
+
+    if not po_files:
+        print(f"no PO files found in directory {po_dir}")
         sys.exit(1)
 
     with cd(CONFIG.tra_dir):
-        # extract PO files
-        pool = Pool()
-        try:
-            r = pool.map_async(partial(extract_po, language_map=language_map), po_files)
-            pool.close()
-            codes = r.get()  # noqa: F841 - need to get results to see if there's an exception
-        except KeyboardInterrupt:
-            pool.terminate()
-        finally:
-            pool.join()
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            futures = {executor.submit(extract_po, pf, language_map): pf for pf in po_files}
+
+            for future in concurrent.futures.as_completed(futures):
+                pf = futures[future]
+                try:
+                    future.result()
+                except ValueError as e:
+                    print(f"ValueError in file {pf}: {e}")
+                    executor.shutdown(wait=False, cancel_futures=True)
+                    sys.exit(1)
+                except KeyboardInterrupt:
+                    print("Interrupted by user, terminating execution...")
+                    executor.shutdown(wait=False, cancel_futures=True)
+                    sys.exit(1)
+                except Exception as e:
+                    print(f"Unhandled exception in file {pf}: {e}")
+                    executor.shutdown(wait=False, cancel_futures=True)
+                    sys.exit(1)
 
 
 if __name__ == "__main__":

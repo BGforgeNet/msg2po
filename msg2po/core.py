@@ -31,6 +31,7 @@ FILE_FORMAT = {
             "context": "{{{index}}}{{{context}}}{{{value}}}\n",
             "female": "separate",
         },
+        "forbidden_characters": ["{", "}"],
     },
     "sve": {
         "pattern": r"(\d+):(.*)",
@@ -41,6 +42,7 @@ FILE_FORMAT = {
             "default": "{index}:{value}\n",
             "female": "separate",
         },
+        "forbidden_characters": [],
     },
     "txt": {
         "pattern": r"(\d+):(.*)",
@@ -52,6 +54,7 @@ FILE_FORMAT = {
             "default": "{index}:{value}\n",
             "female": "separate",
         },
+        "forbidden_characters": [],
     },
     "tra": {
         "pattern": r"@(\d+)\s*?=\s*?~([^~]*?)~(?:\s)?(?:\[([^]]*)\])?(?:~([^~]*)~)?",
@@ -65,6 +68,7 @@ FILE_FORMAT = {
             "context": "@{index} = ~{value}~ [{context}]\n",
             "female": "@{index} = ~{value}~ ~{female}~\n",
         },
+        "forbidden_characters": [],
     },
 }
 
@@ -542,6 +546,14 @@ def get_line_format(e, ext: str):
     """
     ff = FILE_FORMAT[ext]
     line_format = ff["line_format"]
+
+    forbidden_characters = ff["forbidden_characters"]
+    for fc in forbidden_characters:
+        if fc in e["value"]:
+            print(f"ERROR: {ext} strings may not contain '{fc}' character")
+            print(f"\t\tentry: {e}")
+            raise ValueError("Invalid translation character")
+
     if e["context"] is not None:  # entry with context
         lfrm = line_format["context"]
     elif (
@@ -789,6 +801,7 @@ class TRANSFile:
         self.pattern = self.fformat["pattern"]
         self.dotall = self.fformat["dotall"]
         self.filepath = filepath
+        self.forbidden_characters = self.fformat["forbidden_characters"]
 
         try:  # comment for all entries in file
             self.comment = self.fformat["comment"]
@@ -826,6 +839,12 @@ class TRANSFile:
             index = line[self.fformat["index"]]
             entry.occurence = (filepath, str(index))
             entry.value = str(line[self.fformat["value"]])
+
+            for fc in self.forbidden_characters:
+                if fc in entry.value:
+                    print(f"ERROR: {fext} strings may not contain '{fc}' character")
+                    print(f"\t\tentry: {entry}")
+                    raise ValueError("Invalid translation character")
 
             # skip invalid '000' entries in MSG files
             if fext == "msg" and index == "000":
