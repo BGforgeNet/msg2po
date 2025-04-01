@@ -30,7 +30,8 @@ jobs:
       #     pylint handle.py
 
       - name: Black
-        uses: psf/black@stable
+        # Match version in poetry.lock
+        uses: psf/black@24.4.2
 
       - name: Run mypy
         uses: sasanquaneuf/mypy-github-action@9d43a0bf65fc419f7aa493ac24af5e2226edffbb
