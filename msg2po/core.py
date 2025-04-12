@@ -935,14 +935,18 @@ def language_slug(po_filename):
     A temporary hack until a better solution is found.
     """
     slug_map = {
+        "cs": "czech",
         "de": "german",
         "fr": "french",
-        "pt_br": "portuguese",
         "it": "italian",
+        "hu": "hungarian",
         "pl": "polish",
+        "pt": "portuguese",
+        "pt_br": "portuguese",
         "es": "spanish",
         "ru": "russian",
         "sv": "swedish",
+        "tchinese": "tchinese",
         "uk": "ukrainian",
         "vi": "vietnamese",
     }
