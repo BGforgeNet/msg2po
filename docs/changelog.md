@@ -1,5 +1,9 @@
 ## Changelog
 
+### 1.4.1
+
+Added simplified language aliases for cs/hu/pt/tchinese to use during extraction.
+
 ### 1.4.0
 
 Disallow to use curly brackets in msg files, to avoid
