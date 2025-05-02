@@ -1,5 +1,9 @@
 ## Changelog
 
+### 1.4.2
+
+Fixed regex for `*_ee.tra` files.
+
 ### 1.4.1
 
 Added simplified language aliases for cs/hu/pt/tchinese to use during extraction.
