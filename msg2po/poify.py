@@ -73,10 +73,10 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
                 if os.path.sep == "\\":
                     full_name = full_name.replace("\\", "/")
 
-                full_name = re.sub("^\./", "", full_name)  # remove trailing './'
+                full_name = re.sub(r"^\./", "", full_name)  # remove trailing './'
 
                 # skip female cuts
-                pretty_dir_name = re.sub("^\./", "", dir_name)
+                pretty_dir_name = re.sub(r"^\./", "", dir_name)
                 if extract_format == "sfall" and pretty_dir_name == "cuts_female":
                     print("{} is in cuts_female. Skipping!".format(full_name))
                     continue
