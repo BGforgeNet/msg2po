@@ -62,7 +62,7 @@ def dir2msgstr(src_dir: str, po: POFile, po_path: str = "", overwrite: bool = Tr
         for dir_name, subdir_list, file_list in os.walk(".", topdown=False, followlinks=True):
             for file_name in file_list:
                 full_name = os.path.join(dir_name, file_name)
-                full_name = re.sub("^\./", "", full_name)  # remove trailing './'
+                full_name = re.sub(r"^\./", "", full_name)  # remove trailing './'
                 fext = get_ext(file_name)
                 if fext != extension:
                     continue
