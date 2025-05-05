@@ -1,5 +1,10 @@
 ## Changelog
 
+### 1.4.3
+
+- Fixed regex handling in `dir2msgstr` and `poify`.
+- `dir2msgstr` now honors `skip_files` setting.
+
 ### 1.4.2
 
 Fixed regex for `*_ee.tra` files.
