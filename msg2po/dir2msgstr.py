@@ -56,6 +56,8 @@ def dir2msgstr(src_dir: str, po: POFile, po_path: str = "", overwrite: bool = Tr
     """
     print("overwrite is " + str(overwrite))
 
+    skip_files = CONFIG.skip_files
+
     with cd(src_dir):
         female_map = female_entries(po)
 
@@ -68,6 +70,11 @@ def dir2msgstr(src_dir: str, po: POFile, po_path: str = "", overwrite: bool = Tr
                     continue
                 if dir_name.endswith(CONFIG.female_dir_suffix):
                     print("{} is a file with female strings, skipping".format(full_name))
+                    continue
+
+                # Skip files as configured
+                if full_name in skip_files:
+                    print("{} is in skip_files. Skipping!".format(full_name))
                     continue
 
                 enc = get_enc(po_path, file_name)
