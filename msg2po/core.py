@@ -846,14 +846,11 @@ class TRANSFile:
                     print(f"\t\tentry: {entry}")
                     raise ValueError("Invalid translation character")
 
-            # skip invalid '000' entries in MSG files
-            if fext == "msg" and index == "000":
-                print(
-                    "WARN: {} - invalid entry number found, skipping:\n     {{000}}{{}}{{{}}}".format(
-                        filepath, entry.value
-                    )
-                )
-                continue
+            # fail on invalid '000' entries in MSG files
+            if index == "000":
+                print(f"ERROR: {filepath} - invalid entry index '000' found, aborting.")
+                print(f"\t\tentry: {entry}")
+                raise ValueError("Invalid entry index")
 
             entry.index = line[self.fformat["index"]]
 
@@ -904,13 +901,9 @@ class TRANSFile:
 
             # protection against duplicate indexes, part 2
             if entry.index in seen:
-                print(
-                    "WARN: duplicate string definition found {}:{}, using new value:\n      {}".format(
-                        filepath, entry.index, entry.value
-                    )
-                )
-                self.entries = [entry if x.index == entry.index else x for x in self.entries]
-                continue
+                print(f"ERROR: {filepath} - duplicate string index found: '{entry.index}'. Aborting.")
+                print(f"\tLast value: {entry.value}")
+                raise ValueError("Duplicate entry indices")
             else:
                 seen.append(index)
 
