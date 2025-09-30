@@ -17,7 +17,7 @@ python-dateutil = ">=2.8.2"
 python = ">=3.9"
 # Python 3.12 does not install setuptools by default,
 # and natsort seems to require it.
-setuptools = ">=78.1.1"
+setuptools = ">=80.9.0"
 
 [tool.poetry.dev-dependencies]
 black = "~=24.4.0"
