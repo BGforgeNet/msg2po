@@ -8,10 +8,15 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 REPOS_DIR="$SCRIPT_DIR/repos"
 
+# Run msg2po CLI commands via uv from the project root
+run_cmd() {
+  uv run --project "$PROJECT_DIR" "$@"
+}
+
 PASS=0
-FAIL=0
 
 pass() {
   PASS=$((PASS + 1))
@@ -19,8 +24,8 @@ pass() {
 }
 
 fail() {
-  FAIL=$((FAIL + 1))
   echo "  FAIL: $1"
+  exit 1
 }
 
 clone_if_missing() {
@@ -65,11 +70,8 @@ REF_COUNT=$(grep -c '^msgid "' "$REF_POT")
 echo ""
 echo "--- poify ---"
 
-if poify data/text/english > /dev/null 2>&1; then
-  pass "poify exits successfully"
-else
-  fail "poify exited with error"
-fi
+run_cmd poify data/text/english > /dev/null || fail "poify exited with error"
+pass "poify exits successfully"
 
 GEN_COUNT=$(grep -c '^msgid "' "$REF_POT")
 if [ "$GEN_COUNT" -eq "$REF_COUNT" ]; then
@@ -83,16 +85,16 @@ MODIFIED=$(count_modified)
 if [ "$MODIFIED" -le 1 ]; then
   pass "poify only modified POT ($MODIFIED files changed)"
 else
-  fail "poify modified unexpected files ($MODIFIED changed)"
   git diff --name-only | head -10
+  fail "poify modified unexpected files ($MODIFIED changed)"
 fi
 
 UNTRACKED=$(count_untracked)
 if [ "$UNTRACKED" -eq 0 ]; then
   pass "poify created no untracked files"
 else
-  fail "poify created $UNTRACKED untracked files"
   git ls-files --others --exclude-standard | head -10
+  fail "poify created $UNTRACKED untracked files"
 fi
 
 reset_repo "$FO2_DIR"
@@ -101,11 +103,8 @@ reset_repo "$FO2_DIR"
 echo ""
 echo "--- unpoify ---"
 
-if unpoify data/text/po > /dev/null 2>&1; then
-  pass "unpoify exits successfully"
-else
-  fail "unpoify exited with error"
-fi
+run_cmd unpoify data/text/po > /dev/null || fail "unpoify exited with error"
+pass "unpoify exits successfully"
 
 MSG_COUNT=$(find data/text/russian -name "*.msg" | wc -l)
 if [ "$MSG_COUNT" -gt 100 ]; then
@@ -126,8 +125,8 @@ SRC_MODIFIED=$(git diff --name-only -- data/text/english/ | wc -l)
 if [ "$SRC_MODIFIED" -eq 0 ]; then
   pass "unpoify did not modify source language files"
 else
-  fail "unpoify modified $SRC_MODIFIED source language files"
   git diff --name-only -- data/text/english/ | head -10
+  fail "unpoify modified $SRC_MODIFIED source language files"
 fi
 
 # PO files must not be modified
@@ -135,19 +134,16 @@ PO_MODIFIED=$(git diff --name-only -- data/text/po/ | wc -l)
 if [ "$PO_MODIFIED" -eq 0 ]; then
   pass "unpoify did not modify PO files"
 else
-  fail "unpoify modified $PO_MODIFIED PO files"
   git diff --name-only -- data/text/po/ | head -10
+  fail "unpoify modified $PO_MODIFIED PO files"
 fi
 
 # --- dir2msgstr roundtrip ---
 echo ""
 echo "--- dir2msgstr ---"
 
-if dir2msgstr --auto --overwrite > /dev/null 2>&1; then
-  pass "dir2msgstr exits successfully"
-else
-  fail "dir2msgstr exited with error"
-fi
+run_cmd dir2msgstr --auto --overwrite > /dev/null || fail "dir2msgstr exited with error"
+pass "dir2msgstr exits successfully"
 
 # dir2msgstr should modify PO files (loading translations back)
 PO_MODIFIED=$(git diff --name-only -- data/text/po/ | wc -l)
@@ -185,11 +181,8 @@ REF_COUNT=$(grep -c '^msgid "' "$REF_POT")
 echo ""
 echo "--- poify ---"
 
-if poify ascension/lang/english > /dev/null 2>&1; then
-  pass "poify exits successfully"
-else
-  fail "poify exited with error"
-fi
+run_cmd poify ascension/lang/english > /dev/null || fail "poify exited with error"
+pass "poify exits successfully"
 
 GEN_COUNT=$(grep -c '^msgid "' "$REF_POT")
 if [ "$GEN_COUNT" -eq "$REF_COUNT" ]; then
@@ -202,16 +195,16 @@ MODIFIED=$(count_modified)
 if [ "$MODIFIED" -le 1 ]; then
   pass "poify only modified POT ($MODIFIED files changed)"
 else
-  fail "poify modified unexpected files ($MODIFIED changed)"
   git diff --name-only | head -10
+  fail "poify modified unexpected files ($MODIFIED changed)"
 fi
 
 UNTRACKED=$(count_untracked)
 if [ "$UNTRACKED" -eq 0 ]; then
   pass "poify created no untracked files"
 else
-  fail "poify created $UNTRACKED untracked files"
   git ls-files --others --exclude-standard | head -10
+  fail "poify created $UNTRACKED untracked files"
 fi
 
 reset_repo "$ASC_DIR"
@@ -220,11 +213,8 @@ reset_repo "$ASC_DIR"
 echo ""
 echo "--- unpoify ---"
 
-if unpoify ascension/lang/po > /dev/null 2>&1; then
-  pass "unpoify exits successfully"
-else
-  fail "unpoify exited with error"
-fi
+run_cmd unpoify ascension/lang/po > /dev/null || fail "unpoify exited with error"
+pass "unpoify exits successfully"
 
 TRA_COUNT=$(find ascension/lang/french -name "*.tra" | wc -l)
 if [ "$TRA_COUNT" -gt 5 ]; then
@@ -260,11 +250,8 @@ fi
 echo ""
 echo "--- dir2msgstr ---"
 
-if dir2msgstr --auto --overwrite > /dev/null 2>&1; then
-  pass "dir2msgstr exits successfully"
-else
-  fail "dir2msgstr exited with error"
-fi
+run_cmd dir2msgstr --auto --overwrite > /dev/null || fail "dir2msgstr exited with error"
+pass "dir2msgstr exits successfully"
 
 # Ascension has extract_fuzzy: true and translations already match POs,
 # so dir2msgstr may not modify anything - that's correct behavior.
@@ -286,7 +273,5 @@ reset_repo "$ASC_DIR"
 
 echo ""
 echo "================================"
-echo "  e2e: $PASS passed, $FAIL failed"
+echo "  e2e: $PASS passed"
 echo "================================"
-
-[ "$FAIL" -eq 0 ]

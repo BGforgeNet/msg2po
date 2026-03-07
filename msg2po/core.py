@@ -740,7 +740,6 @@ def po_make_unique(po):
     old_metadata = po.metadata
     for e in po:
         if (e.msgid, e.msgctxt) in entries_dict:
-
             e0 = entries_dict[(e.msgid, e.msgctxt)]
             e0.occurrences.extend(e.occurrences)
 

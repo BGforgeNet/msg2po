@@ -10,7 +10,6 @@ from msg2po.core import (
     language_slug,
     transliterate,
     encode_custom,
-    encode_vietnamese,
     TRANSLITERATION_RULES_VIETNAMESE,
     metadata,
 )

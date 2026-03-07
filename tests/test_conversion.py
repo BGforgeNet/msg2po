@@ -1,7 +1,5 @@
 # Tests for file2po, po2file, and roundtrip conversions.
 
-import os
-import pytest
 import polib
 from msg2po.core import (
     file2po,
@@ -14,7 +12,6 @@ from msg2po.core import (
     update_female_entries,
     EMPTY_COMMENT,
     CONTEXT_FEMALE,
-    CONFIG,
 )
 
 

@@ -1,6 +1,5 @@
 # Tests for TRANSFile parsing across all supported formats.
 
-import os
 import pytest
 from msg2po.core import TRANSFile, is_indexed
 

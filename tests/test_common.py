@@ -1,7 +1,6 @@
 # Tests for msg2po.common utility functions.
 
 import os
-import pytest
 from msg2po.common import find_files, get_ext
 
 

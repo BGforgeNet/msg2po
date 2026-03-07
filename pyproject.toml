@@ -1,42 +1,27 @@
-[tool.poetry]
+[project]
 name = "msg2po"
 version = "1.4.3"
 description = "A set of helper tools to convert Fallout 1/2 MSG and WeiDU TRA into GNU gettext PO and back."
-authors = ["BGforge <dev@bgforge.net>"]
+authors = [{ name = "BGforge", email = "dev@bgforge.net" }]
 keywords = ["Fallout", "Fallout 2", "Baldur's Gate", "Infinity Engine", "WeiDU"]
 readme = "README.md"
-homepage = "https://github.com/BGforgeNet/msg2po"
-repository = "https://github.com/BGforgeNet/msg2po"
+requires-python = ">=3.9"
+dependencies = [
+    "configparser>=5.2.0",
+    "natsort>=6.2.1,<7",
+    "polib>=1.1.1",
+    "python-dateutil>=2.8.2",
+    "ruamel.yaml>=0.17.21",
+    # Python 3.12 does not install setuptools by default,
+    # and natsort seems to require it.
+    "setuptools>=80.9.0",
+]
 
-[tool.poetry.dependencies]
-configparser = ">=5.2.0"
-natsort = ">=6.2.1,<7"
-polib = ">=1.1.1"
-python-dateutil = ">=2.8.2"
-"ruamel.yaml" = ">=0.17.21"
-python = ">=3.9"
-# Python 3.12 does not install setuptools by default,
-# and natsort seems to require it.
-setuptools = ">=80.9.0"
+[project.urls]
+Homepage = "https://github.com/BGforgeNet/msg2po"
+Repository = "https://github.com/BGforgeNet/msg2po"
 
-[tool.poetry.dev-dependencies]
-black = "~=24.4.0"
-flake8 = "~=5.0.4"
-
-[tool.poetry.group.dev.dependencies]
-pytest = ">=7.4,<9"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-
-[tool.black]
-line-length = 120
-
-[tool.poetry.plugins."console_scripts"]
+[project.scripts]
 "bgforge-config" = "msg2po.bgforge_config:main"
 "dir2msgstr" = "msg2po.dir2msgstr:main"
 "file2msgstr" = "msg2po.file2msgstr:main"
@@ -48,3 +33,25 @@ line-length = 120
 "resave-po" = "msg2po.resave_po:main"
 "unpoify" = "msg2po.unpoify:main"
 "unfuzzy" = "msg2po.unfuzzy:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=7.4,<9",
+    "ruff>=0.15",
+    "ty>=0.0.1a8",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+# Pre-existing bare excepts throughout the codebase
+ignore = ["E722"]
