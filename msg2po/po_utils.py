@@ -59,22 +59,30 @@ def translation_entries(po: polib.POFile):
 
 def female_entries(po: polib.POFile) -> dict[str, polib.POEntry]:
     """
-    Returns mapping of male msgids to corresponding female PO entries
+    Returns mapping of male msgids to corresponding female PO entries.
+    Uses pre-built dicts for O(n) lookup instead of O(n^2) linear scans.
     """
-    entries = {}
-    fe_list = [e for e in po if len(e.occurrences) == 0 and e.msgctxt == CONTEXT_FEMALE]
-    for fe in fe_list:
-        # first, check male entries without context
-        male_entries = [e for e in po if e.msgid == fe.msgid and not e.msgctxt]
-        if len(male_entries) > 0:
-            me = male_entries[0]
-        else:  # then, those with
-            male_entries = [e for e in po if e.msgid == fe.msgid and e.msgctxt != CONTEXT_FEMALE]
-        if len(male_entries) > 0:
-            me = male_entries[0]
-            entries[me.msgid] = fe
+    # Pre-build lookup dicts: msgid -> entry for non-female entries
+    male_no_ctx = {}  # entries with no context
+    male_any_ctx = {}  # entries with context != female
+    for e in po:
+        if e.msgctxt == CONTEXT_FEMALE:
+            continue
+        if not e.msgctxt:
+            male_no_ctx.setdefault(e.msgid, e)
         else:
-            logger.warning(f"couldn't find a corresponding male counterpart for a female entry: {fe}")
+            male_any_ctx.setdefault(e.msgid, e)
+
+    entries = {}
+    for e in po:
+        if e.msgctxt != CONTEXT_FEMALE or len(e.occurrences) != 0:
+            continue
+        # Prefer male entry without context, fall back to any non-female context
+        me = male_no_ctx.get(e.msgid) or male_any_ctx.get(e.msgid)
+        if me:
+            entries[me.msgid] = e
+        else:
+            logger.warning(f"couldn't find a corresponding male counterpart for a female entry: {e}")
     return entries
 
 

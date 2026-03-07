@@ -380,6 +380,15 @@ def get_line_format(e, ext: str):
     return lfrm
 
 
+def build_occurrence_dict(po: polib.POFile) -> OrderedDict:
+    """Build a dict mapping (filepath, line_number) to PO entry for fast lookup."""
+    entries_dict = OrderedDict()
+    for e in po:
+        for eo in e.occurrences:
+            entries_dict[(eo[0], eo[1])] = e
+    return entries_dict
+
+
 def file2msgstr(
     input_file: str,
     po: polib.POFile,
@@ -388,6 +397,7 @@ def file2msgstr(
     overwrite: bool = True,
     same: bool = False,
     female_map: Optional[dict[str, polib.POEntry]] = None,
+    entries_dict: Optional[OrderedDict] = None,
 ):
     """returns PO file object"""
     if encoding is None:
@@ -395,11 +405,8 @@ def file2msgstr(
 
     trans = TRANSFile(filepath=input_file, is_source=False, encoding=encoding)  # load translations
 
-    # map entries to occurrences for faster access, part 1
-    entries_dict = OrderedDict()
-    for e in po:
-        for eo in e.occurrences:
-            entries_dict[(eo[0], eo[1])] = e
+    if entries_dict is None:
+        entries_dict = build_occurrence_dict(po)
     if female_map is None:
         female_map = female_entries(po)
 

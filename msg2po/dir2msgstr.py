@@ -4,7 +4,10 @@ import argparse
 import os
 import re
 import sys
+from collections import OrderedDict
+from typing import Optional
 
+import polib
 from loguru import logger
 from polib import POFile, pofile
 
@@ -13,6 +16,7 @@ from msg2po.core import (
     VALID_EXTENSIONS,
     LanguageMap,
     basename,
+    build_occurrence_dict,
     cd,
     female_entries,
     file2msgstr,
@@ -31,6 +35,8 @@ def dir2msgstr(
     overwrite: bool = True,
     extension: str = "",
     same: bool = False,
+    female_map: Optional[dict[str, "polib.POEntry"]] = None,
+    entries_dict: Optional["OrderedDict"] = None,
 ):
     """
     src_dir is relative
@@ -40,9 +46,12 @@ def dir2msgstr(
 
     skip_files = CONFIG.skip_files
 
-    with cd(src_dir):
+    if female_map is None:
         female_map = female_entries(po)
+    if entries_dict is None:
+        entries_dict = build_occurrence_dict(po)
 
+    with cd(src_dir):
         for dir_name, _subdir_list, file_list in os.walk(".", topdown=False, followlinks=True):
             for file_name in file_list:
                 full_name = os.path.join(dir_name, file_name)
@@ -69,6 +78,7 @@ def dir2msgstr(
                     overwrite=overwrite,
                     same=same,
                     female_map=female_map,
+                    entries_dict=entries_dict,
                 )
     po = po_make_unique(po)
     return po
@@ -133,6 +143,8 @@ def main():
                 logger.info(f"Loading into {pf}")
                 lang_dir = language_map.po2slug[basename(pf)]
                 po = pofile(pf)
+                female_map = female_entries(po)
+                occ_dict = build_occurrence_dict(po)
                 for ve in VALID_EXTENSIONS:
                     po = dir2msgstr(
                         src_dir=lang_dir,
@@ -141,9 +153,11 @@ def main():
                         overwrite=args.overwrite,
                         extension=ve,
                         same=args.same,
+                        female_map=female_map,
+                        entries_dict=occ_dict,
                     )
-                    po.save(pf, newline=CONFIG.newline_po)
                     logger.info(f"Processed {ve} files in directory {lang_dir}, the result is in {pf}")
+                po.save(pf, newline=CONFIG.newline_po)
 
 
 if __name__ == "__main__":
