@@ -40,14 +40,15 @@ reset_repo() {
   cd "$1" && git checkout -q . && git clean -fd -q
 }
 
-# Count modified tracked files (excludes untracked)
-count_modified() {
-  git diff --name-only | wc -l
-}
-
-# Count untracked files
-count_untracked() {
-  git ls-files --others --exclude-standard | wc -l
+check_clean() {
+  local status
+  status=$(git status --porcelain)
+  if [ -z "$status" ]; then
+    pass "git status is clean"
+  else
+    echo "$status" | head -10
+    fail "git status is dirty"
+  fi
 }
 
 mkdir -p "$REPOS_DIR"
@@ -61,6 +62,7 @@ echo "==== Fallout 2 Unofficial Patch ===="
 
 FO2_DIR="$REPOS_DIR/fo2_up"
 clone_if_missing "https://github.com/BGforgeNet/Fallout2_Unofficial_Patch.git" "$FO2_DIR"
+reset_repo "$FO2_DIR"
 cd "$FO2_DIR"
 
 REF_POT="data/text/po/english.pot"
@@ -80,23 +82,7 @@ else
   fail "POT entry count mismatch: generated=$GEN_COUNT, reference=$REF_COUNT"
 fi
 
-MODIFIED=$(count_modified)
-if [ "$MODIFIED" -eq 0 ]; then
-  pass "poify produced no changes"
-else
-  git diff --name-only | head -10
-  fail "poify modified $MODIFIED files (expected 0)"
-fi
-
-UNTRACKED=$(count_untracked)
-if [ "$UNTRACKED" -eq 0 ]; then
-  pass "poify created no untracked files"
-else
-  git ls-files --others --exclude-standard | head -10
-  fail "poify created $UNTRACKED untracked files"
-fi
-
-reset_repo "$FO2_DIR"
+check_clean
 
 # --- unpoify ---
 echo ""
@@ -104,63 +90,15 @@ echo "--- unpoify ---"
 
 run_cmd unpoify data/text/po > /dev/null || fail "unpoify exited with error"
 pass "unpoify exits successfully"
+check_clean
 
-MSG_COUNT=$(find data/text/russian -name "*.msg" | wc -l)
-if [ "$MSG_COUNT" -gt 100 ]; then
-  pass "Russian has >100 MSG files ($MSG_COUNT)"
-else
-  fail "Russian has too few MSG files ($MSG_COUNT)"
-fi
-
-EMPTY=$(find data/text/russian -name "*.msg" -empty | wc -l)
-if [ "$EMPTY" -eq 0 ]; then
-  pass "No empty MSG files"
-else
-  fail "$EMPTY empty MSG files found"
-fi
-
-# Source language must not be touched
-SRC_MODIFIED=$(git diff --name-only -- data/text/english/ | wc -l)
-if [ "$SRC_MODIFIED" -eq 0 ]; then
-  pass "unpoify did not modify source language files"
-else
-  git diff --name-only -- data/text/english/ | head -10
-  fail "unpoify modified $SRC_MODIFIED source language files"
-fi
-
-# PO files must not be modified
-PO_MODIFIED=$(git diff --name-only -- data/text/po/ | wc -l)
-if [ "$PO_MODIFIED" -eq 0 ]; then
-  pass "unpoify did not modify PO files"
-else
-  git diff --name-only -- data/text/po/ | head -10
-  fail "unpoify modified $PO_MODIFIED PO files"
-fi
-
-# --- dir2msgstr roundtrip ---
+# --- dir2msgstr ---
 echo ""
 echo "--- dir2msgstr ---"
 
 run_cmd dir2msgstr --auto --overwrite > /dev/null || fail "dir2msgstr exited with error"
 pass "dir2msgstr exits successfully"
-
-# dir2msgstr should modify PO files (loading translations back)
-PO_MODIFIED=$(git diff --name-only -- data/text/po/ | wc -l)
-if [ "$PO_MODIFIED" -gt 0 ]; then
-  pass "dir2msgstr updated PO files ($PO_MODIFIED modified)"
-else
-  fail "dir2msgstr did not modify any PO files"
-fi
-
-# Source language must still not be touched
-SRC_MODIFIED=$(git diff --name-only -- data/text/english/ | wc -l)
-if [ "$SRC_MODIFIED" -eq 0 ]; then
-  pass "dir2msgstr did not modify source language files"
-else
-  fail "dir2msgstr modified $SRC_MODIFIED source language files"
-fi
-
-reset_repo "$FO2_DIR"
+check_clean
 
 # ============================================================
 # Ascension (WeiDU, TRA)
@@ -171,6 +109,7 @@ echo "==== Ascension ===="
 
 ASC_DIR="$REPOS_DIR/ascension"
 clone_if_missing "https://github.com/Gibberlings3/Ascension.git" "$ASC_DIR"
+reset_repo "$ASC_DIR"
 cd "$ASC_DIR"
 
 REF_POT="ascension/lang/po/english.pot"
@@ -190,23 +129,7 @@ else
   fail "POT entry count mismatch: generated=$GEN_COUNT, reference=$REF_COUNT"
 fi
 
-MODIFIED=$(count_modified)
-if [ "$MODIFIED" -eq 0 ]; then
-  pass "poify produced no changes"
-else
-  git diff --name-only | head -10
-  fail "poify modified $MODIFIED files (expected 0)"
-fi
-
-UNTRACKED=$(count_untracked)
-if [ "$UNTRACKED" -eq 0 ]; then
-  pass "poify created no untracked files"
-else
-  git ls-files --others --exclude-standard | head -10
-  fail "poify created $UNTRACKED untracked files"
-fi
-
-reset_repo "$ASC_DIR"
+check_clean
 
 # --- unpoify ---
 echo ""
@@ -214,55 +137,15 @@ echo "--- unpoify ---"
 
 run_cmd unpoify ascension/lang/po > /dev/null || fail "unpoify exited with error"
 pass "unpoify exits successfully"
+check_clean
 
-TRA_COUNT=$(find ascension/lang/french -name "*.tra" | wc -l)
-if [ "$TRA_COUNT" -gt 5 ]; then
-  pass "French has >5 TRA files ($TRA_COUNT)"
-else
-  fail "French has too few TRA files ($TRA_COUNT)"
-fi
-
-EMPTY=$(find ascension/lang/french -name "*.tra" -empty | wc -l)
-if [ "$EMPTY" -eq 0 ]; then
-  pass "No empty TRA files"
-else
-  fail "$EMPTY empty TRA files found"
-fi
-
-# Source language must not be touched
-SRC_MODIFIED=$(git diff --name-only -- ascension/lang/english/ | wc -l)
-if [ "$SRC_MODIFIED" -eq 0 ]; then
-  pass "unpoify did not modify source language files"
-else
-  fail "unpoify modified $SRC_MODIFIED source language files"
-fi
-
-# PO files must not be modified
-PO_MODIFIED=$(git diff --name-only -- ascension/lang/po/ | wc -l)
-if [ "$PO_MODIFIED" -eq 0 ]; then
-  pass "unpoify did not modify PO files"
-else
-  fail "unpoify modified $PO_MODIFIED PO files"
-fi
-
-# --- dir2msgstr roundtrip ---
+# --- dir2msgstr ---
 echo ""
 echo "--- dir2msgstr ---"
 
 run_cmd dir2msgstr --auto --overwrite > /dev/null || fail "dir2msgstr exited with error"
 pass "dir2msgstr exits successfully"
-
-# Ascension has extract_fuzzy: true and translations already match POs,
-# so dir2msgstr may not modify anything - that's correct behavior.
-PO_MODIFIED=$(git diff --name-only -- ascension/lang/po/ | wc -l)
-pass "dir2msgstr PO state ok ($PO_MODIFIED modified)"
-
-SRC_MODIFIED=$(git diff --name-only -- ascension/lang/english/ | wc -l)
-if [ "$SRC_MODIFIED" -eq 0 ]; then
-  pass "dir2msgstr did not modify source language files"
-else
-  fail "dir2msgstr modified $SRC_MODIFIED source language files"
-fi
+check_clean
 
 reset_repo "$ASC_DIR"
 
