@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# coding: utf-8
 
 import argparse
+
 from polib import pofile
-from msg2po.core import sort_po, update_female_entries, CONFIG, unfuzzy_exact_matches, po_make_unique
+
+from msg2po.core import CONFIG, po_make_unique, sort_po, unfuzzy_exact_matches, update_female_entries
 
 parser = argparse.ArgumentParser(
     description="Resave PO file using polib API, to correct formatting",

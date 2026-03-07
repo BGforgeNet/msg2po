@@ -52,6 +52,8 @@ testpaths = ["tests"]
 line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F", "W"]
-# Pre-existing bare excepts throughout the codebase
-ignore = ["E722"]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+ignore = [
+    "E722",   # bare except — pre-existing throughout the codebase
+    "SIM108", # ternary operator — often less readable in this codebase
+]

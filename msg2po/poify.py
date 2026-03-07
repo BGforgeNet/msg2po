@@ -1,28 +1,29 @@
 #!/usr/bin/env python3
-# coding: utf-8
 
-import os
-import sys
 import argparse
-import polib
-import shutil
+import os
 import re
+import shutil
+import sys
+
+import natsort
+import polib
+
 from msg2po.core import (
+    CONFIG,
     VALID_EXTENSIONS,
-    dir_or_exit,
-    get_enc,
-    cd,
     basename,
-    metadata,
+    cd,
+    dir_or_exit,
     file2po,
+    get_enc,
     get_ext,
+    is_indexed,
+    metadata,
+    parent_dir,
     po_make_unique,
     sort_po,
-    parent_dir,
-    is_indexed,
-    CONFIG,
 )
-import natsort
 
 
 # prepare po dir
@@ -78,11 +79,11 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
                 # skip female cuts
                 pretty_dir_name = re.sub(r"^\./", "", dir_name)
                 if extract_format == "sfall" and pretty_dir_name == "cuts_female":
-                    print("{} is in cuts_female. Skipping!".format(full_name))
+                    print(f"{full_name} is in cuts_female. Skipping!")
                     continue
 
                 if full_name in skip_files:
-                    print("{} is in skip_files. Skipping!".format(full_name))
+                    print(f"{full_name} is in skip_files. Skipping!")
                     continue
 
                 ext = get_ext(file_name)
@@ -92,9 +93,9 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
                 # checked txt is indexed and if it is, process it
                 if ext == "txt":
                     if is_indexed(full_name):
-                        print("{} is indexed TXT".format(full_name))
+                        print(f"{full_name} is indexed TXT")
                     else:
-                        print("{} is TXT, but not indexed. Skipping!".format(full_name))
+                        print(f"{full_name} is TXT, but not indexed. Skipping!")
                         continue
 
                 bname = basename(full_name)
@@ -103,7 +104,7 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
                     enc = get_enc(file_path=bname)
                 else:
                     enc = encoding
-                print("processing {} with encoding {}".format(full_name, enc))
+                print(f"processing {full_name} with encoding {enc}")
                 po2 = file2po(full_name, encoding=enc)
                 for e2 in po2:
                     po.append(e2)
@@ -117,14 +118,14 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
     else:
         old_po = polib.POFile()
     if po == old_po:
-        print("No change in source directory {}".format(poify_dir))
+        print(f"No change in source directory {poify_dir}")
         sys.exit(0)
     else:
         po.metadata = metadata(pot=True)
 
     po.save(dst_file, newline=CONFIG.newline_po)
 
-    print("Processed directory {}, the result is in {}/{}/{}.pot".format(poify_dir, tra_dir, po_dir, lang))
+    print(f"Processed directory {poify_dir}, the result is in {tra_dir}/{po_dir}/{lang}.pot")
 
 
 def tra_relpath(poify_dir: str) -> str:
@@ -139,10 +140,10 @@ def main():
     parser.add_argument(
         "DIR",
         nargs="?",
-        default="{}".format(CONFIG.poify_dir),
+        default=f"{CONFIG.poify_dir}",
         help="source language directory",
     )
-    parser.add_argument("-e", dest="enc", help="source encoding", default="{}".format(CONFIG.encoding))
+    parser.add_argument("-e", dest="enc", help="source encoding", default=f"{CONFIG.encoding}")
     args = parser.parse_args()
 
     # init vars

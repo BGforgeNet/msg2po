@@ -1,8 +1,8 @@
+import os
+import sys
 from typing import Any
 
 import ruamel.yaml
-import sys
-import os
 
 VERSION = "1.4.3"
 

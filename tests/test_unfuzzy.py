@@ -4,8 +4,10 @@
 # trivial) and test the core unfuzzy_exact_matches from core.py.
 
 import os
+
 import polib
 import ruamel.yaml
+
 from msg2po.core import unfuzzy_exact_matches
 
 

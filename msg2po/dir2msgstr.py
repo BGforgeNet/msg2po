@@ -1,24 +1,25 @@
 #!/usr/bin/env python3
-# coding: utf-8
 
-import os
 import argparse
+import os
 import re
 import sys
+
+from polib import POFile, pofile
+
 from msg2po.core import (
+    CONFIG,
     VALID_EXTENSIONS,
     LanguageMap,
+    basename,
     cd,
     female_entries,
-    find_files,
-    get_ext,
-    get_enc,
     file2msgstr,
+    find_files,
+    get_enc,
+    get_ext,
     po_make_unique,
-    CONFIG,
-    basename,
 )
-from polib import pofile, POFile
 
 # parse args
 parser = argparse.ArgumentParser(
@@ -61,7 +62,7 @@ def dir2msgstr(src_dir: str, po: POFile, po_path: str = "", overwrite: bool = Tr
     with cd(src_dir):
         female_map = female_entries(po)
 
-        for dir_name, subdir_list, file_list in os.walk(".", topdown=False, followlinks=True):
+        for dir_name, _subdir_list, file_list in os.walk(".", topdown=False, followlinks=True):
             for file_name in file_list:
                 full_name = os.path.join(dir_name, file_name)
                 full_name = re.sub(r"^\./", "", full_name)  # remove trailing './'
@@ -69,16 +70,16 @@ def dir2msgstr(src_dir: str, po: POFile, po_path: str = "", overwrite: bool = Tr
                 if fext != extension:
                     continue
                 if dir_name.endswith(CONFIG.female_dir_suffix):
-                    print("{} is a file with female strings, skipping".format(full_name))
+                    print(f"{full_name} is a file with female strings, skipping")
                     continue
 
                 # Skip files as configured
                 if full_name in skip_files:
-                    print("{} is in skip_files. Skipping!".format(full_name))
+                    print(f"{full_name} is in skip_files. Skipping!")
                     continue
 
                 enc = get_enc(po_path, file_name)
-                print("processing {} with encoding {}".format(full_name, enc))
+                print(f"processing {full_name} with encoding {enc}")
                 po = file2msgstr(
                     input_file=full_name,
                     po=po,
@@ -104,20 +105,20 @@ def main():
             src_dir=args.src_dir, po=po, po_path=output_file, overwrite=args.overwrite, extension=args.file_ext
         )
         po.save(output_file, newline=CONFIG.newline_po)
-        print("Processed directory {}, the result is in {}".format(args.src_dir, output_file))
+        print(f"Processed directory {args.src_dir}, the result is in {output_file}")
 
     if args.auto:
         language_map = LanguageMap()
         with cd(CONFIG.tra_dir):
             po_paths = find_files(CONFIG.po_dirname, "po")
             for pf in po_paths:
-                print("Loading into {}".format(pf))
+                print(f"Loading into {pf}")
                 lang_dir = language_map.po2slug[basename(pf)]
                 po = pofile(pf)
                 for ve in VALID_EXTENSIONS:
                     po = dir2msgstr(src_dir=lang_dir, po=po, po_path=pf, overwrite=args.overwrite, extension=ve)
                     po.save(pf, newline=CONFIG.newline_po)
-                    print("Processed {} files in directory {}, the result is in {}".format(ve, lang_dir, pf))
+                    print(f"Processed {ve} files in directory {lang_dir}, the result is in {pf}")
 
 
 if __name__ == "__main__":

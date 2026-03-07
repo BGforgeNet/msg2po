@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import os
 import argparse
+import os
 import sys
 
 # po: new translations added through weblate use case sensitive code: pt_BR.po. Keeping them.
@@ -23,18 +23,18 @@ def lowercase_rename(dir):
             if name == new_name:
                 continue
             if (name in EXCLUDE_FILES) or name.endswith(".po"):
-                print("{}: reserved name, skip".format(name))
+                print(f"{name}: reserved name, skip")
                 continue
             path = os.path.join(root, name)
             new_path = os.path.join(root, new_name)
 
             full_path = os.path.normpath(path)
             split_path = full_path.split(os.sep)
-            if len((set(EXCLUDE_DIRS) & set(split_path))) > 0:
-                print("{}: reserved dir name in path, skip".format(path))
+            if len(set(EXCLUDE_DIRS) & set(split_path)) > 0:
+                print(f"{path}: reserved dir name in path, skip")
                 continue
 
-            print("renaming {} to {}".format(path, new_path))
+            print(f"renaming {path} to {new_path}")
             os.rename(path, new_path)
 
     # starts from the bottom so paths further up remain valid after renaming
@@ -45,7 +45,7 @@ def lowercase_rename(dir):
 
 def main():
     if not os.path.isdir(args.dir):
-        print("Error: {} is not a directory".format(args.dir))
+        print(f"Error: {args.dir} is not a directory")
         sys.exit(1)
     lowercase_rename(args.dir)
 

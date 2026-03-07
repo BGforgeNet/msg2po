@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-# coding: utf-8
 
 import argparse
-from msg2po.core import file2po, CONFIG, VALID_EXTENSIONS
+
+from msg2po.core import CONFIG, VALID_EXTENSIONS, file2po
 
 formats = "/".join(VALID_EXTENSIONS)
 parser = argparse.ArgumentParser(
-    description="Load {} into gettext PO msgid's".format(formats),
+    description=f"Load {formats} into gettext PO msgid's",
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 parser.add_argument("INPUT_SOURCE", help="input source file")
 parser.add_argument("OUTPUT_PO", help="output PO file")
-parser.add_argument("-e", dest="enc", default="{}".format(CONFIG.encoding), help="source encoding")
+parser.add_argument("-e", dest="enc", default=f"{CONFIG.encoding}", help="source encoding")
 args = parser.parse_args()
 
 

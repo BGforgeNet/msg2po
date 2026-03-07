@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 
-import os
 import argparse
-import sys
 import concurrent.futures
+import os
+import sys
+
 from polib import pofile
+
 from msg2po.core import (
     CONFIG,
     LanguageMap,
-    dir_or_exit,
     cd,
+    dir_or_exit,
     female_entries,
-    translation_entries,
     get_enc,
-    po2file,
     get_ext,
+    po2file,
+    translation_entries,
 )
 
 # parse args
@@ -64,26 +66,25 @@ def main():
         print(f"no PO files found in directory {po_dir}")
         sys.exit(1)
 
-    with cd(CONFIG.tra_dir):
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            futures = {executor.submit(extract_po, pf, language_map): pf for pf in po_files}
+    with cd(CONFIG.tra_dir), concurrent.futures.ProcessPoolExecutor() as executor:
+        futures = {executor.submit(extract_po, pf, language_map): pf for pf in po_files}
 
-            for future in concurrent.futures.as_completed(futures):
-                pf = futures[future]
-                try:
-                    future.result()
-                except ValueError as e:
-                    print(f"ValueError in file {pf}: {e}")
-                    executor.shutdown(wait=False, cancel_futures=True)
-                    sys.exit(1)
-                except KeyboardInterrupt:
-                    print("Interrupted by user, terminating execution...")
-                    executor.shutdown(wait=False, cancel_futures=True)
-                    sys.exit(1)
-                except Exception as e:
-                    print(f"Unhandled exception in file {pf}: {e}")
-                    executor.shutdown(wait=False, cancel_futures=True)
-                    sys.exit(1)
+        for future in concurrent.futures.as_completed(futures):
+            pf = futures[future]
+            try:
+                future.result()
+            except ValueError as e:
+                print(f"ValueError in file {pf}: {e}")
+                executor.shutdown(wait=False, cancel_futures=True)
+                sys.exit(1)
+            except KeyboardInterrupt:
+                print("Interrupted by user, terminating execution...")
+                executor.shutdown(wait=False, cancel_futures=True)
+                sys.exit(1)
+            except Exception as e:
+                print(f"Unhandled exception in file {pf}: {e}")
+                executor.shutdown(wait=False, cancel_futures=True)
+                sys.exit(1)
 
 
 if __name__ == "__main__":

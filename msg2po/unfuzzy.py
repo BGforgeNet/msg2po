@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 import argparse
-from polib import pofile
-import ruamel.yaml
 import os
+
+import ruamel.yaml
+from polib import pofile
+
 from msg2po.core import CONFIG
 
 parser = argparse.ArgumentParser(
@@ -40,10 +42,7 @@ def make_replaces(line, replace_list):
 def msgids_equal(id1, id2, replace_list):
     id1 = make_replaces(id1, replace_list)
     id2 = make_replaces(id2, replace_list)
-    if id1 == id2:
-        return True
-    else:
-        return False
+    return id1 == id2
 
 
 def main():
@@ -61,9 +60,9 @@ def main():
                     e.previous_msgctxt = None
                 else:  # preview
                     i = i + 1
-                    print("OLD SOURCE:  {}".format(e1))
-                    print("NEW SOURCE:  {}".format(e2))
-                    print("TRANSLATION: {}".format(e.msgstr))
+                    print(f"OLD SOURCE:  {e1}")
+                    print(f"NEW SOURCE:  {e2}")
+                    print(f"TRANSLATION: {e.msgstr}")
                     print("")
 
     if write:

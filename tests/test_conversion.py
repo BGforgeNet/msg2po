@@ -1,17 +1,18 @@
 # Tests for file2po, po2file, and roundtrip conversions.
 
 import polib
+
 from msg2po.core import (
+    CONTEXT_FEMALE,
+    EMPTY_COMMENT,
+    female_entries,
+    file2msgstr,
     file2po,
     po2file,
-    file2msgstr,
-    sort_po,
     po_make_unique,
+    sort_po,
     translation_entries,
-    female_entries,
     update_female_entries,
-    EMPTY_COMMENT,
-    CONTEXT_FEMALE,
 )
 
 
@@ -71,9 +72,9 @@ class TestPo2File:
         output = str(tmp_path / "output.msg")
         po2file(po, output, "utf-8", msg_file)
 
-        with open(msg_file, "r", encoding="utf-8") as f:
+        with open(msg_file, encoding="utf-8") as f:
             original_lines = f.read().strip().splitlines()
-        with open(output, "r", encoding="utf-8") as f:
+        with open(output, encoding="utf-8") as f:
             output_lines = f.read().strip().splitlines()
 
         assert len(output_lines) == len(original_lines)
@@ -84,9 +85,9 @@ class TestPo2File:
         output = str(tmp_path / "output.sve")
         po2file(po, output, "utf-8", sve_file)
 
-        with open(sve_file, "r", encoding="utf-8") as f:
+        with open(sve_file, encoding="utf-8") as f:
             original = f.read().strip()
-        with open(output, "r", encoding="utf-8") as f:
+        with open(output, encoding="utf-8") as f:
             result = f.read().strip()
 
         assert result == original
@@ -97,7 +98,7 @@ class TestPo2File:
         output = str(tmp_path / "output.tra")
         po2file(po, output, "utf-8", tra_file)
 
-        with open(output, "r", encoding="utf-8") as f:
+        with open(output, encoding="utf-8") as f:
             result = f.read()
 
         # Verify key entries are present
@@ -112,7 +113,7 @@ class TestPo2File:
         output = str(tmp_path / "output.msg")
         po2file(po, output, "utf-8", msg_file)
 
-        with open(output, "r", encoding="utf-8") as f:
+        with open(output, encoding="utf-8") as f:
             content = f.read()
 
         assert "Hello world" in content
@@ -124,7 +125,7 @@ class TestPo2File:
         output = str(tmp_path / "output.msg")
         po2file(po, output, "utf-8", msg_file)
 
-        with open(output, "r", encoding="utf-8") as f:
+        with open(output, encoding="utf-8") as f:
             content = f.read()
 
         assert "Bonjour le monde" in content

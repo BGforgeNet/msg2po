@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-# coding: utf-8
 
 import argparse
-from msg2po.core import po2file, VALID_EXTENSIONS
+
 from polib import pofile
+
+from msg2po.core import VALID_EXTENSIONS, po2file
 
 formats = "/".join(VALID_EXTENSIONS)
 parser = argparse.ArgumentParser(
-    description="Extract {} from gettext PO".format(formats), formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    description=f"Extract {formats} from gettext PO", formatter_class=argparse.ArgumentDefaultsHelpFormatter
 )
 parser.add_argument("INPUT_FILE", help="input PO file")
 parser.add_argument("OUTPUT_FILE", help="output translation file")

@@ -1,16 +1,18 @@
-import re
-import sys
-from collections import OrderedDict
-from typing import Optional, TypedDict
-import polib
 import os
+import re
 import shutil
+import sys
 import unicodedata
+from collections import OrderedDict
 from contextlib import contextmanager
-from natsort import natsorted
-from msg2po.config import CONFIG
 from datetime import datetime
+from typing import Optional, TypedDict
+
+import polib
+from natsort import natsorted
+
 from msg2po.common import find_files, get_ext
+from msg2po.config import CONFIG
 
 # extensions recognized by file2po, etc
 VALID_EXTENSIONS = ["msg", "txt", "sve", "tra"]
@@ -158,9 +160,9 @@ def create_dir(path):
 
 def dir_or_exit(d):
     if os.path.isdir(d):
-        print("Found directory {}".format(d))
+        print(f"Found directory {d}")
     else:
-        print("Directory {} does not exist, cannot continue!".format(d))
+        print(f"Directory {d} does not exist, cannot continue!")
         sys.exit(1)
 
 
@@ -272,7 +274,7 @@ def metadata(old_metadata=None, pot=False, po=False):
             "MIME-Version": "1.0",
             "Content-Type": "text/plain; charset=UTF-8",
             "Content-Transfer-Encoding": "8bit",
-            "X-Generator": "BGforge/msg2po v.{}".format(CONFIG.version),
+            "X-Generator": f"BGforge/msg2po v.{CONFIG.version}",
         }
         if pot:
             data["POT-Creation-Date"] = datetime.today().strftime("%Y-%m-%d-%H:%M") + "+0000"
@@ -330,7 +332,7 @@ def check_path_in_po(po, path):
             present_files.add(eo[0])
     present_files_list = sorted(set(present_files))
     if path not in present_files_list:
-        print("{} is not present in selected PO file".format(path))
+        print(f"{path} is not present in selected PO file")
         print("supply one of present files with --path argument:")
         for pf in present_files_list:
             print(pf)
@@ -450,9 +452,7 @@ def po2file(
         po_index = file_trans["po_index"]
         entry = po[po_index]
 
-        if entry.msgstr == "":  # if not translated, keep msgid
-            value = entry.msgid
-        elif "fuzzy" in entry.flags and not extract_fuzzy:  # skip fuzzy?
+        if entry.msgstr == "" or "fuzzy" in entry.flags and not extract_fuzzy:  # if not translated, keep msgid
             value = entry.msgid
         else:
             value = entry.msgstr  # either translated or fuzzy+extract_fuzzy
@@ -468,9 +468,7 @@ def po2file(
         female = None
         if entry.msgid in female_map:
             fe_entry = female_map[entry.msgid]
-            if fe_entry.msgstr == "":
-                female = fe_entry.msgid
-            elif "fuzzy" in fe_entry.flags and not extract_fuzzy:
+            if fe_entry.msgstr == "" or "fuzzy" in fe_entry.flags and not extract_fuzzy:
                 female = fe_entry.msgid
             else:
                 female = fe_entry.msgstr
@@ -519,21 +517,17 @@ def po2file(
         # If need to create the file
         if same:  # if female translation is the same?
             if female_file is None:  # don't need to copy, automatic fallback
-                print("  Female strings are same, not copying - sfall will fallback to male {}".format(output_file))
+                print(f"  Female strings are same, not copying - sfall will fallback to male {output_file}")
                 return True  # cutoff the rest of the function
             else:
-                print("  Female strings are same, copying to {}".format(female_file))
+                print(f"  Female strings are same, copying to {female_file}")
                 copycreate(output_file, female_file)
         else:  # if it's different, extract separately
             if female_file is None:
-                print(
-                    "  WARN: female strings are different, but female file is not supported for path {}".format(
-                        output_file
-                    )
-                )
+                print(f"  WARN: female strings are different, but female file is not supported for path {output_file}")
                 return True
             else:
-                print("  Also extracting female counterpart into {}".format(female_file))
+                print(f"  Also extracting female counterpart into {female_file}")
                 create_dir(get_dir(female_file))  # create dir if not exists
                 with open(female_file, "w", encoding=encoding, newline=CONFIG.newline_tra) as file2:
                     file2.writelines(lines_female)
@@ -617,7 +611,7 @@ def file2msgstr(
         female_value = t.female
 
         if (value is None) or (value == ""):
-            print("WARN: no msgid found for {}:{}, skipping string\n      {}".format(occurence_path, index, value))
+            print(f"WARN: no msgid found for {occurence_path}:{index}, skipping string\n      {value}")
             continue
 
         if (occurence_path, index) in entries_dict:
@@ -630,9 +624,9 @@ def file2msgstr(
                     fe: polib.POEntry = female_map[e.msgid]
                     if fe and (fe.msgstr != female_value):
                         print("INFO: female translation change detected:")
-                        print("  ORIG: {}".format(e.msgid))
-                        print("  OLD:  {}".format(fe.msgstr))
-                        print("  NEW:  {}".format(female_value))
+                        print(f"  ORIG: {e.msgid}")
+                        print(f"  OLD:  {fe.msgstr}")
+                        print(f"  NEW:  {female_value}")
                         skip = False
                         if not overwrite:
                             print("  Female translation already exists, overwrite disabled, skipping")
@@ -640,16 +634,14 @@ def file2msgstr(
                         if not skip and (e.msgid == female_value):
                             if same:
                                 print("INFO: source and female translation are the same. Using it regardless.")
-                                print("   {}".format(e.msgid))
-                                print("   {}".format(female_value))
+                                print(f"   {e.msgid}")
+                                print(f"   {female_value}")
                             else:
                                 print(
-                                    "INFO: source and female translation are the same for {}. Skipping:".format(
-                                        e.occurrences
-                                    )
+                                    f"INFO: source and female translation are the same for {e.occurrences}. Skipping:"
                                 )
-                                print("   {}".format(e.msgid))
-                                print("   {}".format(female_value))
+                                print(f"   {e.msgid}")
+                                print(f"   {female_value}")
                                 skip = True
                         if not skip:
                             fe.msgstr = female_value
@@ -659,18 +651,18 @@ def file2msgstr(
                                 fe.previous_msgid = None
                 elif e.msgstr != female_value:
                     print("INFO: new female translation detected:")
-                    print("  ORIG:   {}".format(e.msgid))
-                    print("  MALE:   {}".format(e.msgstr))
-                    print("  FEMALE: {}".format(female_value))
+                    print(f"  ORIG:   {e.msgid}")
+                    print(f"  MALE:   {e.msgstr}")
+                    print(f"  FEMALE: {female_value}")
                     fe = polib.POEntry(msgid=e.msgid, msgstr=female_value, msgctxt=CONTEXT_FEMALE)
                     new_female_enties.append(fe)
 
             # translation is the same
             if e.msgstr == value and e.msgctxt == context:
-                print("  translation is the same for {}".format(e.occurrences))
+                print(f"  translation is the same for {e.occurrences}")
                 if "fuzzy" in e.flags:
                     if CONFIG.extract_fuzzy:
-                        print("  {}  is fuzzy. Keeping fuzzy flag.".format(e.occurrences))
+                        print(f"  {e.occurrences}  is fuzzy. Keeping fuzzy flag.")
                         continue
                     else:
                         print(
@@ -682,25 +674,21 @@ def file2msgstr(
 
             # translation is the same as source
             if e.msgid == value and not same:
-                print("INFO: string and new translation are the same for {}. Skipping:".format(e.occurrences))
-                print("   {}".format(e.msgid))
+                print(f"INFO: string and new translation are the same for {e.occurrences}. Skipping:")
+                print(f"   {e.msgid}")
                 continue
 
-            # if translation already exists and different
-            if e.msgstr is not None and e.msgstr != "" and e.msgstr != value:
-                # if overwrite is disabled, cutoff
-                if not overwrite:
-                    print(
-                        "INFO: translation already exists for {}, overwrite disabled, skipping:".format(e.occurrences)
-                    )
-                    continue
+            # if translation already exists and different, and overwrite is disabled, cutoff
+            if e.msgstr is not None and e.msgstr != "" and e.msgstr != value and not overwrite:
+                print(f"INFO: translation already exists for {e.occurrences}, overwrite disabled, skipping:")
+                continue
 
             # finally, all checks passed
-            print("INFO: translation update found for {}.".format(e.occurrences))
+            print(f"INFO: translation update found for {e.occurrences}.")
             print("  Replacing old string with new:")
-            print("    ORIG: {}".format(e.msgid))
-            print("    OLD:  {}".format(e.msgstr))
-            print("    NEW:  {}".format(value))
+            print(f"    ORIG: {e.msgid}")
+            print(f"    OLD:  {e.msgstr}")
+            print(f"    NEW:  {value}")
             e.msgstr = value
             e.msgctxt = context
             if "fuzzy" in e.flags or e.previous_msgid:
@@ -718,22 +706,17 @@ def file2msgstr(
 
 # check if TXT file is indexed
 def is_indexed(txt_filename: str, encoding: str = CONFIG.encoding) -> bool:
-    f = open(txt_filename, "r", encoding=encoding)
-    # count non-empty lines
-    num_lines = sum(1 for line in f if line.rstrip())
-    f.close()
+    with open(txt_filename, encoding=encoding) as f:
+        # count non-empty lines
+        num_lines = sum(1 for line in f if line.rstrip())
 
     # count lines that are indexed
     pattern = FILE_FORMAT["txt"]["pattern"]
-    f = open(txt_filename, "r", encoding=encoding)
-    text = f.read()
+    with open(txt_filename, encoding=encoding) as f:
+        text = f.read()
     indexed_lines = re.findall(pattern, text)
     num_indexed_lines = len(indexed_lines)
-    f.close()
-    if num_lines == num_indexed_lines:
-        return True
-    else:
-        return False
+    return num_lines == num_indexed_lines
 
 
 def sort_po(po: polib.POFile):
@@ -784,7 +767,7 @@ def po_make_unique(po):
             entries_dict[(e.msgid, e.msgctxt)] = e
     po2 = polib.POFile()
     po2.metadata = old_metadata
-    for key, value in list(entries_dict.items()):
+    for _key, value in list(entries_dict.items()):
         po2.append(value)
     return po2
 
@@ -825,7 +808,7 @@ class TRANSFile:
             if self.fformat["line_format"]["female"] == "separate":
                 female_dir = get_dir(filepath) + CONFIG.female_dir_suffix
                 female_file = os.path.join(female_dir, basename(filepath))
-                print("  separate file format, looking for female file {}... ".format(female_file), end="")
+                print(f"  separate file format, looking for female file {female_file}... ", end="")
                 if os.path.isfile(female_file):
                     print("found")
                     self.lines_female = self.load_lines(female_file)
@@ -867,10 +850,9 @@ class TRANSFile:
             # 1. generic comment for all entries in file
             entry.comment = self.comment
             # 2. handle empty lines in source files
-            if entry.value == "":
-                if is_source is True:
-                    entry.value = " "
-                    entry.comment = EMPTY_COMMENT
+            if entry.value == "" and is_source is True:
+                entry.value = " "
+                entry.comment = EMPTY_COMMENT
 
             # context
             if "context" in self.fformat:
@@ -891,12 +873,12 @@ class TRANSFile:
                     sys.exit(1)
 
             # sfall female extraction
-            if not is_source and (self.lines_female is not None) and not (self.lines_female == self.lines):
+            if not is_source and (self.lines_female is not None) and self.lines_female != self.lines:
                 try:
                     female_line = [fl for fl in self.lines_female if fl[self.fformat["index"]] == entry.index][0]
                     entry.female = str(female_line[self.fformat["value"]])
                     if entry.female != entry.value:
-                        print("  found alternative female string for line {}: {}".format(entry.index, entry.female))
+                        print(f"  found alternative female string for line {entry.index}: {entry.female}")
                 except:
                     pass
 
@@ -913,7 +895,7 @@ class TRANSFile:
                 self.entries.append(entry)
 
     def load_lines(self, filepath: str):
-        with open(filepath, "r", encoding=self.encoding) as fh:
+        with open(filepath, encoding=self.encoding) as fh:
             text = fh.read()
             if self.dotall:
                 lines = re.findall(self.pattern, text, re.DOTALL)
@@ -946,10 +928,7 @@ def language_slug(po_filename):
     }
     slug = strip_ext(basename(po_filename)).lower()
     if CONFIG.simple_languages:
-        try:
-            slug = slug_map[slug]
-        except:
-            pass
+        slug = slug_map.get(slug, slug)
     return slug
 
 
@@ -1011,7 +990,7 @@ def unfuzzy_exact_matches(po: polib.POFile):
     """
     for e in po.fuzzy_entries():
         if (e.previous_msgid == e.msgid) and (e.previous_msgctxt == e.msgctxt):
-            print("    Unfuzzied entry {}, exact match with previous".format(e.occurrences))
+            print(f"    Unfuzzied entry {e.occurrences}, exact match with previous")
             e.flags.remove("fuzzy")
             e.previous_msgid = None
             e.previous_msgctxt = None

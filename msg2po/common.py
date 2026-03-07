@@ -7,10 +7,10 @@ def find_files(dir: str, ext: str):
     Find files with extension ext in directory dir
     """
     files = []
-    for root, subdir_list, file_list in os.walk(dir):
+    for root, _subdir_list, file_list in os.walk(dir):
         for f in file_list:
             if get_ext(f) == ext:
-                files.append((os.path.join(root, f)))
+                files.append(os.path.join(root, f))
     return files
 
 

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-# coding: utf-8
 
 # this script is needed for shell wrappers
 
 import sys
-from msg2po.config import CONFIG
+
 import ruamel.yaml
+
+from msg2po.config import CONFIG
 
 stanza = sys.argv[1]
 if stanza != "paths-filter":
@@ -20,7 +21,7 @@ def main():
         value = CONFIG._config[stanza][key]
         print(value)
     except:
-        print("config {}:{} not found".format(stanza, key))
+        print(f"config {stanza}:{key} not found")
         sys.exit(1)
 
 
@@ -29,26 +30,26 @@ def paths_filter():
     yaml = ruamel.yaml.YAML()
     tra_dir = CONFIG.tra_dir
     src_lang = CONFIG.src_lang
-    unpoify = ["{}/po/*.po".format(tra_dir)]
+    unpoify = [f"{tra_dir}/po/*.po"]
     if CONFIG.extract_format == "sfall":  # fallout
         poify = [
-            "{}/{}/*/*.msg".format(tra_dir, src_lang),
-            "{}/{}/*/*.sve".format(tra_dir, src_lang),
-            "{}/{}/*/*.txt".format(tra_dir, src_lang),
+            f"{tra_dir}/{src_lang}/*/*.msg",
+            f"{tra_dir}/{src_lang}/*/*.sve",
+            f"{tra_dir}/{src_lang}/*/*.txt",
         ]
         dir2msgstr = [
-            "{}/*/*/*.msg".format(tra_dir),
-            "{}/*/*/*.sve".format(tra_dir),
-            "{}/*/*/*.txt".format(tra_dir),
-            "!{}/{}/*/*.msg".format(tra_dir, src_lang),
-            "!{}/{}/*/*.sve".format(tra_dir, src_lang),
-            "!{}/{}/*/*.txt".format(tra_dir, src_lang),
+            f"{tra_dir}/*/*/*.msg",
+            f"{tra_dir}/*/*/*.sve",
+            f"{tra_dir}/*/*/*.txt",
+            f"!{tra_dir}/{src_lang}/*/*.msg",
+            f"!{tra_dir}/{src_lang}/*/*.sve",
+            f"!{tra_dir}/{src_lang}/*/*.txt",
         ]
     else:
-        poify = ["{}/{}/**/*.tra".format(tra_dir, src_lang)]
+        poify = [f"{tra_dir}/{src_lang}/**/*.tra"]
         dir2msgstr = [
-            "{}/**/*.tra".format(tra_dir),
-            "!{}/{}/**/*.tra".format(tra_dir, src_lang),
+            f"{tra_dir}/**/*.tra",
+            f"!{tra_dir}/{src_lang}/**/*.tra",
         ]
     paths = {"poify": poify, "unpoify": unpoify, "dir2msgstr": dir2msgstr}
     yaml.dump(paths, sys.stdout)

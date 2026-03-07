@@ -1,17 +1,18 @@
 # Tests for pure utility functions in msg2po.core.
 
 import pytest
+
 from msg2po.core import (
+    TRANSLITERATION_RULES_VIETNAMESE,
     basename,
-    parent_dir,
-    strip_ext,
+    encode_custom,
     get_dir,
     get_line_format,
     language_slug,
-    transliterate,
-    encode_custom,
-    TRANSLITERATION_RULES_VIETNAMESE,
     metadata,
+    parent_dir,
+    strip_ext,
+    transliterate,
 )
 
 

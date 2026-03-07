@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
 import argparse
-from msg2po.core import file2msgstr, CONFIG, VALID_EXTENSIONS
+
 from polib import pofile
+
+from msg2po.core import CONFIG, VALID_EXTENSIONS, file2msgstr
 
 formats = "/".join(VALID_EXTENSIONS)
 parser = argparse.ArgumentParser(
-    description="Load {} into gettext PO msgstr".format(formats), formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    description=f"Load {formats} into gettext PO msgstr", formatter_class=argparse.ArgumentDefaultsHelpFormatter
 )
 parser.add_argument("INPUT_FILE", help="input file")
 parser.add_argument("OUTPUT_FILE", help="output PO file")
