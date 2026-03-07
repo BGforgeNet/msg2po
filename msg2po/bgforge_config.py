@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# this script is needed for shell wrappers
+# This script is needed for shell wrappers to read values from .bgforge.yml.
 
 import sys
 
@@ -8,19 +8,18 @@ import ruamel.yaml
 
 from msg2po.config import CONFIG
 
-stanza = sys.argv[1]
-if stanza != "paths-filter":
-    key = sys.argv[2]
-
 
 def main():
+    stanza = sys.argv[1]
     if stanza == "paths-filter":
         paths_filter()
         sys.exit(0)
+
+    key = sys.argv[2]
     try:
         value = CONFIG._config[stanza][key]
         print(value)
-    except:
+    except (KeyError, TypeError):
         print(f"config {stanza}:{key} not found")
         sys.exit(1)
 

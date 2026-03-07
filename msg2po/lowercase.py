@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import argparse
 import os
 import sys
@@ -6,13 +7,6 @@ import sys
 # po: new translations added through weblate use case sensitive code: pt_BR.po. Keeping them.
 EXCLUDE_FILES = ["README.md"]
 EXCLUDE_DIRS = [".git", ".svn", ".hg", ".github"]
-
-# parse args
-parser = argparse.ArgumentParser(
-    description="Lowercase files in selected directory", formatter_class=argparse.ArgumentDefaultsHelpFormatter
-)
-parser.add_argument("dir")
-args = parser.parse_args()
 
 
 # https://stackoverflow.com/questions/3075443/python-recursively-remove-capitalisation-from-directory-structure
@@ -44,6 +38,12 @@ def lowercase_rename(dir):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Lowercase files in selected directory", formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument("dir")
+    args = parser.parse_args()
+
     if not os.path.isdir(args.dir):
         print(f"Error: {args.dir} is not a directory")
         sys.exit(1)

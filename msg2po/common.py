@@ -15,8 +15,7 @@ def find_files(dir: str, ext: str):
 
 
 def get_ext(path):
-    try:
-        ext = path.rsplit(".", 1)[1].lower()
-    except:
-        ext = None
-    return ext
+    parts = path.rsplit(".", 1)
+    if len(parts) < 2:
+        return None
+    return parts[1].lower()

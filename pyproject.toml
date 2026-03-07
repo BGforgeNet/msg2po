@@ -7,14 +7,9 @@ keywords = ["Fallout", "Fallout 2", "Baldur's Gate", "Infinity Engine", "WeiDU"]
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "configparser>=5.2.0",
-    "natsort>=6.2.1,<7",
+    "natsort>=6.2.1",
     "polib>=1.1.1",
-    "python-dateutil>=2.8.2",
     "ruamel.yaml>=0.17.21",
-    # Python 3.12 does not install setuptools by default,
-    # and natsort seems to require it.
-    "setuptools>=80.9.0",
 ]
 
 [project.urls]
@@ -55,6 +50,5 @@ line-length = 120
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "SIM"]
 ignore = [
-    "E722",   # bare except — pre-existing throughout the codebase
     "SIM108", # ternary operator — often less readable in this codebase
 ]

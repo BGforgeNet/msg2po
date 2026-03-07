@@ -19,18 +19,6 @@ from msg2po.core import (
     translation_entries,
 )
 
-# parse args
-parser = argparse.ArgumentParser(
-    description="Unpoify files into parent directory of selected PO dir",
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-)
-parser.add_argument("DIR", nargs="?", default=CONFIG.po_dir, help="directory with PO files")
-args = parser.parse_args()
-
-# init vars
-po_dir = args.DIR
-dir_or_exit(po_dir)
-
 
 def extract_po(pf: str, language_map: LanguageMap):
     """
@@ -56,7 +44,16 @@ def extract_po(pf: str, language_map: LanguageMap):
 
 
 def main():
-    po_dir = CONFIG.po_dir
+    parser = argparse.ArgumentParser(
+        description="Unpoify files into parent directory of selected PO dir",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument("DIR", nargs="?", default=CONFIG.po_dir, help="directory with PO files")
+    args = parser.parse_args()
+
+    po_dir = args.DIR
+    dir_or_exit(po_dir)
+
     language_map = LanguageMap()
 
     # Find PO files

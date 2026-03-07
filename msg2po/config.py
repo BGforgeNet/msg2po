@@ -50,8 +50,8 @@ class Config:
                 yaml = ruamel.yaml.YAML()
                 config = yaml.load(yf)
             translation_config: dict[str, Any] = {**translation_defaults, **config["translation"]}
-        except:
-            print(yml + " not found, assuming defaults", file=sys.stderr)
+        except (OSError, KeyError):
+            print(yml + " not found or missing 'translation' key, assuming defaults", file=sys.stderr)
             translation_config = translation_defaults
         config["translation"] = translation_config
         self._config = config  # so that shell wrapper can get values from other stanzas too

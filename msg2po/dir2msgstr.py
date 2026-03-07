@@ -21,39 +21,18 @@ from msg2po.core import (
     po_make_unique,
 )
 
-# parse args
-parser = argparse.ArgumentParser(
-    description="Load strings from files in selected dir into PO msgstr's",
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-)
-parser.add_argument(
-    "--auto",
-    dest="auto",
-    default=False,
-    action="store_true",
-    help="automatically find POs and language dirs, process all valid extensions",
-    required=False,
-)
-parser.add_argument("-s", dest="src_dir", default=".", help="directory to load", required=False)
-parser.add_argument("-o", dest="output_file", default=None, help="existing PO file", required=False)
-parser.add_argument("--ext", dest="file_ext", default=None, help="load files with this extension", required=False)
-parser.add_argument(
-    "--same",
-    dest="same",
-    default=False,
-    action="store_true",
-    help="load translations that are identical to original strings",
-)
-parser.add_argument(
-    "--overwrite", dest="overwrite", default=False, action="store_true", help="overwrite existing translations"
-)
-args = parser.parse_args()
 
-
-def dir2msgstr(src_dir: str, po: POFile, po_path: str = "", overwrite: bool = True, extension: str = ""):
+def dir2msgstr(
+    src_dir: str,
+    po: POFile,
+    po_path: str = "",
+    overwrite: bool = True,
+    extension: str = "",
+    same: bool = False,
+):
     """
     src_dir is relative
-    overwrite means ovewrite existing entries if any
+    overwrite means overwrite existing entries if any
     """
     print("overwrite is " + str(overwrite))
 
@@ -83,10 +62,10 @@ def dir2msgstr(src_dir: str, po: POFile, po_path: str = "", overwrite: bool = Tr
                 po = file2msgstr(
                     input_file=full_name,
                     po=po,
-                    occurence_path=full_name,
+                    occurrence_path=full_name,
                     encoding=enc,
                     overwrite=overwrite,
-                    same=args.same,
+                    same=same,
                     female_map=female_map,
                 )
     po = po_make_unique(po)
@@ -94,6 +73,33 @@ def dir2msgstr(src_dir: str, po: POFile, po_path: str = "", overwrite: bool = Tr
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Load strings from files in selected dir into PO msgstr's",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "--auto",
+        dest="auto",
+        default=False,
+        action="store_true",
+        help="automatically find POs and language dirs, process all valid extensions",
+        required=False,
+    )
+    parser.add_argument("-s", dest="src_dir", default=".", help="directory to load", required=False)
+    parser.add_argument("-o", dest="output_file", default=None, help="existing PO file", required=False)
+    parser.add_argument("--ext", dest="file_ext", default=None, help="load files with this extension", required=False)
+    parser.add_argument(
+        "--same",
+        dest="same",
+        default=False,
+        action="store_true",
+        help="load translations that are identical to original strings",
+    )
+    parser.add_argument(
+        "--overwrite", dest="overwrite", default=False, action="store_true", help="overwrite existing translations"
+    )
+    args = parser.parse_args()
+
     if not args.auto and ((args.output_file is None) or (args.file_ext is None)):
         print("ERROR: you must either use auto mode or specify output PO and file extension")
         sys.exit(1)
@@ -102,7 +108,12 @@ def main():
         output_file = args.output_file
         po = pofile(output_file)
         po = dir2msgstr(
-            src_dir=args.src_dir, po=po, po_path=output_file, overwrite=args.overwrite, extension=args.file_ext
+            src_dir=args.src_dir,
+            po=po,
+            po_path=output_file,
+            overwrite=args.overwrite,
+            extension=args.file_ext,
+            same=args.same,
         )
         po.save(output_file, newline=CONFIG.newline_po)
         print(f"Processed directory {args.src_dir}, the result is in {output_file}")
@@ -116,7 +127,14 @@ def main():
                 lang_dir = language_map.po2slug[basename(pf)]
                 po = pofile(pf)
                 for ve in VALID_EXTENSIONS:
-                    po = dir2msgstr(src_dir=lang_dir, po=po, po_path=pf, overwrite=args.overwrite, extension=ve)
+                    po = dir2msgstr(
+                        src_dir=lang_dir,
+                        po=po,
+                        po_path=pf,
+                        overwrite=args.overwrite,
+                        extension=ve,
+                        same=args.same,
+                    )
                     po.save(pf, newline=CONFIG.newline_po)
                     print(f"Processed {ve} files in directory {lang_dir}, the result is in {pf}")
 

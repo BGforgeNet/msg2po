@@ -139,7 +139,7 @@ class TestFile2Msgstr:
         po = file2msgstr(
             input_file=msg_translated_file,
             po=po,
-            occurence_path=msg_file,
+            occurrence_path=msg_file,
             encoding="utf-8",
         )
         assert po[0].msgstr == "Bonjour le monde"
@@ -151,7 +151,7 @@ class TestFile2Msgstr:
         po = file2msgstr(
             input_file=msg_file,
             po=po,
-            occurence_path=msg_file,
+            occurrence_path=msg_file,
             encoding="utf-8",
         )
         # Should remain empty since translation == source
@@ -163,7 +163,7 @@ class TestFile2Msgstr:
         po = file2msgstr(
             input_file=msg_file,
             po=po,
-            occurence_path=msg_file,
+            occurrence_path=msg_file,
             encoding="utf-8",
             same=True,
         )
@@ -175,7 +175,7 @@ class TestFile2Msgstr:
         po = file2msgstr(
             input_file=tra_translated_file,
             po=po,
-            occurence_path=tra_file,
+            occurrence_path=tra_file,
             encoding="utf-8",
         )
         fe_map = female_entries(po)

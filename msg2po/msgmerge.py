@@ -17,16 +17,6 @@ from polib import pofile
 
 from msg2po.core import CONFIG, find_files, sort_po, unfuzzy_exact_matches, update_female_entries
 
-# parse args
-parser = argparse.ArgumentParser(
-    description="Update POs from POT, keeping female entries. Requires Gettext msgmerge in PATH",
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-)
-
-parser.add_argument("PO", help="PO file", nargs="?", default=None)
-parser.add_argument("POT", help="POT file", nargs="?", default=None)
-args = parser.parse_args()
-
 
 def merge(po_path: str, pot_path: str):
     print(po_path)
@@ -52,6 +42,15 @@ def merge(po_path: str, pot_path: str):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Update POs from POT, keeping female entries. Requires Gettext msgmerge in PATH",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+
+    parser.add_argument("PO", help="PO file", nargs="?", default=None)
+    parser.add_argument("POT", help="POT file", nargs="?", default=None)
+    args = parser.parse_args()
+
     # single file
     if (args.PO is not None) and (args.POT is not None):
         res = merge(args.PO, args.POT)

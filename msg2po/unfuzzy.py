@@ -8,19 +8,6 @@ from polib import pofile
 
 from msg2po.core import CONFIG
 
-parser = argparse.ArgumentParser(
-    description="Unmark PO entries as fuzzy, "
-    "if replacing string1 with string2 in previous msgid results in current msgid",
-    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-)
-parser.add_argument("INPUT_FILE", help="input PO file")
-parser.add_argument("-w", default=False, dest="WRITE", action="store_true", help="save PO file?")
-args = parser.parse_args()
-
-input_file = args.INPUT_FILE
-write = args.WRITE
-po = pofile(input_file)
-
 
 def load_replacements():
     if os.path.isfile("unfuzzy.yml"):
@@ -46,6 +33,19 @@ def msgids_equal(id1, id2, replace_list):
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Unmark PO entries as fuzzy, "
+        "if replacing string1 with string2 in previous msgid results in current msgid",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument("INPUT_FILE", help="input PO file")
+    parser.add_argument("-w", default=False, dest="WRITE", action="store_true", help="save PO file?")
+    args = parser.parse_args()
+
+    input_file = args.INPUT_FILE
+    write = args.WRITE
+    po = pofile(input_file)
+
     i = 0
     replace_list = load_replacements()
     for e in po.fuzzy_entries():

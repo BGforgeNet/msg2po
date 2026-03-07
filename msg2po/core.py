@@ -244,11 +244,8 @@ def get_enc(lang_path: str = "", file_path: str = ""):
         if not CONFIG.ansi_console:
             return "utf-8"
         # Otherwise, try known ansi encodings
-        try:
-            encoding = ANSI_ENCODINGS[lang]
-            return encoding
-        except:
-            pass
+        if lang in ANSI_ENCODINGS:
+            return ANSI_ENCODINGS[lang]
 
     if filename in UTF_FILENAMES:
         encoding = "utf-8"
@@ -342,7 +339,7 @@ def check_path_in_po(po, path):
 def translation_entries(po: polib.POFile):
     """
     returns {filepath: [{"file_index": index_in_file, "po_index": index_in_po}] }
-    does not include female entries, as they don't have occurences
+    does not include female entries, as they don't have occurrences
     """
     entries = {}
     i = 0
@@ -371,10 +368,10 @@ def female_entries(po: polib.POFile) -> dict[str, polib.POEntry]:
             me = male_entries[0]
         else:  # then, those with
             male_entries = [e for e in po if e.msgid == fe.msgid and e.msgctxt != CONTEXT_FEMALE]
-        try:
+        if len(male_entries) > 0:
             me = male_entries[0]
             entries[me.msgid] = fe
-        except:
+        else:
             print("WARNING: couldn't find a corresponding male counterpart for a female entry")
             print(fe)
     return entries
@@ -583,7 +580,7 @@ def copycreate(src_file, dst_file):
 def file2msgstr(
     input_file: str,
     po: polib.POFile,
-    occurence_path: str,
+    occurrence_path: str,
     encoding: str = CONFIG.encoding,
     overwrite: bool = True,
     same: bool = False,
@@ -602,7 +599,7 @@ def file2msgstr(
         female_map = female_entries(po)
 
     # newly added female entries, without PO counterpart
-    new_female_enties = []
+    new_female_entries = []
 
     for t in trans.entries:
         index = t.index
@@ -611,15 +608,15 @@ def file2msgstr(
         female_value = t.female
 
         if (value is None) or (value == ""):
-            print(f"WARN: no msgid found for {occurence_path}:{index}, skipping string\n      {value}")
+            print(f"WARN: no msgid found for {occurrence_path}:{index}, skipping string\n      {value}")
             continue
 
-        if (occurence_path, index) in entries_dict:
+        if (occurrence_path, index) in entries_dict:
             # map entries to occurrences for faster access, part 2
-            e: polib.POEntry = entries_dict[(occurence_path, index)]
+            e: polib.POEntry = entries_dict[(occurrence_path, index)]
 
             if female_value:
-                # female entries have no occurences, checking if female translation already present
+                # female entries have no occurrences, checking if female translation already present
                 if e.msgid in female_map:
                     fe: polib.POEntry = female_map[e.msgid]
                     if fe and (fe.msgstr != female_value):
@@ -655,7 +652,7 @@ def file2msgstr(
                     print(f"  MALE:   {e.msgstr}")
                     print(f"  FEMALE: {female_value}")
                     fe = polib.POEntry(msgid=e.msgid, msgstr=female_value, msgctxt=CONTEXT_FEMALE)
-                    new_female_enties.append(fe)
+                    new_female_entries.append(fe)
 
             # translation is the same
             if e.msgstr == value and e.msgctxt == context:
@@ -698,7 +695,7 @@ def file2msgstr(
                     e.flags.remove("fuzzy")
 
     # add newly found female entries
-    for nfe in new_female_enties:
+    for nfe in new_female_entries:
         po.append(nfe)
 
     return po
@@ -725,7 +722,7 @@ def sort_po(po: polib.POFile):
     metadata = po.metadata
     po = natsorted(
         po, key=lambda k: k.occurrences[0] if len(k.occurrences) > 0 else ("zzzzz", "99999")
-    )  # female empty occurences hack
+    )  # female empty occurrences hack
     po2 = polib.POFile()
     po2.metadata = metadata
     po2.extend(po)
@@ -779,7 +776,7 @@ class TRANSEntry:
         self.context = None
         self.female = None
         self.comment = None
-        self.occurence = None
+        self.occurrence = None
 
 
 class TRANSFile:
@@ -821,15 +818,15 @@ class TRANSFile:
                 else:
                     print("  female lines are different")
 
-        # protection again duplicate indexes, part 1
-        seen = []
+        # protection against duplicate indexes, part 1
+        seen: set[str] = set()
 
         for line in self.lines:
             entry = TRANSEntry()
 
             # index and value
             index = line[self.fformat["index"]]
-            entry.occurence = (filepath, str(index))
+            entry.occurrence = (filepath, str(index))
             entry.value = str(line[self.fformat["value"]])
 
             for fc in self.forbidden_characters:
@@ -874,13 +871,12 @@ class TRANSFile:
 
             # sfall female extraction
             if not is_source and (self.lines_female is not None) and self.lines_female != self.lines:
-                try:
-                    female_line = [fl for fl in self.lines_female if fl[self.fformat["index"]] == entry.index][0]
+                matching = [fl for fl in self.lines_female if fl[self.fformat["index"]] == entry.index]
+                if matching:
+                    female_line = matching[0]
                     entry.female = str(female_line[self.fformat["value"]])
                     if entry.female != entry.value:
                         print(f"  found alternative female string for line {entry.index}: {entry.female}")
-                except:
-                    pass
 
             # protection against duplicate indexes, part 2
             if entry.index in seen:
@@ -888,7 +884,7 @@ class TRANSFile:
                 print(f"\tLast value: {entry.value}")
                 raise ValueError("Duplicate entry indices")
             else:
-                seen.append(index)
+                seen.add(index)
 
             # produce the final list of strings
             if entry.value is not None and entry.value != "":
