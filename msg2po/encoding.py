@@ -4,6 +4,7 @@
 
 import re
 import unicodedata
+from pathlib import Path
 
 from msg2po.config import CONFIG
 
@@ -77,10 +78,10 @@ def get_enc(lang_path: str = "", file_path: str = ""):
     Infers encoding based on dir/PO name and file path.
     lang_path can be PO path or translation path, only basename is used.
     """
-    # Import here to avoid circular dependency (language_slug needs basename from core)
-    from msg2po.core import basename, language_slug
+    # language_slug imported here to avoid circular dependency (it lives in core)
+    from msg2po.core import language_slug
 
-    filename = basename(file_path)
+    filename = Path(file_path).resolve().name
 
     # All utf-8, maybe except console
     if CONFIG.all_utf8 is True:

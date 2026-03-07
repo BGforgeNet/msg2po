@@ -1,6 +1,7 @@
 # Tests for file2po, po2file, and roundtrip conversions.
 
 import polib
+import pytest
 
 from msg2po.core import (
     CONTEXT_FEMALE,
@@ -63,6 +64,23 @@ class TestFile2Po:
         po = file2po(str(msg), encoding="utf-8")
         assert len(po) == 1
         assert len(po[0].occurrences) == 2
+
+
+class TestCheckPathInPo:
+    def test_missing_path_raises(self, msg_file):
+        po = file2po(msg_file, encoding="utf-8")
+        with pytest.raises(FileNotFoundError, match="not present in selected PO file"):
+            po2file(po, "nonexistent.msg", "utf-8", "nonexistent.msg")
+
+
+class TestTRAFemaleContextConflict:
+    def test_female_with_context_raises(self, tmp_path):
+        """TRA entries with both female text and context are invalid."""
+        # No space between context and female -- this is how the regex captures both
+        tra = tmp_path / "bad.tra"
+        tra.write_text("@100 = ~Hello~ [CTX]~Female~\n", encoding="utf-8")
+        with pytest.raises(ValueError, match="female variants may not have context"):
+            file2po(str(tra), encoding="utf-8")
 
 
 class TestPo2File:

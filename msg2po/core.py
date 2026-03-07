@@ -8,6 +8,7 @@ import shutil
 import sys
 from collections import OrderedDict
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Optional, TypedDict
 
 import polib
@@ -118,37 +119,27 @@ FILE_FORMAT: dict[str, FileFormat] = {
 
 
 def basename(path):
-    if path.endswith(os.sep):
-        path = path[:-1]
-    return os.path.abspath(path).rsplit(os.sep, 1)[1]
+    return Path(path).resolve().name
 
 
 def parent_dir(path):
-    if path.endswith(os.sep):
-        path = path[:-1]
-    return os.path.abspath(path).rsplit(os.sep, 1)[0]
+    return str(Path(path).resolve().parent)
 
 
 def strip_ext(filename):
-    return filename.rsplit(".", 1)[0]
+    return Path(filename).stem
 
 
 def get_dir(path: str):
-    path_parts = path.rsplit(os.sep, 1)
-    # return directory if it's present in path
-    if len(path_parts) > 1:
-        return path_parts[0]
-    # if not, return current directory
-    return "."
+    return str(Path(path).parent)
 
 
 def create_dir(path):
-    if not os.path.isdir(path):
-        os.makedirs(path)
+    Path(path).mkdir(parents=True, exist_ok=True)
 
 
 def dir_or_exit(d):
-    if os.path.isdir(d):
+    if Path(d).is_dir():
         print(f"Found directory {d}")
     else:
         print(f"Directory {d} does not exist, cannot continue!")
@@ -166,9 +157,7 @@ def cd(newdir):
 
 
 def copycreate(src_file, dst_file):
-    dirname = os.path.dirname(dst_file)
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
+    Path(dst_file).parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(src_file, dst_file)
 
 
@@ -222,11 +211,11 @@ def check_path_in_po(po, path):
             present_files.add(eo[0])
     present_files_list = sorted(set(present_files))
     if path not in present_files_list:
-        print(f"{path} is not present in selected PO file")
-        print("supply one of present files with --path argument:")
-        for pf in present_files_list:
-            print(pf)
-        sys.exit(1)
+        available = "\n".join(present_files_list)
+        raise FileNotFoundError(
+            f"{path} is not present in selected PO file.\n"
+            f"Supply one of present files with --path argument:\n{available}"
+        )
 
 
 def po2file(
@@ -619,10 +608,7 @@ class TRANSFile:
                     entry.female = None
 
                 if entry.female and entry.context:
-                    print("ERROR. TRA strings with female variants may not have context.")
-                    print(line)
-                    print(entry)
-                    sys.exit(1)
+                    raise ValueError(f"TRA strings with female variants may not have context: {line}")
 
             # sfall female extraction
             if not is_source and (self.lines_female is not None) and self.lines_female != self.lines:

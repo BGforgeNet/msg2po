@@ -5,6 +5,9 @@ import pytest
 from msg2po.core import (
     TRANSLITERATION_RULES_VIETNAMESE,
     basename,
+    copycreate,
+    create_dir,
+    dir_or_exit,
     encode_custom,
     get_dir,
     get_line_format,
@@ -59,6 +62,36 @@ class TestGetDir:
 
     def test_filename_only(self):
         assert get_dir("file.msg") == "."
+
+
+class TestCreateDir:
+    def test_creates_nested_dirs(self, tmp_path):
+        target = tmp_path / "a" / "b" / "c"
+        create_dir(str(target))
+        assert target.is_dir()
+
+    def test_existing_dir_is_noop(self, tmp_path):
+        create_dir(str(tmp_path))
+        assert tmp_path.is_dir()
+
+
+class TestDirOrExit:
+    def test_existing_dir_succeeds(self, tmp_path):
+        # Should not raise
+        dir_or_exit(str(tmp_path))
+
+    def test_missing_dir_exits(self, tmp_path):
+        with pytest.raises(SystemExit):
+            dir_or_exit(str(tmp_path / "nonexistent"))
+
+
+class TestCopycreate:
+    def test_copies_file_creating_dirs(self, tmp_path):
+        src = tmp_path / "src.txt"
+        src.write_text("hello")
+        dst = tmp_path / "sub" / "dir" / "dst.txt"
+        copycreate(str(src), str(dst))
+        assert dst.read_text() == "hello"
 
 
 class TestGetLineFormat:
