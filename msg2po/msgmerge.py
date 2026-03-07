@@ -15,7 +15,9 @@ from multiprocessing import Pool
 
 from polib import pofile
 
-from msg2po.core import CONFIG, find_files, sort_po, unfuzzy_exact_matches, update_female_entries
+from msg2po.common import find_files
+from msg2po.config import CONFIG
+from msg2po.po_utils import normalize_po
 
 
 def merge(po_path: str, pot_path: str):
@@ -34,9 +36,7 @@ def merge(po_path: str, pot_path: str):
         exit_code = res.returncode
         print(f"ERROR: msgmerge failed for {po_path}")
     po2 = pofile(po_path)
-    po2 = update_female_entries(po2)
-    po2 = sort_po(po2)
-    po2 = unfuzzy_exact_matches(po2)
+    po2 = normalize_po(po2)
     po2.save(fpath=po_path, newline=CONFIG.newline_po)
     return exit_code
 

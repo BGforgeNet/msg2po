@@ -1,18 +1,36 @@
+# Central module for msg2po. Contains file format definitions, TRANSFile/TRANSEntry
+# classes for parsing game translation files, and conversion functions (file2po,
+# po2file, file2msgstr).
+
 import os
 import re
 import shutil
 import sys
-import unicodedata
 from collections import OrderedDict
 from contextlib import contextmanager
-from datetime import datetime
 from typing import Optional, TypedDict
 
 import polib
-from natsort import natsorted
 
 from msg2po.common import find_files, get_ext
 from msg2po.config import CONFIG
+
+# Re-export from encoding module for backwards compatibility
+from msg2po.encoding import TRANSLITERATION_RULES_VIETNAMESE, encode_custom, get_enc, transliterate  # noqa: F401
+
+# Re-export from po_utils module for backwards compatibility
+from msg2po.po_utils import (  # noqa: F401
+    CONTEXT_FEMALE,
+    EMPTY_COMMENT,
+    female_entries,
+    metadata,
+    normalize_po,
+    po_make_unique,
+    sort_po,
+    translation_entries,
+    unfuzzy_exact_matches,
+    update_female_entries,
+)
 
 # extensions recognized by file2po, etc
 VALID_EXTENSIONS = ["msg", "txt", "sve", "tra"]
@@ -95,35 +113,6 @@ FILE_FORMAT: dict[str, FileFormat] = {
 }
 
 
-# used for determining empty strings, which are invalid by PO spec
-EMPTY_COMMENT = "LEAVE empty space in translation"
-
-CONTEXT_FEMALE = "female"
-
-TRANSLITERATION_RULES_VIETNAMESE = {
-    "a\u0306": "\u0103",  # ă
-    "A\u0306": "\u0102",  # Ă
-    "a\u0323\u0306": "\u0103\u0323",  # ặ
-    "A\u0323\u0306": "\u0102\u0323",  # Ặ
-    "a\u0302": "\u00e2",  # â
-    "A\u0302": "\u00c2",  # Â
-    "a\u0323\u0302": "\u00e2\u0323",  # ậ
-    "A\u0323\u0302": "\u00c2\u0323",  # Ậ
-    "e\u0302": "\u00ea",  # ê
-    "E\u0302": "\u00ca",  # Ê
-    "e\u0323\u0302": "\u00ea\u0323",  # ệ
-    "E\u0323\u0302": "\u00ca\u0323",  # Ệ
-    "o\u0302": "\u00f4",  # ô
-    "O\u0302": "\u00d4",  # Ô
-    "o\u0323\u0302": "\u00f4\u0323",  # ộ
-    "O\u0323\u0302": "\u00d4\u0323",  # Ộ
-    "o\u031b": "\u01a1",  # ơ
-    "O\u031b": "\u01a0",  # Ơ
-    "u\u031b": "\u01b0",  # ư
-    "U\u031b": "\u01af",  # Ư
-}
-
-
 # file and dir manipulation
 #################################
 
@@ -176,110 +165,14 @@ def cd(newdir):
         os.chdir(prevdir)
 
 
-def get_enc(lang_path: str = "", file_path: str = ""):
-    """
-    Infers encoding based on dir/PO name and file path
-    lang_path can be PO path or translation path, only basename is used
-    """
-    ENCODINGS = {
-        "schinese": "cp936",
-        "tchinese": "cp950",
-        "czech": "cp1250",
-        "hungarian": "cp1250",
-        "japanese": "cp932",
-        "korean": "cp949",
-        "polish": "cp1250",
-        "polski": "cp1250",
-        "russian": "cp1251",
-        "ukrainian": "cp1251",
-        "vietnamese": "cp1258",
-    }
-
-    ANSI_ENCODINGS = {
-        #  'czech': 'cp852',
-        #  'polish': 'cp852',
-        #  'polski': 'cp852',
-        "russian": "cp866",
-        "ukrainian": "cp866",
-        #  'french': 'cp850',
-        #  'francais': 'cp850',
-        #  'german': 'cp850',
-        #  'deutsch': 'cp850',
-        #  'italian': 'cp850',
-        #  'italiano': 'cp850',
-        #  'spanish': 'cp850',
-        #  'espanol': 'cp850',
-        #  'castilian': 'cp850',
-        #  'castellano': 'cp850',
-    }
-
-    CONSOLE_FILENAMES = [
-        "setup.tra",
-        "install.tra",
-    ]
-
-    UTF_FILENAMES = [
-        "ee.tra",
-    ]
-
-    filename = basename(file_path)
-
-    # All utf-8, maybe except console
-    if CONFIG.all_utf8 is True:
-        if not CONFIG.ansi_console:
-            return "utf-8"
-        if filename not in CONSOLE_FILENAMES:
-            return "utf-8"
-
-    # Configured encoding
-    encoding = CONFIG.encoding
-    lang = language_slug(lang_path)
-
-    # Try known encodings
-    if lang in ENCODINGS:
-        encoding = ENCODINGS[lang]
-
-    if filename in CONSOLE_FILENAMES:
-        # Always utf-8 for console, unless explicitly disabled
-        if not CONFIG.ansi_console:
-            return "utf-8"
-        # Otherwise, try known ansi encodings
-        if lang in ANSI_ENCODINGS:
-            return ANSI_ENCODINGS[lang]
-
-    if filename in UTF_FILENAMES:
-        encoding = "utf-8"
-
-    utf_name = re.compile(r".*_ee\.tra$")
-    if utf_name.match(filename):
-        encoding = "utf-8"
-
-    return encoding
+def copycreate(src_file, dst_file):
+    dirname = os.path.dirname(dst_file)
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+    shutil.copyfile(src_file, dst_file)
 
 
 ################################
-
-
-def metadata(old_metadata=None, pot=False, po=False):
-    if old_metadata is None:
-        data = {
-            "Project-Id-Version": "PACKAGE VERSION",
-            "Report-Msgid-Bugs-To": "",
-            "Last-Translator": "FULL NAME <EMAIL@ADDRESS>",
-            "Language-Team": "LANGUAGE <LL@li.org>",
-            "Language": "",
-            "MIME-Version": "1.0",
-            "Content-Type": "text/plain; charset=UTF-8",
-            "Content-Transfer-Encoding": "8bit",
-            "X-Generator": f"BGforge/msg2po v.{CONFIG.version}",
-        }
-        if pot:
-            data["POT-Creation-Date"] = datetime.today().strftime("%Y-%m-%d-%H:%M") + "+0000"
-        if po:
-            data["PO-Revision-Date"] = datetime.today().strftime("%Y-%m-%d-%H:%M") + "+0000"
-    else:
-        return old_metadata
-    return data
 
 
 def file2po(filepath: str, po_path: str = "", encoding: str = CONFIG.encoding):
@@ -334,82 +227,6 @@ def check_path_in_po(po, path):
         for pf in present_files_list:
             print(pf)
         sys.exit(1)
-
-
-def translation_entries(po: polib.POFile):
-    """
-    returns {filepath: [{"file_index": index_in_file, "po_index": index_in_po}] }
-    does not include female entries, as they don't have occurrences
-    """
-    entries = {}
-    i = 0
-    for entry in po:
-        for eo in entry.occurrences:
-            path = eo[0]
-            linenum = eo[1]
-            if path in entries:
-                entries[path].append({"file_index": int(linenum), "po_index": i})
-            else:
-                entries[path] = [{"file_index": int(linenum), "po_index": i}]
-        i = i + 1
-    return entries
-
-
-def female_entries(po: polib.POFile) -> dict[str, polib.POEntry]:
-    """
-    Returns mapping of male msgids to corresponding female PO entries
-    """
-    entries = {}
-    fe_list = [e for e in po if len(e.occurrences) == 0 and e.msgctxt == CONTEXT_FEMALE]
-    for fe in fe_list:
-        # first, check male entries without context
-        male_entries = [e for e in po if e.msgid == fe.msgid and not e.msgctxt]
-        if len(male_entries) > 0:
-            me = male_entries[0]
-        else:  # then, those with
-            male_entries = [e for e in po if e.msgid == fe.msgid and e.msgctxt != CONTEXT_FEMALE]
-        if len(male_entries) > 0:
-            me = male_entries[0]
-            entries[me.msgid] = fe
-        else:
-            print("WARNING: couldn't find a corresponding male counterpart for a female entry")
-            print(fe)
-    return entries
-
-
-def transliterate(text, rules):
-    """
-    For Vietnamese encoding handling.
-    """
-    text = unicodedata.normalize("NFD", text)
-    for decomposed, precomposed in rules.items():
-        text = text.replace(decomposed, precomposed)
-    return text
-
-
-# Not sure if this works correctly.
-# Linked answer uses PyICU, but that requires building c++ extensions, might be hard on windows.
-# So we're using transliterate instead.
-def encode_vietnamese(text: str) -> str:
-    """
-    Vietnamese requires special handling.
-    See https://stackoverflow.com/questions/58661415/python-how-can-i-print-cp1258-vietnamese-characters-correctly/78176520#78176520
-    """
-    text = transliterate(text, TRANSLITERATION_RULES_VIETNAMESE)
-    return text.encode("cp1258", "replace").decode("cp1258")
-
-
-def encode_custom(text: str, encoding: str = "utf-8") -> str:
-    """
-    Encodes and decodes the given text using the specified encoding,
-    replacing invalid characters.
-    If encoding is 'cp1258', it uses the encode_vietnamese function.
-    """
-    if encoding == "cp1258":
-        return encode_vietnamese(text)
-    else:
-        # Gracefull fallback for replace, can't really protect against invalid characters being entered in Weblate?
-        return text.encode(encoding, "replace").decode(encoding)
 
 
 def po2file(
@@ -570,13 +387,6 @@ def get_line_format(e, ext: str):
     return lfrm
 
 
-def copycreate(src_file, dst_file):
-    dirname = os.path.dirname(dst_file)
-    if not os.path.exists(dirname):
-        os.makedirs(dirname)
-    shutil.copyfile(src_file, dst_file)
-
-
 def file2msgstr(
     input_file: str,
     po: polib.POFile,
@@ -714,59 +524,6 @@ def is_indexed(txt_filename: str, encoding: str = CONFIG.encoding) -> bool:
     indexed_lines = re.findall(pattern, text)
     num_indexed_lines = len(indexed_lines)
     return num_lines == num_indexed_lines
-
-
-def sort_po(po: polib.POFile):
-    for e in po:
-        e.occurrences = natsorted(e.occurrences, key=lambda k: (k[0], k[1]))
-    metadata = po.metadata
-    po = natsorted(
-        po, key=lambda k: k.occurrences[0] if len(k.occurrences) > 0 else ("zzzzz", "99999")
-    )  # female empty occurrences hack
-    po2 = polib.POFile()
-    po2.metadata = metadata
-    po2.extend(po)
-    return po2
-
-
-def po_make_unique(po):
-    entries_dict = OrderedDict()
-    old_metadata = po.metadata
-    for e in po:
-        if (e.msgid, e.msgctxt) in entries_dict:
-            e0 = entries_dict[(e.msgid, e.msgctxt)]
-            e0.occurrences.extend(e.occurrences)
-
-            if e.comment is not None:
-                if e0.comment is None:
-                    e0.comment = e.comment
-                elif e0.comment != e.comment:
-                    e0.comment = e0.comment + "; " + e.comment
-
-            if e.tcomment is not None:
-                if e0.tcomment is None:
-                    e0.tcomment = e.tcomment
-                elif e0.tcomment != e.tcomment:
-                    e0.tcomment = e0.tcomment + "; " + e.tcomment
-
-            for f in e.flags:
-                if f not in e0.flags:
-                    e0.flags.append(f)
-
-            if e.previous_msgctxt and not e0.previous_msgctxt:
-                e0.previous_msgctxt = e.previous_msgctxt
-            if e.previous_msgid and not e0.previous_msgid:
-                e0.previous_msgid = e.previous_msgid
-            if e.previous_msgid_plural and not e0.previous_msgid_plural:
-                e0.previous_msgid_plural = e.previous_msgid_plural
-
-        else:
-            entries_dict[(e.msgid, e.msgctxt)] = e
-    po2 = polib.POFile()
-    po2.metadata = old_metadata
-    for _key, value in list(entries_dict.items()):
-        po2.append(value)
-    return po2
 
 
 class TRANSEntry:
@@ -924,71 +681,6 @@ def language_slug(po_filename):
     if CONFIG.simple_languages:
         slug = slug_map.get(slug, slug)
     return slug
-
-
-def update_female_entries(po: polib.POFile):
-    """
-    (Un)obsoletes and if necessary (un)fuzzies female strings that have a corresponding male counterpart.
-    (Male = no context)
-    """
-    # this also includes fuzzies
-    male_entries = {x.msgid: x for x in po if ((x.msgctxt != CONTEXT_FEMALE) and (not x.obsolete))}
-    # and this is for matching male strings that were changed
-    fuzzy_male_entries = {
-        x.previous_msgid: x
-        for x in po
-        if ((x.previous_msgid is not None) and (x.msgctxt != CONTEXT_FEMALE) and (not x.obsolete))
-    }
-
-    for e in po.obsolete_entries():
-        if e.msgctxt != CONTEXT_FEMALE:
-            continue
-
-        # if exact male match found, unobsolete
-        if e.msgid in male_entries:
-            male_entry = male_entries[e.msgid]
-            # if it's fuzzy, doing the same for female
-            e.previous_msgid = male_entry.previous_msgid
-            e.flags = male_entry.flags
-            e.obsolete = False
-
-        # else, check if a fuzzy male match exists, and fix female to have the same attributes
-        elif e.msgid in fuzzy_male_entries:
-            male_entry = fuzzy_male_entries[e.msgid]
-            e.msgid = male_entry.msgid
-            e.previous_msgid = male_entry.previous_msgid
-            if "fuzzy" not in e.flags:
-                e.flags.append("fuzzy")
-            e.obsolete = False
-
-    # and delete female entries with no non-obsolete male match
-    new_entries = [x for x in po if not (x.obsolete and (x.msgctxt == CONTEXT_FEMALE))]
-    meta = po.metadata
-    po2 = polib.POFile()
-    po2.metadata = meta
-    for e in new_entries:
-        po2.append(e)
-    return po2
-
-
-def unfuzzy_exact_matches(po: polib.POFile):
-    """
-    For some reason msgmerge won't clear fuzzy flag if source string is changed, then changed back:
-    #: game/g_map_hotkey.msg:1
-    #, fuzzy
-    #| msgid "Nah... I think I'm gonna take the ladder."
-    msgid "Nah... I think I'm gonna take the ladder."
-    msgstr "Naa... Penso che prendero' la scala."
-
-    This function unfuzzies such entries.
-    """
-    for e in po.fuzzy_entries():
-        if (e.previous_msgid == e.msgid) and (e.previous_msgctxt == e.msgctxt):
-            print(f"    Unfuzzied entry {e.occurrences}, exact match with previous")
-            e.flags.remove("fuzzy")
-            e.previous_msgid = None
-            e.previous_msgctxt = None
-    return po
 
 
 class LanguageMap:

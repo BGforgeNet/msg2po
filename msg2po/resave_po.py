@@ -4,7 +4,8 @@ import argparse
 
 from polib import pofile
 
-from msg2po.core import CONFIG, po_make_unique, sort_po, unfuzzy_exact_matches, update_female_entries
+from msg2po.config import CONFIG
+from msg2po.po_utils import normalize_po
 
 
 def main():
@@ -16,10 +17,7 @@ def main():
     args = parser.parse_args()
 
     po = pofile(args.INPUT_FILE)
-    po = update_female_entries(po)
-    po = po_make_unique(po)
-    po = unfuzzy_exact_matches(po)
-    po = sort_po(po)
+    po = normalize_po(po)
     po.save(args.INPUT_FILE, newline=CONFIG.newline_po)
 
 
