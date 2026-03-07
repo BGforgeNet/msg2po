@@ -31,7 +31,7 @@ jobs:
 
       - name: Black
         # Match version in poetry.lock
-        uses: psf/black@24.4.2
+        uses: psf/black@26.3.0
 
       - name: Run mypy
         uses: sasanquaneuf/mypy-github-action@9d43a0bf65fc419f7aa493ac24af5e2226edffbb
