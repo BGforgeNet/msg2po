@@ -80,13 +80,12 @@ else
   fail "POT entry count mismatch: generated=$GEN_COUNT, reference=$REF_COUNT"
 fi
 
-# Only the POT should be modified (metadata timestamp), nothing else
 MODIFIED=$(count_modified)
-if [ "$MODIFIED" -le 1 ]; then
-  pass "poify only modified POT ($MODIFIED files changed)"
+if [ "$MODIFIED" -eq 0 ]; then
+  pass "poify produced no changes"
 else
   git diff --name-only | head -10
-  fail "poify modified unexpected files ($MODIFIED changed)"
+  fail "poify modified $MODIFIED files (expected 0)"
 fi
 
 UNTRACKED=$(count_untracked)
@@ -192,11 +191,11 @@ else
 fi
 
 MODIFIED=$(count_modified)
-if [ "$MODIFIED" -le 1 ]; then
-  pass "poify only modified POT ($MODIFIED files changed)"
+if [ "$MODIFIED" -eq 0 ]; then
+  pass "poify produced no changes"
 else
   git diff --name-only | head -10
-  fail "poify modified unexpected files ($MODIFIED changed)"
+  fail "poify modified $MODIFIED files (expected 0)"
 fi
 
 UNTRACKED=$(count_untracked)

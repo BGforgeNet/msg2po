@@ -7,7 +7,7 @@ keywords = ["Fallout", "Fallout 2", "Baldur's Gate", "Infinity Engine", "WeiDU"]
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "natsort>=6.2.1",
+    "natsort>=8.4",
     "polib>=1.1.1",
     "loguru>=0.7.0",
     "ruamel.yaml>=0.17.21",
