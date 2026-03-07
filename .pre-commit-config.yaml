@@ -18,6 +18,13 @@ repos:
         types: [python]
         pass_filenames: false
 
+      - id: vulture
+        name: vulture (dead code)
+        entry: uv run vulture msg2po/ --min-confidence 80 --ignore-names "default"
+        language: system
+        types: [python]
+        pass_filenames: false
+
       - id: pytest
         name: pytest
         entry: uv run pytest -q

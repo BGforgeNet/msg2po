@@ -34,6 +34,9 @@ jobs:
       - name: ty check
         run: uv run ty check
 
+      - name: Vulture (dead code)
+        run: uv run vulture msg2po/ --min-confidence 80 --ignore-names "default"
+
   test:
     name: test
     runs-on: ubuntu-latest

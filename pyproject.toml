@@ -35,6 +35,7 @@ dev = [
     "pytest>=7.4,<9",
     "ruff>=0.15",
     "ty>=0.0.1a8",
+    "vulture>=2.14",
 ]
 
 [build-system]

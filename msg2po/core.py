@@ -776,7 +776,6 @@ class TRANSEntry:
         self.context = None
         self.female = None
         self.comment = None
-        self.occurrence = None
 
 
 class TRANSFile:
@@ -826,7 +825,6 @@ class TRANSFile:
 
             # index and value
             index = line[self.fformat["index"]]
-            entry.occurrence = (filepath, str(index))
             entry.value = str(line[self.fformat["value"]])
 
             for fc in self.forbidden_characters:
