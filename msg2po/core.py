@@ -164,8 +164,10 @@ def copycreate(src_file, dst_file):
 ################################
 
 
-def file2po(filepath: str, po_path: str = "", encoding: str = CONFIG.encoding):
+def file2po(filepath: str, po_path: str = "", encoding: Optional[str] = None):
     """Returns PO file object"""
+    if encoding is None:
+        encoding = CONFIG.encoding
 
     trans = TRANSFile(filepath=filepath, is_source=True, encoding=encoding)  # load translations
 
@@ -380,12 +382,14 @@ def file2msgstr(
     input_file: str,
     po: polib.POFile,
     occurrence_path: str,
-    encoding: str = CONFIG.encoding,
+    encoding: Optional[str] = None,
     overwrite: bool = True,
     same: bool = False,
     female_map: Optional[dict[str, polib.POEntry]] = None,
 ):
     """returns PO file object"""
+    if encoding is None:
+        encoding = CONFIG.encoding
 
     trans = TRANSFile(filepath=input_file, is_source=False, encoding=encoding)  # load translations
 
@@ -501,7 +505,9 @@ def file2msgstr(
 
 
 # check if TXT file is indexed
-def is_indexed(txt_filename: str, encoding: str = CONFIG.encoding) -> bool:
+def is_indexed(txt_filename: str, encoding: Optional[str] = None) -> bool:
+    if encoding is None:
+        encoding = CONFIG.encoding
     with open(txt_filename, encoding=encoding) as f:
         # count non-empty lines
         num_lines = sum(1 for line in f if line.rstrip())
@@ -531,8 +537,10 @@ class TRANSFile:
     This is because PO gettext format doesn't tolerate empty msgids
     """
 
-    def __init__(self, filepath: str, is_source: bool = False, encoding: str = CONFIG.encoding):
+    def __init__(self, filepath: str, is_source: bool = False, encoding: Optional[str] = None):
         self.entries: list[TRANSEntry] = []
+        if encoding is None:
+            encoding = CONFIG.encoding
         self.encoding = encoding
         fext = get_ext(filepath)
         self.fformat: FileFormat = FILE_FORMAT[fext]

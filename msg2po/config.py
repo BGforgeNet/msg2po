@@ -1,79 +1,86 @@
+# Project configuration loaded from .bgforge.yml.
+# Config is a frozen dataclass; load_config() is the factory.
+# Module-level CONFIG is the convenience singleton for CLI use.
+
 import os
 import sys
+from dataclasses import dataclass, field
 from typing import Any
 
 import ruamel.yaml
 
 VERSION = "1.4.3"
 
+TRANSLATION_DEFAULTS: dict[str, Any] = {
+    "encoding": "cp1252",
+    "tra_dir": ".",
+    "src_lang": "english",
+    "simple_languages": True,
+    "skip_files": [],
+    "extract_format": "",
+    "no_female": False,
+    "extract_fuzzy": False,
+    "all_utf8": False,
+    "ansi_console": False,
+}
 
+
+@dataclass(frozen=True)
 class Config:
-    encoding: str
-    tra_dir: str
-    src_lang: str
-    simple_languages: bool
-    skip_files: list[str]
-    extract_format: str
-    no_female: bool
-    extract_fuzzy: bool
-    all_utf8: bool
-    ansi_console: bool
-    po_dirname: str
-    female_dir_suffix: str
-    po_dir: str
-    poify_dir: str
-    version: str
-    newline_tra: str
-    newline_po: str
-    _config: dict[str, Any]
+    encoding: str = "cp1252"
+    tra_dir: str = "."
+    src_lang: str = "english"
+    simple_languages: bool = True
+    skip_files: tuple[str, ...] = ()
+    extract_format: str = ""
+    no_female: bool = False
+    extract_fuzzy: bool = False
+    all_utf8: bool = False
+    ansi_console: bool = False
+    po_dirname: str = "po"
+    female_dir_suffix: str = "_female"
+    version: str = VERSION
+    newline_tra: str = "\r\n"
+    newline_po: str = "\n"
+    # Raw config dict for bgforge-config shell wrapper
+    _config: dict[str, Any] = field(default_factory=dict, repr=False)
 
-    def __init__(self):
-        yml = ".bgforge.yml"
-        translation_defaults: dict[str, Any] = {
-            "encoding": "cp1252",
-            "tra_dir": ".",
-            "src_lang": "english",
-            "simple_languages": True,  # extract into language name, not language code. pt_BR.po -> portuguese/1.msg
-            "skip_files": [],
-            "extract_format": "",  # could be 'sfall'
-            "no_female": False,  # explicitly disable female extraction (TODO: reason unclear)
-            "extract_fuzzy": False,
-            # work with all files in utf-8
-            "all_utf8": False,
-            # if all_utf8 it True, still keep console files in ansi (CONSOLE_FILENAMES)
-            "ansi_console": False,
-        }
+    @property
+    def po_dir(self) -> str:
+        return os.path.join(self.tra_dir, self.po_dirname)
 
-        config: dict[str, Any] = dict(translation_defaults)
-        try:
-            with open(yml, encoding="utf-8") as yf:
-                yaml = ruamel.yaml.YAML()
-                config = yaml.load(yf)
-            translation_config: dict[str, Any] = {**translation_defaults, **config["translation"]}
-        except (OSError, KeyError):
-            print(yml + " not found or missing 'translation' key, assuming defaults", file=sys.stderr)
-            translation_config = translation_defaults
-        config["translation"] = translation_config
-        self._config = config  # so that shell wrapper can get values from other stanzas too
-
-        self.encoding = translation_config["encoding"]
-        self.tra_dir = translation_config["tra_dir"]
-        self.src_lang = translation_config["src_lang"]
-        self.simple_languages = translation_config["simple_languages"]
-        self.skip_files = translation_config["skip_files"]
-        self.extract_format = translation_config["extract_format"]
-        self.no_female = translation_config["no_female"]
-        self.extract_fuzzy = translation_config["extract_fuzzy"]
-        self.all_utf8 = translation_config["all_utf8"]
-        self.ansi_console = translation_config["ansi_console"]
-
-        self.po_dirname = "po"
-        self.female_dir_suffix = "_female"
-        self.po_dir = os.path.join(self.tra_dir, self.po_dirname)
-        self.poify_dir = os.path.join(self.tra_dir, self.src_lang)
-        self.version = VERSION
-        self.newline_tra = "\r\n"
-        self.newline_po = "\n"
+    @property
+    def poify_dir(self) -> str:
+        return os.path.join(self.tra_dir, self.src_lang)
 
 
-CONFIG = Config()
+def load_config(yml_path: str = ".bgforge.yml") -> Config:
+    """Load Config from a .bgforge.yml file. Returns defaults if file not found."""
+    try:
+        with open(yml_path, encoding="utf-8") as yf:
+            yaml = ruamel.yaml.YAML()
+            raw_config = yaml.load(yf)
+        translation_config: dict[str, Any] = {**TRANSLATION_DEFAULTS, **raw_config["translation"]}
+    except (OSError, KeyError):
+        print(yml_path + " not found or missing 'translation' key, assuming defaults", file=sys.stderr)
+        translation_config = dict(TRANSLATION_DEFAULTS)
+        raw_config = {}
+
+    raw_config["translation"] = translation_config
+
+    return Config(
+        encoding=translation_config["encoding"],
+        tra_dir=translation_config["tra_dir"],
+        src_lang=translation_config["src_lang"],
+        simple_languages=translation_config["simple_languages"],
+        skip_files=tuple(translation_config["skip_files"]),
+        extract_format=translation_config["extract_format"],
+        no_female=translation_config["no_female"],
+        extract_fuzzy=translation_config["extract_fuzzy"],
+        all_utf8=translation_config["all_utf8"],
+        ansi_console=translation_config["ansi_console"],
+        _config=raw_config,
+    )
+
+
+CONFIG = load_config()
