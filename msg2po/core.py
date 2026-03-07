@@ -1,6 +1,7 @@
 import re
 import sys
 from collections import OrderedDict
+from typing import Optional, TypedDict
 import polib
 import os
 import shutil
@@ -14,12 +15,31 @@ from msg2po.common import find_files, get_ext
 # extensions recognized by file2po, etc
 VALID_EXTENSIONS = ["msg", "txt", "sve", "tra"]
 
+
+class LineFormat(TypedDict, total=False):
+    default: str
+    context: str
+    female: str
+
+
+class FileFormat(TypedDict, total=False):
+    pattern: str
+    dotall: bool
+    index: int
+    value: int
+    context: int
+    female: int
+    comment: str
+    line_format: LineFormat
+    forbidden_characters: list[str]
+
+
 # supported file formats
 # pattern is used to parse original files
 # line_format to write to translated files
 # index, value, context, female - order of these tokens in pattern
 # dotall - whether file entries are multiline
-FILE_FORMAT = {
+FILE_FORMAT: dict[str, FileFormat] = {
     "msg": {
         "pattern": r"{(\d+)}{([^}]*)}{([^}]*)}",
         "dotall": True,
@@ -263,7 +283,7 @@ def metadata(old_metadata=None, pot=False, po=False):
     return data
 
 
-def file2po(filepath: str, po_path: str = "", encoding=CONFIG.encoding):
+def file2po(filepath: str, po_path: str = "", encoding: str = CONFIG.encoding):
     """Returns PO file object"""
 
     trans = TRANSFile(filepath=filepath, is_source=True, encoding=encoding)  # load translations
@@ -336,7 +356,7 @@ def translation_entries(po: polib.POFile):
     return entries
 
 
-def female_entries(po: polib.POFile) -> "dict[str: polib.POEntry]":
+def female_entries(po: polib.POFile) -> dict[str, polib.POEntry]:
     """
     Returns mapping of male msgids to corresponding female PO entries
     """
@@ -371,7 +391,7 @@ def transliterate(text, rules):
 # Not sure if this works correctly.
 # Linked answer uses PyICU, but that requires building c++ extensions, might be hard on windows.
 # So we're using transliterate instead.
-def encode_vietnamese(text: str) -> bytes:
+def encode_vietnamese(text: str) -> str:
     """
     Vietnamese requires special handling.
     See https://stackoverflow.com/questions/58661415/python-how-can-i-print-cp1258-vietnamese-characters-correctly/78176520#78176520
@@ -380,17 +400,11 @@ def encode_vietnamese(text: str) -> bytes:
     return text.encode("cp1258", "replace").decode("cp1258")
 
 
-def encode_custom(text: str, encoding: str = "utf-8") -> bytes:
+def encode_custom(text: str, encoding: str = "utf-8") -> str:
     """
-    Encodes the given text using the specified encoding.
+    Encodes and decodes the given text using the specified encoding,
+    replacing invalid characters.
     If encoding is 'cp1258', it uses the encode_vietnamese function.
-
-    Args:
-    text (str): The text to be encoded.
-    encoding (str): The encoding to use.
-
-    Returns:
-    bytes: The encoded text.
     """
     if encoding == "cp1258":
         return encode_vietnamese(text)
@@ -504,14 +518,14 @@ def po2file(
 
         # If need to create the file
         if same:  # if female translation is the same?
-            if female_file is False:  # don't need to copy, automatic fallback
+            if female_file is None:  # don't need to copy, automatic fallback
                 print("  Female strings are same, not copying - sfall will fallback to male {}".format(output_file))
                 return True  # cutoff the rest of the function
             else:
                 print("  Female strings are same, copying to {}".format(female_file))
                 copycreate(output_file, female_file)
         else:  # if it's different, extract separately
-            if female_file is False:
+            if female_file is None:
                 print(
                     "  WARN: female strings are different, but female file is not supported for path {}".format(
                         output_file
@@ -526,11 +540,11 @@ def po2file(
 
 
 # nasty hack for sfall's female strings placement
-def get_female_filepath(path: str, dst_dir: str, same: bool = True):
+def get_female_filepath(path: str, dst_dir: str, same: bool = True) -> Optional[str]:
     # default: just add _female suffix
-    female_path = path.replace(dst_dir + os.sep, dst_dir + CONFIG.female_dir_suffix + os.sep)
+    female_path: Optional[str] = path.replace(dst_dir + os.sep, dst_dir + CONFIG.female_dir_suffix + os.sep)
     if CONFIG.extract_format == "sfall":
-        female_path = False  # default for sfall: don't copy, it will fallback to male
+        female_path = None  # default for sfall: don't copy, it will fallback to male
         if "cuts" in path.split(os.sep):  # cuts dont' fallback
             female_path = path.replace(os.sep + "cuts" + os.sep, os.sep + "cuts_female" + os.sep)
         if "dialog" in path.split(os.sep) and not same:  # dialog, female translation differs
@@ -576,10 +590,10 @@ def file2msgstr(
     input_file: str,
     po: polib.POFile,
     occurence_path: str,
-    encoding=CONFIG.encoding,
+    encoding: str = CONFIG.encoding,
     overwrite: bool = True,
     same: bool = False,
-    female_map=None,
+    female_map: Optional[dict[str, polib.POEntry]] = None,
 ):
     """returns PO file object"""
 
@@ -703,7 +717,7 @@ def file2msgstr(
 
 
 # check if TXT file is indexed
-def is_indexed(txt_filename: str, encoding=CONFIG.encoding):
+def is_indexed(txt_filename: str, encoding: str = CONFIG.encoding) -> bool:
     f = open(txt_filename, "r", encoding=encoding)
     # count non-empty lines
     num_lines = sum(1 for line in f if line.rstrip())
@@ -792,20 +806,16 @@ class TRANSFile:
     This is because PO gettext format doesn't tolerate empty msgids
     """
 
-    def __init__(self, filepath: str, is_source: False, encoding=CONFIG.encoding):
+    def __init__(self, filepath: str, is_source: bool = False, encoding: str = CONFIG.encoding):
         self.entries: list[TRANSEntry] = []
         self.encoding = encoding
         fext = get_ext(filepath)
-        self.fformat = FILE_FORMAT[fext]
-        self.pattern = self.fformat["pattern"]
-        self.dotall = self.fformat["dotall"]
+        self.fformat: FileFormat = FILE_FORMAT[fext]
+        self.pattern: str = self.fformat["pattern"]
+        self.dotall: bool = self.fformat["dotall"]
         self.filepath = filepath
-        self.forbidden_characters = self.fformat["forbidden_characters"]
-
-        try:  # comment for all entries in file
-            self.comment = self.fformat["comment"]
-        except:
-            pass
+        self.forbidden_characters: list[str] = self.fformat["forbidden_characters"]
+        self.comment: Optional[str] = self.fformat.get("comment")
 
         self.lines = self.load_lines(filepath)
 
@@ -855,10 +865,7 @@ class TRANSFile:
 
             # comment
             # 1. generic comment for all entries in file
-            try:
-                entry.comment = self.fformat["comment"]
-            except:
-                pass
+            entry.comment = self.comment
             # 2. handle empty lines in source files
             if entry.value == "":
                 if is_source is True:
@@ -866,19 +873,14 @@ class TRANSFile:
                     entry.comment = EMPTY_COMMENT
 
             # context
-            try:
+            if "context" in self.fformat:
                 entry.context = line[self.fformat["context"]]
-            except:
-                pass
             if entry.context == "":
                 entry.context = None
 
             # female
-            if fext == "tra":  # TRA file specific
-                try:
-                    entry.female = str(line[self.fformat["female"]])
-                except:
-                    pass
+            if fext == "tra" and "female" in self.fformat:  # TRA file specific
+                entry.female = str(line[self.fformat["female"]])
                 if entry.female == "":
                     entry.female = None
 

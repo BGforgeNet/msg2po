@@ -62,10 +62,10 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
         skip_files = CONFIG.skip_files
 
         for dir_name, subdir_list, file_list in natsort.natsorted(
-            os.walk(".", topdown=False, followlinks=True), alg=natsort.PATH
+            os.walk(".", topdown=False, followlinks=True), alg=natsort.ns.PATH
         ):
-            subdir_list = natsort.natsorted(subdir_list, alg=natsort.PATH)
-            file_list = natsort.natsorted(file_list, alg=natsort.PATH)
+            subdir_list = natsort.natsorted(subdir_list, alg=natsort.ns.PATH)
+            file_list = natsort.natsorted(file_list, alg=natsort.ns.PATH)
             for file_name in file_list:
                 full_name = os.path.join(dir_name, file_name)
 

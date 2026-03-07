@@ -1,3 +1,5 @@
+from typing import Any
+
 import ruamel.yaml
 import sys
 import os
@@ -6,9 +8,28 @@ VERSION = "1.4.3"
 
 
 class Config:
+    encoding: str
+    tra_dir: str
+    src_lang: str
+    simple_languages: bool
+    skip_files: list[str]
+    extract_format: str
+    no_female: bool
+    extract_fuzzy: bool
+    all_utf8: bool
+    ansi_console: bool
+    po_dirname: str
+    female_dir_suffix: str
+    po_dir: str
+    poify_dir: str
+    version: str
+    newline_tra: str
+    newline_po: str
+    _config: dict[str, Any]
+
     def __init__(self):
         yml = ".bgforge.yml"
-        translation_defaults = {
+        translation_defaults: dict[str, Any] = {
             "encoding": "cp1252",
             "tra_dir": ".",
             "src_lang": "english",
@@ -23,12 +44,12 @@ class Config:
             "ansi_console": False,
         }
 
-        config = translation_defaults
+        config: dict[str, Any] = dict(translation_defaults)
         try:
             with open(yml, encoding="utf-8") as yf:
                 yaml = ruamel.yaml.YAML()
                 config = yaml.load(yf)
-            translation_config = {**translation_defaults, **config["translation"]}
+            translation_config: dict[str, Any] = {**translation_defaults, **config["translation"]}
         except:
             print(yml + " not found, assuming defaults", file=sys.stderr)
             translation_config = translation_defaults
