@@ -90,11 +90,11 @@ def sort_po(po: polib.POFile):
     for e in po:
         e.occurrences = natsorted(e.occurrences, key=lambda k: (k[0], k[1]))
     old_metadata = po.metadata
-    po = natsorted(
+    sorted_entries = natsorted(
         po, key=lambda k: k.occurrences[0] if len(k.occurrences) > 0 else ("zzzzz", "99999")
     )  # female empty occurrences hack
     po2 = _new_po_with_metadata(old_metadata)
-    po2.extend(po)
+    po2.extend(sorted_entries)
     return po2
 
 

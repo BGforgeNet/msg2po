@@ -8,28 +8,44 @@ from pathlib import Path
 
 from msg2po.config import CONFIG
 
-TRANSLITERATION_RULES_VIETNAMESE = {
-    "a\u0306": "\u0103",  # ă
-    "A\u0306": "\u0102",  # Ă
-    "a\u0323\u0306": "\u0103\u0323",  # ặ
-    "A\u0323\u0306": "\u0102\u0323",  # Ặ
-    "a\u0302": "\u00e2",  # â
-    "A\u0302": "\u00c2",  # Â
-    "a\u0323\u0302": "\u00e2\u0323",  # ậ
-    "A\u0323\u0302": "\u00c2\u0323",  # Ậ
-    "e\u0302": "\u00ea",  # ê
-    "E\u0302": "\u00ca",  # Ê
-    "e\u0323\u0302": "\u00ea\u0323",  # ệ
-    "E\u0323\u0302": "\u00ca\u0323",  # Ệ
-    "o\u0302": "\u00f4",  # ô
-    "O\u0302": "\u00d4",  # Ô
-    "o\u0323\u0302": "\u00f4\u0323",  # ộ
-    "O\u0323\u0302": "\u00d4\u0323",  # Ộ
-    "o\u031b": "\u01a1",  # ơ
-    "O\u031b": "\u01a0",  # Ơ
-    "u\u031b": "\u01b0",  # ư
-    "U\u031b": "\u01af",  # Ư
-}
+
+def _build_cp1258_transliteration_rules() -> dict[str, str]:
+    """
+    Build transliteration rules from the cp1258 encoding table.
+    cp1258 uses a mix of precomposed characters and combining marks.
+    This finds all precomposed characters that cp1258 can encode as single bytes,
+    plus Vietnamese-specific multi-char sequences (vowel + dot below + diacritic).
+    After NFD decomposition, these rules recompose exactly the characters that
+    cp1258 expects precomposed, leaving tone marks as combining characters.
+    """
+    rules = {}
+    for byte_val in range(0x80, 0x100):
+        try:
+            char = bytes([byte_val]).decode("cp1258")
+            nfd = unicodedata.normalize("NFD", char)
+            if len(nfd) > 1:
+                rules[nfd] = char
+        except (UnicodeDecodeError, ValueError):
+            pass
+
+    # Vietnamese vowel + dot below + diacritic sequences.
+    # These appear in NFD as base + combining_mark + dot_below,
+    # but cp1258 encodes them as precomposed_vowel + dot_below.
+    viet_dot_below = {
+        "a\u0323\u0306": "\u0103\u0323",  # ặ
+        "A\u0323\u0306": "\u0102\u0323",  # Ặ
+        "a\u0323\u0302": "\u00e2\u0323",  # ậ
+        "A\u0323\u0302": "\u00c2\u0323",  # Ậ
+        "e\u0323\u0302": "\u00ea\u0323",  # ệ
+        "E\u0323\u0302": "\u00ca\u0323",  # Ệ
+        "o\u0323\u0302": "\u00f4\u0323",  # ộ
+        "O\u0323\u0302": "\u00d4\u0323",  # Ộ
+    }
+    rules.update(viet_dot_below)
+    return rules
+
+
+TRANSLITERATION_RULES_VIETNAMESE = _build_cp1258_transliteration_rules()
 
 ENCODINGS = {
     "schinese": "cp936",
@@ -118,20 +134,26 @@ def get_enc(lang_path: str = "", file_path: str = ""):
 
 def transliterate(text, rules):
     """
-    For Vietnamese encoding handling.
+    Converts NFC Unicode text to the mixed normalization form that cp1258 expects.
+    NFD decomposes everything, then rules selectively recompose characters that
+    cp1258 can encode as single bytes. Longer sequences are matched first.
     """
     text = unicodedata.normalize("NFD", text)
-    for decomposed, precomposed in rules.items():
+    for decomposed, precomposed in sorted(rules.items(), key=lambda x: len(x[0]), reverse=True):
         text = text.replace(decomposed, precomposed)
     return text
 
 
-# Not sure if this works correctly.
-# Linked answer uses PyICU, but that requires building c++ extensions, might be hard on windows.
-# So we're using transliterate instead.
 def encode_vietnamese(text: str) -> str:
     """
-    Vietnamese requires special handling.
+    Vietnamese cp1258 uses a mix of precomposed vowels and combining tone marks.
+    Python's cp1258 codec decodes into this exact mixed form, so text that originated
+    from cp1258 round-trips correctly without any normalization.
+
+    For text from other sources (e.g. PO files with NFC Unicode), we must first
+    decompose to NFD, then recompose only the vowels that cp1258 expects precomposed,
+    leaving tone marks as combining characters.
+
     See https://stackoverflow.com/questions/58661415/python-how-can-i-print-cp1258-vietnamese-characters-correctly/78176520#78176520
     """
     text = transliterate(text, TRANSLITERATION_RULES_VIETNAMESE)
