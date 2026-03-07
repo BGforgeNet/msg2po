@@ -23,3 +23,13 @@ jobs:
         uses: astral-sh/ruff-action@v3
         with:
           args: "format --check"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: ty check
+        run: uv run ty check
