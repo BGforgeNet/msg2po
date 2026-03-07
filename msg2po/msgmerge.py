@@ -13,15 +13,17 @@ import sys
 from functools import partial
 from multiprocessing import Pool
 
+from loguru import logger
 from polib import pofile
 
 from msg2po.common import find_files
 from msg2po.config import CONFIG
+from msg2po.log import cli_entry, setup_logging
 from msg2po.po_utils import normalize_po
 
 
 def merge(po_path: str, pot_path: str):
-    print(po_path)
+    logger.info(po_path)
     exit_code = 0
     cmd = ["msgmerge", "--previous", "--no-wrap", "-U", "-q", "--backup=off", po_path, pot_path]
     res = subprocess.run(
@@ -30,17 +32,20 @@ def merge(po_path: str, pot_path: str):
         check=True,
         text=True,
     )
-    print(res.stdout)
-    print(res.stderr)
+    if res.stdout.strip():
+        logger.debug(res.stdout.strip())
+    if res.stderr.strip():
+        logger.debug(res.stderr.strip())
     if res.returncode != 0:
         exit_code = res.returncode
-        print(f"ERROR: msgmerge failed for {po_path}")
+        logger.error(f"msgmerge failed for {po_path}")
     po2 = pofile(po_path)
     po2 = normalize_po(po2)
     po2.save(fpath=po_path, newline=CONFIG.newline_po)
     return exit_code
 
 
+@cli_entry
 def main():
     parser = argparse.ArgumentParser(
         description="Update POs from POT, keeping female entries. Requires Gettext msgmerge in PATH",
@@ -49,13 +54,17 @@ def main():
 
     parser.add_argument("PO", help="PO file", nargs="?", default=None)
     parser.add_argument("POT", help="POT file", nargs="?", default=None)
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
+    parser.add_argument("-q", "--quiet", action="store_true", help="suppress info messages")
+    parser.add_argument("-t", "--timestamps", action="store_true", help="show timestamps in log output")
     args = parser.parse_args()
+    setup_logging(verbose=args.verbose, quiet=args.quiet, timestamps=args.timestamps)
 
     # single file
     if (args.PO is not None) and (args.POT is not None):
         res = merge(args.PO, args.POT)
         if res != 0:
-            print(f"ERROR: msgmerge failed for {args.PO}")
+            logger.error(f"msgmerge failed for {args.PO}")
             sys.exit(1)
         sys.exit(0)
 
@@ -64,7 +73,7 @@ def main():
     po_files = find_files(po_dir, "po")
     pot_file = os.path.join(po_dir, CONFIG.src_lang + ".pot")
 
-    print(f"Merging PO files in {po_dir} with {pot_file}")
+    logger.info(f"Merging PO files in {po_dir} with {pot_file}")
     pool = Pool()
     try:
         r = pool.map_async(partial(merge, pot_path=pot_file), po_files)
@@ -77,7 +86,7 @@ def main():
 
     for c in codes:
         if c != 0:
-            print("ERROR: one of msgmerge invocations failed.")
+            logger.error("one of msgmerge invocations failed.")
             sys.exit(1)
 
 

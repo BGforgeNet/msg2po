@@ -4,6 +4,10 @@ import argparse
 import os
 import sys
 
+from loguru import logger
+
+from msg2po.log import cli_entry, setup_logging
+
 # po: new translations added through weblate use case sensitive code: pt_BR.po. Keeping them.
 EXCLUDE_FILES = ["README.md"]
 EXCLUDE_DIRS = [".git", ".svn", ".hg", ".github"]
@@ -17,7 +21,7 @@ def lowercase_rename(dir):
             if name == new_name:
                 continue
             if (name in EXCLUDE_FILES) or name.endswith(".po"):
-                print(f"{name}: reserved name, skip")
+                logger.debug(f"{name}: reserved name, skip")
                 continue
             path = os.path.join(root, name)
             new_path = os.path.join(root, new_name)
@@ -25,10 +29,10 @@ def lowercase_rename(dir):
             full_path = os.path.normpath(path)
             split_path = full_path.split(os.sep)
             if len(set(EXCLUDE_DIRS) & set(split_path)) > 0:
-                print(f"{path}: reserved dir name in path, skip")
+                logger.debug(f"{path}: reserved dir name in path, skip")
                 continue
 
-            print(f"renaming {path} to {new_path}")
+            logger.info(f"renaming {path} to {new_path}")
             os.rename(path, new_path)
 
     # starts from the bottom so paths further up remain valid after renaming
@@ -37,15 +41,20 @@ def lowercase_rename(dir):
         rename_all(root, files)
 
 
+@cli_entry
 def main():
     parser = argparse.ArgumentParser(
         description="Lowercase files in selected directory", formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument("dir")
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
+    parser.add_argument("-q", "--quiet", action="store_true", help="suppress info messages")
+    parser.add_argument("-t", "--timestamps", action="store_true", help="show timestamps in log output")
     args = parser.parse_args()
+    setup_logging(verbose=args.verbose, quiet=args.quiet, timestamps=args.timestamps)
 
     if not os.path.isdir(args.dir):
-        print(f"Error: {args.dir} is not a directory")
+        logger.error(f"{args.dir} is not a directory")
         sys.exit(1)
     lowercase_rename(args.dir)
 

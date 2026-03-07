@@ -8,6 +8,7 @@ import sys
 
 import natsort
 import polib
+from loguru import logger
 
 from msg2po.core import (
     CONFIG,
@@ -24,6 +25,7 @@ from msg2po.core import (
     po_make_unique,
     sort_po,
 )
+from msg2po.log import cli_entry, setup_logging
 
 
 # prepare po dir
@@ -46,6 +48,7 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
     """
     poify_dir is path to source language directory
     """
+    poify_dir = poify_dir.rstrip(os.sep + "/")
     language_dir = os.path.basename(poify_dir)
     po_dir = CONFIG.po_dirname
     prepare_po_dir(po_dir)
@@ -79,11 +82,11 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
                 # skip female cuts
                 pretty_dir_name = re.sub(r"^\./", "", dir_name)
                 if extract_format == "sfall" and pretty_dir_name == "cuts_female":
-                    print(f"{full_name} is in cuts_female. Skipping!")
+                    logger.debug(f"{full_name} is in cuts_female. Skipping!")
                     continue
 
                 if full_name in skip_files:
-                    print(f"{full_name} is in skip_files. Skipping!")
+                    logger.debug(f"{full_name} is in skip_files. Skipping!")
                     continue
 
                 ext = get_ext(file_name)
@@ -93,9 +96,9 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
                 # checked txt is indexed and if it is, process it
                 if ext == "txt":
                     if is_indexed(full_name):
-                        print(f"{full_name} is indexed TXT")
+                        logger.debug(f"{full_name} is indexed TXT")
                     else:
-                        print(f"{full_name} is TXT, but not indexed. Skipping!")
+                        logger.debug(f"{full_name} is TXT, but not indexed. Skipping!")
                         continue
 
                 bname = basename(full_name)
@@ -104,7 +107,7 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
                     enc = get_enc(file_path=bname)
                 else:
                     enc = encoding
-                print(f"processing {full_name} with encoding {enc}")
+                logger.info(f"processing {full_name} with encoding {enc}")
                 po2 = file2po(full_name, encoding=enc)
                 for e2 in po2:
                     po.append(e2)
@@ -118,20 +121,21 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
     else:
         old_po = polib.POFile()
     if po == old_po:
-        print(f"No change in source directory {poify_dir}")
+        logger.info(f"No change in source directory {poify_dir}")
         sys.exit(0)
     else:
         po.metadata = metadata(pot=True)
 
     po.save(dst_file, newline=CONFIG.newline_po)
 
-    print(f"Processed directory {poify_dir}, the result is in {tra_dir}/{po_dir}/{lang}.pot")
+    logger.info(f"Processed directory {poify_dir}, the result is in {tra_dir}/{po_dir}/{lang}.pot")
 
 
 def tra_relpath(poify_dir: str) -> str:
     return os.path.relpath(parent_dir(poify_dir))
 
 
+@cli_entry
 def main():
     # parse args
     parser = argparse.ArgumentParser(
@@ -144,7 +148,11 @@ def main():
         help="source language directory",
     )
     parser.add_argument("-e", dest="enc", help="source encoding", default=f"{CONFIG.encoding}")
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
+    parser.add_argument("-q", "--quiet", action="store_true", help="suppress info messages")
+    parser.add_argument("-t", "--timestamps", action="store_true", help="show timestamps in log output")
     args = parser.parse_args()
+    setup_logging(verbose=args.verbose, quiet=args.quiet, timestamps=args.timestamps)
 
     # init vars
     poify_dir = args.DIR

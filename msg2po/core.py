@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Optional, TypedDict
 
 import polib
+from loguru import logger
 
 from msg2po.common import find_files, get_ext
 from msg2po.config import CONFIG
@@ -140,14 +141,16 @@ def create_dir(path):
 
 def dir_or_exit(d):
     if Path(d).is_dir():
-        print(f"Found directory {d}")
+        logger.debug(f"Found directory {d}")
     else:
-        print(f"Directory {d} does not exist, cannot continue!")
+        logger.error(f"Directory '{d}' does not exist. Check the path and try again.")
         sys.exit(1)
 
 
 @contextmanager
 def cd(newdir):
+    if not newdir:
+        raise ValueError("cannot change to empty directory path")
     prevdir = os.getcwd()
     os.chdir(os.path.expanduser(newdir))
     try:
@@ -322,17 +325,17 @@ def po2file(
         # If need to create the file
         if same:  # if female translation is the same?
             if female_file is None:  # don't need to copy, automatic fallback
-                print(f"  Female strings are same, not copying - sfall will fallback to male {output_file}")
+                logger.debug(f"Female strings are same, not copying - sfall will fallback to male {output_file}")
                 return True  # cutoff the rest of the function
             else:
-                print(f"  Female strings are same, copying to {female_file}")
+                logger.debug(f"Female strings are same, copying to {female_file}")
                 copycreate(output_file, female_file)
         else:  # if it's different, extract separately
             if female_file is None:
-                print(f"  WARN: female strings are different, but female file is not supported for path {output_file}")
+                logger.warning(f"female strings are different, but female file is not supported for path {output_file}")
                 return True
             else:
-                print(f"  Also extracting female counterpart into {female_file}")
+                logger.debug(f"Also extracting female counterpart into {female_file}")
                 create_dir(get_dir(female_file))  # create dir if not exists
                 with open(female_file, "w", encoding=encoding, newline=CONFIG.newline_tra) as file2:
                     file2.writelines(lines_female)
@@ -363,8 +366,7 @@ def get_line_format(e, ext: str):
     forbidden_characters = ff["forbidden_characters"]
     for fc in forbidden_characters:
         if fc in e["value"]:
-            print(f"ERROR: {ext} strings may not contain '{fc}' character")
-            print(f"\t\tentry: {e}")
+            logger.error(f"{ext} strings may not contain '{fc}' character, entry: {e}")
             raise ValueError("Invalid translation character")
 
     if e["context"] is not None:  # entry with context
@@ -411,7 +413,7 @@ def file2msgstr(
         female_value = t.female
 
         if (value is None) or (value == ""):
-            print(f"WARN: no msgid found for {occurrence_path}:{index}, skipping string\n      {value}")
+            logger.warning(f"no msgid found for {occurrence_path}:{index}, skipping string: {value}")
             continue
 
         if (occurrence_path, index) in entries_dict:
@@ -423,50 +425,42 @@ def file2msgstr(
                 if e.msgid in female_map:
                     fe: polib.POEntry = female_map[e.msgid]
                     if fe and (fe.msgstr != female_value):
-                        print("INFO: female translation change detected:")
-                        print(f"  ORIG: {e.msgid}")
-                        print(f"  OLD:  {fe.msgstr}")
-                        print(f"  NEW:  {female_value}")
+                        logger.info(
+                            f"female translation change: ORIG: {e.msgid} | OLD: {fe.msgstr} | NEW: {female_value}"
+                        )
                         skip = False
                         if not overwrite:
-                            print("  Female translation already exists, overwrite disabled, skipping")
+                            logger.debug("Female translation already exists, overwrite disabled, skipping")
                             skip = True
                         if not skip and (e.msgid == female_value):
                             if same:
-                                print("INFO: source and female translation are the same. Using it regardless.")
-                                print(f"   {e.msgid}")
-                                print(f"   {female_value}")
+                                logger.info(f"source and female translation are the same, using regardless: {e.msgid}")
                             else:
-                                print(
-                                    f"INFO: source and female translation are the same for {e.occurrences}. Skipping:"
-                                )
-                                print(f"   {e.msgid}")
-                                print(f"   {female_value}")
+                                logger.info(f"source and female translation are the same for {e.occurrences}, skipping")
                                 skip = True
                         if not skip:
                             fe.msgstr = female_value
                             if "fuzzy" in fe.flags:
-                                print("    Unfuzzied female entry")
+                                logger.debug("Unfuzzied female entry")
                                 fe.flags.remove("fuzzy")
                                 fe.previous_msgid = None
                 elif e.msgstr != female_value:
-                    print("INFO: new female translation detected:")
-                    print(f"  ORIG:   {e.msgid}")
-                    print(f"  MALE:   {e.msgstr}")
-                    print(f"  FEMALE: {female_value}")
+                    logger.info(
+                        f"new female translation detected: ORIG: {e.msgid} | MALE: {e.msgstr} | FEMALE: {female_value}"
+                    )
                     fe = polib.POEntry(msgid=e.msgid, msgstr=female_value, msgctxt=CONTEXT_FEMALE)
                     new_female_entries.append(fe)
 
             # translation is the same
             if e.msgstr == value and e.msgctxt == context:
-                print(f"  translation is the same for {e.occurrences}")
+                logger.debug(f"translation is the same for {e.occurrences}")
                 if "fuzzy" in e.flags:
                     if CONFIG.extract_fuzzy:
-                        print(f"  {e.occurrences}  is fuzzy. Keeping fuzzy flag.")
+                        logger.debug(f"{e.occurrences} is fuzzy. Keeping fuzzy flag.")
                         continue
                     else:
-                        print(
-                            f"  {e.occurrences} is fuzzy, but extract_fuzzy is not set. "
+                        logger.debug(
+                            f"{e.occurrences} is fuzzy, but extract_fuzzy is not set. "
                             "Assuming manual translation change to the same value, clearing fuzzy flag."
                         )
                 else:
@@ -474,25 +468,20 @@ def file2msgstr(
 
             # translation is the same as source
             if e.msgid == value and not same:
-                print(f"INFO: string and new translation are the same for {e.occurrences}. Skipping:")
-                print(f"   {e.msgid}")
+                logger.debug(f"string and new translation are the same for {e.occurrences}, skipping: {e.msgid}")
                 continue
 
             # if translation already exists and different, and overwrite is disabled, cutoff
             if e.msgstr is not None and e.msgstr != "" and e.msgstr != value and not overwrite:
-                print(f"INFO: translation already exists for {e.occurrences}, overwrite disabled, skipping:")
+                logger.debug(f"translation already exists for {e.occurrences}, overwrite disabled, skipping")
                 continue
 
             # finally, all checks passed
-            print(f"INFO: translation update found for {e.occurrences}.")
-            print("  Replacing old string with new:")
-            print(f"    ORIG: {e.msgid}")
-            print(f"    OLD:  {e.msgstr}")
-            print(f"    NEW:  {value}")
+            logger.info(f"translation update for {e.occurrences}: ORIG: {e.msgid} | OLD: {e.msgstr} | NEW: {value}")
             e.msgstr = value
             e.msgctxt = context
             if "fuzzy" in e.flags or e.previous_msgid:
-                print("    Unfuzzied entry")
+                logger.debug("Unfuzzied entry")
                 e.previous_msgid = None
                 if "fuzzy" in e.flags:
                     e.flags.remove("fuzzy")
@@ -508,14 +497,17 @@ def file2msgstr(
 def is_indexed(txt_filename: str, encoding: Optional[str] = None) -> bool:
     if encoding is None:
         encoding = CONFIG.encoding
-    with open(txt_filename, encoding=encoding) as f:
-        # count non-empty lines
-        num_lines = sum(1 for line in f if line.rstrip())
+    try:
+        with open(txt_filename, encoding=encoding) as f:
+            # count non-empty lines
+            num_lines = sum(1 for line in f if line.rstrip())
 
-    # count lines that are indexed
-    pattern = FILE_FORMAT["txt"]["pattern"]
-    with open(txt_filename, encoding=encoding) as f:
-        text = f.read()
+        # count lines that are indexed
+        pattern = FILE_FORMAT["txt"]["pattern"]
+        with open(txt_filename, encoding=encoding) as f:
+            text = f.read()
+    except UnicodeDecodeError as e:
+        raise ValueError(f"Failed to read '{txt_filename}' with encoding '{encoding}': {e}") from None
     indexed_lines = re.findall(pattern, text)
     num_indexed_lines = len(indexed_lines)
     return num_lines == num_indexed_lines
@@ -558,18 +550,17 @@ class TRANSFile:
             if self.fformat["line_format"]["female"] == "separate":
                 female_dir = get_dir(filepath) + CONFIG.female_dir_suffix
                 female_file = os.path.join(female_dir, basename(filepath))
-                print(f"  separate file format, looking for female file {female_file}... ", end="")
                 if os.path.isfile(female_file):
-                    print("found")
+                    logger.debug(f"found female file {female_file}")
                     self.lines_female = self.load_lines(female_file)
                 else:
-                    print("didn't find")
+                    logger.debug(f"female file not found: {female_file}")
 
             if self.lines_female is not None:
                 if self.lines_female == self.lines:
-                    print("  female lines are identical")
+                    logger.debug("female lines are identical")
                 else:
-                    print("  female lines are different")
+                    logger.debug("female lines are different")
 
         # protection against duplicate indexes, part 1
         seen: set[str] = set()
@@ -583,14 +574,12 @@ class TRANSFile:
 
             for fc in self.forbidden_characters:
                 if fc in entry.value:
-                    print(f"ERROR: {fext} strings may not contain '{fc}' character")
-                    print(f"\t\tentry: {entry}")
+                    logger.error(f"{fext} strings may not contain '{fc}' character, entry: {entry}")
                     raise ValueError("Invalid translation character")
 
             # fail on invalid '000' entries in MSG files
             if index == "000":
-                print(f"ERROR: {filepath} - invalid entry index '000' found, aborting.")
-                print(f"\t\tentry: {entry}")
+                logger.error(f"{filepath} - invalid entry index '000' found, entry: {entry}")
                 raise ValueError("Invalid entry index")
 
             entry.index = line[self.fformat["index"]]
@@ -625,12 +614,11 @@ class TRANSFile:
                     female_line = matching[0]
                     entry.female = str(female_line[self.fformat["value"]])
                     if entry.female != entry.value:
-                        print(f"  found alternative female string for line {entry.index}: {entry.female}")
+                        logger.debug(f"found alternative female string for line {entry.index}: {entry.female}")
 
             # protection against duplicate indexes, part 2
             if entry.index in seen:
-                print(f"ERROR: {filepath} - duplicate string index found: '{entry.index}'. Aborting.")
-                print(f"\tLast value: {entry.value}")
+                logger.error(f"{filepath} - duplicate string index '{entry.index}', last value: {entry.value}")
                 raise ValueError("Duplicate entry indices")
             else:
                 seen.add(index)
@@ -640,12 +628,15 @@ class TRANSFile:
                 self.entries.append(entry)
 
     def load_lines(self, filepath: str):
-        with open(filepath, encoding=self.encoding) as fh:
-            text = fh.read()
-            if self.dotall:
-                lines = re.findall(self.pattern, text, re.DOTALL)
-            else:
-                lines = re.findall(self.pattern, text)
+        try:
+            with open(filepath, encoding=self.encoding) as fh:
+                text = fh.read()
+        except UnicodeDecodeError as e:
+            raise ValueError(f"Failed to read '{filepath}' with encoding '{self.encoding}': {e}") from None
+        if self.dotall:
+            lines = re.findall(self.pattern, text, re.DOTALL)
+        else:
+            lines = re.findall(self.pattern, text)
         return lines
 
 

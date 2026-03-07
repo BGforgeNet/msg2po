@@ -5,6 +5,7 @@ import os
 import re
 import sys
 
+from loguru import logger
 from polib import POFile, pofile
 
 from msg2po.core import (
@@ -20,6 +21,7 @@ from msg2po.core import (
     get_ext,
     po_make_unique,
 )
+from msg2po.log import cli_entry, setup_logging
 
 
 def dir2msgstr(
@@ -34,7 +36,7 @@ def dir2msgstr(
     src_dir is relative
     overwrite means overwrite existing entries if any
     """
-    print("overwrite is " + str(overwrite))
+    logger.debug(f"overwrite is {overwrite}")
 
     skip_files = CONFIG.skip_files
 
@@ -49,16 +51,16 @@ def dir2msgstr(
                 if fext != extension:
                     continue
                 if dir_name.endswith(CONFIG.female_dir_suffix):
-                    print(f"{full_name} is a file with female strings, skipping")
+                    logger.debug(f"{full_name} is a file with female strings, skipping")
                     continue
 
                 # Skip files as configured
                 if full_name in skip_files:
-                    print(f"{full_name} is in skip_files. Skipping!")
+                    logger.debug(f"{full_name} is in skip_files. Skipping!")
                     continue
 
                 enc = get_enc(po_path, file_name)
-                print(f"processing {full_name} with encoding {enc}")
+                logger.info(f"processing {full_name} with encoding {enc}")
                 po = file2msgstr(
                     input_file=full_name,
                     po=po,
@@ -72,6 +74,7 @@ def dir2msgstr(
     return po
 
 
+@cli_entry
 def main():
     parser = argparse.ArgumentParser(
         description="Load strings from files in selected dir into PO msgstr's",
@@ -98,10 +101,14 @@ def main():
     parser.add_argument(
         "--overwrite", dest="overwrite", default=False, action="store_true", help="overwrite existing translations"
     )
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
+    parser.add_argument("-q", "--quiet", action="store_true", help="suppress info messages")
+    parser.add_argument("-t", "--timestamps", action="store_true", help="show timestamps in log output")
     args = parser.parse_args()
+    setup_logging(verbose=args.verbose, quiet=args.quiet, timestamps=args.timestamps)
 
     if not args.auto and ((args.output_file is None) or (args.file_ext is None)):
-        print("ERROR: you must either use auto mode or specify output PO and file extension")
+        logger.error("you must either use auto mode or specify output PO and file extension")
         sys.exit(1)
 
     if not args.auto:
@@ -116,14 +123,14 @@ def main():
             same=args.same,
         )
         po.save(output_file, newline=CONFIG.newline_po)
-        print(f"Processed directory {args.src_dir}, the result is in {output_file}")
+        logger.info(f"Processed directory {args.src_dir}, the result is in {output_file}")
 
     if args.auto:
         language_map = LanguageMap()
         with cd(CONFIG.tra_dir):
             po_paths = find_files(CONFIG.po_dirname, "po")
             for pf in po_paths:
-                print(f"Loading into {pf}")
+                logger.info(f"Loading into {pf}")
                 lang_dir = language_map.po2slug[basename(pf)]
                 po = pofile(pf)
                 for ve in VALID_EXTENSIONS:
@@ -136,7 +143,7 @@ def main():
                         same=args.same,
                     )
                     po.save(pf, newline=CONFIG.newline_po)
-                    print(f"Processed {ve} files in directory {lang_dir}, the result is in {pf}")
+                    logger.info(f"Processed {ve} files in directory {lang_dir}, the result is in {pf}")
 
 
 if __name__ == "__main__":

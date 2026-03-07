@@ -9,6 +9,7 @@ requires-python = ">=3.9"
 dependencies = [
     "natsort>=6.2.1",
     "polib>=1.1.1",
+    "loguru>=0.7.0",
     "ruamel.yaml>=0.17.21",
 ]
 

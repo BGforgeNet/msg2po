@@ -1,0 +1,73 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-03-07-16:36+0000\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: BGforge/msg2po v.1.4.3\n"
+
+#. indexed_txt
+#: sample.msg:100 sample.sve:100 sample.tra:100 sample_indexed.txt:100
+msgid "Hello world"
+msgstr ""
+
+#. indexed_txt
+#: sample.msg:101 sample.sve:101 sample.tra:101 sample_indexed.txt:101
+msgid "How are you?"
+msgstr ""
+
+#: sample.msg:102
+msgctxt "Some context"
+msgid "This has context"
+msgstr ""
+
+#. LEAVE empty space in translation
+#: sample.msg:103 sample_translated.msg:103
+msgid " "
+msgstr ""
+
+#: sample.sve:102
+msgid "This is a subtitle"
+msgstr ""
+
+#: sample.tra:102
+msgctxt "SOME_CONTEXT"
+msgid "This has context"
+msgstr ""
+
+#: sample.tra:103
+msgid "Male greeting"
+msgstr ""
+
+#. indexed_txt
+#: sample_indexed.txt:102
+msgid "This is indexed text"
+msgstr ""
+
+#: sample_translated.msg:100 sample_translated.tra:100
+msgid "Bonjour le monde"
+msgstr ""
+
+#: sample_translated.msg:101 sample_translated.tra:101
+msgid "Comment allez-vous?"
+msgstr ""
+
+#: sample_translated.msg:102
+msgctxt "Some context"
+msgid "Ceci a du contexte"
+msgstr ""
+
+#: sample_translated.tra:102
+msgctxt "SOME_CONTEXT"
+msgid "Ceci a du contexte"
+msgstr ""
+
+#: sample_translated.tra:103
+msgid "Salutation masculine"
+msgstr ""

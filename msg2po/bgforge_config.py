@@ -7,8 +7,10 @@ import sys
 import ruamel.yaml
 
 from msg2po.config import CONFIG
+from msg2po.log import cli_entry
 
 
+@cli_entry
 def main():
     stanza = sys.argv[1]
     if stanza == "paths-filter":

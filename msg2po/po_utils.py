@@ -5,6 +5,7 @@ from collections import OrderedDict
 from datetime import datetime
 
 import polib
+from loguru import logger
 from natsort import natsorted
 
 from msg2po.config import CONFIG
@@ -73,8 +74,7 @@ def female_entries(po: polib.POFile) -> dict[str, polib.POEntry]:
             me = male_entries[0]
             entries[me.msgid] = fe
         else:
-            print("WARNING: couldn't find a corresponding male counterpart for a female entry")
-            print(fe)
+            logger.warning(f"couldn't find a corresponding male counterpart for a female entry: {fe}")
     return entries
 
 
@@ -185,7 +185,7 @@ def unfuzzy_exact_matches(po: polib.POFile):
     """
     for e in po.fuzzy_entries():
         if (e.previous_msgid == e.msgid) and (e.previous_msgctxt == e.msgctxt):
-            print(f"    Unfuzzied entry {e.occurrences}, exact match with previous")
+            logger.info(f"Unfuzzied entry {e.occurrences}, exact match with previous")
             e.flags.remove("fuzzy")
             e.previous_msgid = None
             e.previous_msgctxt = None

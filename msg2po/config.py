@@ -3,11 +3,11 @@
 # Module-level CONFIG is the convenience singleton for CLI use.
 
 import os
-import sys
 from dataclasses import dataclass, field
 from typing import Any
 
 import ruamel.yaml
+from loguru import logger
 
 VERSION = "1.4.3"
 
@@ -62,7 +62,10 @@ def load_config(yml_path: str = ".bgforge.yml") -> Config:
             raw_config = yaml.load(yf)
         translation_config: dict[str, Any] = {**TRANSLATION_DEFAULTS, **raw_config["translation"]}
     except (OSError, KeyError):
-        print(yml_path + " not found or missing 'translation' key, assuming defaults", file=sys.stderr)
+        logger.warning(
+            f"Config file '{yml_path}' not found or missing 'translation' key. "
+            "Using defaults. Create a .bgforge.yml with a 'translation' section to configure."
+        )
         translation_config = dict(TRANSLATION_DEFAULTS)
         raw_config = {}
 

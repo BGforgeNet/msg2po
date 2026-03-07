@@ -5,8 +5,10 @@ import argparse
 from polib import pofile
 
 from msg2po.core import VALID_EXTENSIONS, po2file
+from msg2po.log import cli_entry, setup_logging
 
 
+@cli_entry
 def main():
     formats = "/".join(VALID_EXTENSIONS)
     parser = argparse.ArgumentParser(
@@ -16,7 +18,11 @@ def main():
     parser.add_argument("OUTPUT_FILE", help="output translation file")
     parser.add_argument("-e", dest="encoding", help="output encoding", default="cp1252")
     parser.add_argument("--path", dest="path", help="file occurrence in PO (relative path) - defaults to output name")
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
+    parser.add_argument("-q", "--quiet", action="store_true", help="suppress info messages")
+    parser.add_argument("-t", "--timestamps", action="store_true", help="show timestamps in log output")
     args = parser.parse_args()
+    setup_logging(verbose=args.verbose, quiet=args.quiet, timestamps=args.timestamps)
 
     path = args.path if args.path is not None else args.OUTPUT_FILE
 

@@ -5,8 +5,10 @@ import argparse
 from polib import pofile
 
 from msg2po.core import CONFIG, VALID_EXTENSIONS, file2msgstr
+from msg2po.log import cli_entry, setup_logging
 
 
+@cli_entry
 def main():
     formats = "/".join(VALID_EXTENSIONS)
     parser = argparse.ArgumentParser(
@@ -26,7 +28,11 @@ def main():
         action="store_true",
         help="load translations that are identical to original strings",
     )
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
+    parser.add_argument("-q", "--quiet", action="store_true", help="suppress info messages")
+    parser.add_argument("-t", "--timestamps", action="store_true", help="show timestamps in log output")
     args = parser.parse_args()
+    setup_logging(verbose=args.verbose, quiet=args.quiet, timestamps=args.timestamps)
 
     input_file = args.INPUT_FILE
     output_file = args.OUTPUT_FILE

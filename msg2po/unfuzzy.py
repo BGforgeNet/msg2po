@@ -7,6 +7,7 @@ import ruamel.yaml
 from polib import pofile
 
 from msg2po.core import CONFIG
+from msg2po.log import cli_entry, setup_logging
 
 
 def load_replacements():
@@ -32,6 +33,7 @@ def msgids_equal(id1, id2, replace_list):
     return id1 == id2
 
 
+@cli_entry
 def main():
     parser = argparse.ArgumentParser(
         description="Unmark PO entries as fuzzy, "
@@ -40,7 +42,11 @@ def main():
     )
     parser.add_argument("INPUT_FILE", help="input PO file")
     parser.add_argument("-w", default=False, dest="WRITE", action="store_true", help="save PO file?")
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose output")
+    parser.add_argument("-q", "--quiet", action="store_true", help="suppress info messages")
+    parser.add_argument("-t", "--timestamps", action="store_true", help="show timestamps in log output")
     args = parser.parse_args()
+    setup_logging(verbose=args.verbose, quiet=args.quiet, timestamps=args.timestamps)
 
     input_file = args.INPUT_FILE
     write = args.WRITE
