@@ -1,0 +1,4 @@
+@100 = ~Bonjour le monde~
+@101 = ~Comment allez-vous?~
+@102 = ~Ceci a du contexte~ [SOME_CONTEXT]
+@103 = ~Salutation masculine~ ~Salutation feminine~

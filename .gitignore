@@ -1,2 +1,6 @@
 *.pyc
 dist/
+.venv/
+.pytest_cache/
+__pycache__/
+tests/repos/
