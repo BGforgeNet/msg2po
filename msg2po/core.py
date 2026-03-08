@@ -598,13 +598,13 @@ def _parse_entries(
         if entry.context == "":
             entry.context = None
 
-        # inline female (TRA format)
-        if fext == "tra" and "female" in fformat:
+        # inline female (format has female index in regex, e.g. TRA)
+        if "female" in fformat:
             entry.female = str(line[fformat["female"]])
             if entry.female == "":
                 entry.female = None
             if entry.female and entry.context:
-                raise ValueError(f"TRA strings with female variants may not have context: {line}")
+                raise ValueError(f"Strings with inline female variants may not have context: {line}")
 
         # separate female files (sfall)
         if not is_source and female_lines is not None and female_lines != lines:
