@@ -44,8 +44,7 @@ def translation_entries(po: polib.POFile):
     does not include female entries, as they don't have occurrences
     """
     entries = {}
-    i = 0
-    for entry in po:
+    for i, entry in enumerate(po):
         for eo in entry.occurrences:
             path = eo[0]
             linenum = eo[1]
@@ -53,7 +52,6 @@ def translation_entries(po: polib.POFile):
                 entries[path].append({"file_index": int(linenum), "po_index": i})
             else:
                 entries[path] = [{"file_index": int(linenum), "po_index": i}]
-        i = i + 1
     return entries
 
 

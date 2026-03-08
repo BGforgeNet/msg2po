@@ -11,7 +11,7 @@ from polib import pofile
 from msg2po.core import (
     CONFIG,
     LanguageMap,
-    dir_or_exit,
+    ensure_dir_exists,
     female_entries,
     get_enc,
     get_ext,
@@ -61,7 +61,7 @@ def main():
     setup_logging(verbose=args.verbose, quiet=args.quiet, timestamps=args.timestamps)
 
     po_dir = args.DIR
-    dir_or_exit(po_dir)
+    ensure_dir_exists(po_dir)
 
     language_map = LanguageMap()
 

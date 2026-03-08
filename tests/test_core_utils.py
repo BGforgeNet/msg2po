@@ -7,8 +7,8 @@ from msg2po.core import (
     basename,
     copycreate,
     create_dir,
-    dir_or_exit,
     encode_custom,
+    ensure_dir_exists,
     get_dir,
     get_line_format,
     language_slug,
@@ -75,14 +75,14 @@ class TestCreateDir:
         assert tmp_path.is_dir()
 
 
-class TestDirOrExit:
+class TestEnsureDirExists:
     def test_existing_dir_succeeds(self, tmp_path):
         # Should not raise
-        dir_or_exit(str(tmp_path))
+        ensure_dir_exists(str(tmp_path))
 
     def test_missing_dir_raises(self, tmp_path):
         with pytest.raises(FileNotFoundError):
-            dir_or_exit(str(tmp_path / "nonexistent"))
+            ensure_dir_exists(str(tmp_path / "nonexistent"))
 
 
 class TestCopycreate:

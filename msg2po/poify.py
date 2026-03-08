@@ -3,7 +3,6 @@
 import argparse
 import os
 import shutil
-import sys
 
 import natsort
 import polib
@@ -12,7 +11,7 @@ from loguru import logger
 from msg2po.core import (
     CONFIG,
     VALID_EXTENSIONS,
-    dir_or_exit,
+    ensure_dir_exists,
     file2po,
     get_enc,
     get_ext,
@@ -118,7 +117,7 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
         old_po = polib.POFile()
     if po_content_snapshot(po) == po_content_snapshot(old_po):
         logger.info(f"No change in source directory {poify_dir}")
-        sys.exit(0)
+        return
     else:
         po.metadata = metadata(pot=True)
 
@@ -148,7 +147,7 @@ def main():
 
     # init vars
     poify_dir = args.DIR
-    dir_or_exit(poify_dir)
+    ensure_dir_exists(poify_dir)
     poify(poify_dir)
 
 

@@ -138,7 +138,7 @@ def create_dir(path):
     Path(path).mkdir(parents=True, exist_ok=True)
 
 
-def dir_or_exit(d):
+def ensure_dir_exists(d):
     if Path(d).is_dir():
         logger.debug(f"Found directory {d}")
     else:
@@ -219,7 +219,7 @@ def po2file(
     dst_dir=None,
     trans_map=None,
     female_map=None,
-):
+) -> None:
     """
     Extract and write to disk a single file from POFile
     output_file is the file path to write to
@@ -315,7 +315,7 @@ def po2file(
         if same:  # if female translation is the same?
             if female_file is None:  # don't need to copy, automatic fallback
                 logger.debug(f"Female strings are same, not copying - sfall will fallback to male {occurrence_path}")
-                return True  # cutoff the rest of the function
+                return
             else:
                 logger.debug(f"Female strings are same, copying to {female_file}")
                 copycreate(output_file, female_file)
@@ -324,7 +324,7 @@ def po2file(
                 logger.warning(
                     f"female strings are different, but female file is not supported for path {occurrence_path}"
                 )
-                return True
+                return
             else:
                 logger.debug(f"Also extracting female counterpart into {female_file}")
                 create_dir(get_dir(female_file))  # create dir if not exists
