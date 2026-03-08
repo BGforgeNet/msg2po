@@ -4,6 +4,7 @@
 import os
 import re
 import unicodedata
+from dataclasses import dataclass
 from typing import Optional
 
 from loguru import logger
@@ -15,13 +16,13 @@ from msg2po.formats import FILE_FORMAT, FileFormat
 from msg2po.po_utils import EMPTY_COMMENT
 
 
+@dataclass(frozen=True)
 class TRANSEntry:
-    def __init__(self):
-        self.index: Optional[str] = None
-        self.value: Optional[str] = None
-        self.context: Optional[str] = None
-        self.female: Optional[str] = None
-        self.comment: Optional[str] = None
+    index: str
+    value: str
+    context: Optional[str] = None
+    female: Optional[str] = None
+    comment: Optional[str] = None
 
 
 def _load_lines(filepath: str, pattern: str, dotall: bool, encoding: str) -> list[tuple[str, ...]]:
@@ -73,59 +74,56 @@ def _parse_entries(
     forbidden_characters = fformat["forbidden_characters"]
 
     for line in lines:
-        entry = TRANSEntry()
-
         index = line[fformat["index"]]
-        entry.value = str(line[fformat["value"]])
+        value = str(line[fformat["value"]])
 
         for fc in forbidden_characters:
-            if fc in entry.value:
-                logger.error(f"{fext} strings may not contain '{fc}' character, entry: {entry}")
+            if fc in value:
+                logger.error(f"{fext} strings may not contain '{fc}' character, index: {index}, value: {value}")
                 raise ValueError("Invalid translation character")
 
         if index == "000":
-            logger.error(f"{filepath} - invalid entry index '000' found, entry: {entry}")
+            logger.error(f"{filepath} - invalid entry index '000' found, value: {value}")
             raise ValueError("Invalid entry index")
 
-        entry.index = index
-
-        # 1. generic comment for all entries in file
-        entry.comment = comment
-        # 2. handle empty lines in source files
-        if entry.value == "" and is_source is True:
-            entry.value = " "
-            entry.comment = EMPTY_COMMENT
+        # handle empty lines in source files
+        entry_comment = comment
+        if value == "" and is_source is True:
+            value = " "
+            entry_comment = EMPTY_COMMENT
 
         # context
+        context: Optional[str] = None
         if "context" in fformat:
-            entry.context = line[fformat["context"]]
-        if entry.context == "":
-            entry.context = None
+            context = line[fformat["context"]]
+        if context == "":
+            context = None
 
         # inline female (format has female index in regex, e.g. TRA)
+        female: Optional[str] = None
         if "female" in fformat:
-            entry.female = str(line[fformat["female"]])
-            if entry.female == "":
-                entry.female = None
-            if entry.female and entry.context:
+            female = str(line[fformat["female"]])
+            if female == "":
+                female = None
+            if female and context:
                 raise ValueError(f"Strings with inline female variants may not have context: {line}")
 
         # separate female files (sfall)
         if not is_source and female_lines is not None and female_lines != lines:
-            matching = [fl for fl in female_lines if fl[fformat["index"]] == entry.index]
+            matching = [fl for fl in female_lines if fl[fformat["index"]] == index]
             if matching:
                 female_value = str(matching[0][fformat["value"]])
-                if female_value != entry.value:
-                    logger.debug(f"found alternative female string for line {entry.index}: {female_value}")
-                entry.female = female_value
+                if female_value != value:
+                    logger.debug(f"found alternative female string for line {index}: {female_value}")
+                female = female_value
 
-        if entry.index in seen:
-            logger.error(f"{filepath} - duplicate string index '{entry.index}', last value: {entry.value}")
+        if index in seen:
+            logger.error(f"{filepath} - duplicate string index '{index}', last value: {value}")
             raise ValueError("Duplicate entry indices")
         seen.add(index)
 
-        if entry.value is not None and entry.value != "":
-            entries.append(entry)
+        if value is not None and value != "":
+            entries.append(TRANSEntry(index=index, value=value, context=context, female=female, comment=entry_comment))
 
     return entries
 

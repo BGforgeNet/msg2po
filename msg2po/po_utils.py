@@ -96,12 +96,34 @@ def sort_po(po: polib.POFile):
     return po2
 
 
+def _clone_entry(e: polib.POEntry) -> polib.POEntry:
+    """Create a shallow copy of a POEntry, cloning mutable fields."""
+    clone = polib.POEntry(
+        msgid=e.msgid,
+        msgstr=e.msgstr,
+        msgctxt=e.msgctxt,
+        comment=e.comment,
+        tcomment=e.tcomment,
+        msgid_plural=e.msgid_plural,
+        obsolete=e.obsolete,
+        encoding=e.encoding,
+    )
+    clone.occurrences = list(e.occurrences)
+    clone.flags = list(e.flags)
+    clone.msgstr_plural = dict(e.msgstr_plural)
+    clone.previous_msgctxt = e.previous_msgctxt
+    clone.previous_msgid = e.previous_msgid
+    clone.previous_msgid_plural = e.previous_msgid_plural
+    return clone
+
+
 def po_make_unique(po):
     entries_dict = OrderedDict()
     old_metadata = po.metadata
     for e in po:
-        if (e.msgid, e.msgctxt) in entries_dict:
-            e0 = entries_dict[(e.msgid, e.msgctxt)]
+        key = (e.msgid, e.msgctxt)
+        if key in entries_dict:
+            e0 = entries_dict[key]
             e0.occurrences.extend(e.occurrences)
 
             if e.comment is not None:
@@ -128,7 +150,8 @@ def po_make_unique(po):
                 e0.previous_msgid_plural = e.previous_msgid_plural
 
         else:
-            entries_dict[(e.msgid, e.msgctxt)] = e
+            # Clone so the original PO's entries are never mutated
+            entries_dict[key] = _clone_entry(e)
     po2 = _new_po_with_metadata(old_metadata)
     for _key, value in list(entries_dict.items()):
         po2.append(value)

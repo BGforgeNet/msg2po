@@ -240,6 +240,18 @@ class TestPoMakeUnique:
         result = po_make_unique(po)
         assert len(result) == 2
 
+    def test_does_not_mutate_original_entries(self):
+        """po_make_unique must not mutate the original PO's entry objects."""
+        po = polib.POFile()
+        e1 = polib.POEntry(msgid="Hello", occurrences=[("file1.msg", "100")])
+        e2 = polib.POEntry(msgid="Hello", occurrences=[("file2.msg", "200")])
+        po.append(e1)
+        po.append(e2)
+        po_make_unique(po)
+        # Original entries should be unchanged
+        assert len(e1.occurrences) == 1
+        assert e1.occurrences == [("file1.msg", "100")]
+
 
 class TestTranslationEntries:
     def test_returns_file_index_mapping(self, msg_file):

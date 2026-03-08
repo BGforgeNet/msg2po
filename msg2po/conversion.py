@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 from collections import OrderedDict
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -252,6 +253,167 @@ def build_occurrence_dict(po: polib.POFile) -> OrderedDict:
     return entries_dict
 
 
+@dataclass(frozen=True)
+class EntryUpdate:
+    """Update msgstr/msgctxt on an existing PO entry."""
+
+    entry: polib.POEntry
+    new_msgstr: str
+    new_msgctxt: str | None
+    clear_fuzzy: bool
+
+
+@dataclass(frozen=True)
+class FemaleUpdate:
+    """Update msgstr on an existing female PO entry."""
+
+    entry: polib.POEntry
+    new_msgstr: str
+    clear_fuzzy: bool
+
+
+@dataclass(frozen=True)
+class NewFemaleEntry:
+    """A new female PO entry to append."""
+
+    msgid: str
+    msgstr: str
+
+
+def _compute_female_update(
+    e: polib.POEntry,
+    female_value: str,
+    female_map: dict[str, polib.POEntry],
+    overwrite: bool,
+    same: bool,
+) -> FemaleUpdate | NewFemaleEntry | None:
+    """Decide what to do with a female translation value."""
+    if e.msgid in female_map:
+        fe = female_map[e.msgid]
+        if not fe or fe.msgstr == female_value:
+            return None
+        logger.info(f"female translation change: ORIG: {e.msgid} | OLD: {fe.msgstr} | NEW: {female_value}")
+        if not overwrite:
+            logger.debug("Female translation already exists, overwrite disabled, skipping")
+            return None
+        if e.msgid == female_value:
+            if same:
+                logger.info(f"source and female translation are the same, using regardless: {e.msgid}")
+            else:
+                logger.info(f"source and female translation are the same for {e.occurrences}, skipping")
+                return None
+        return FemaleUpdate(entry=fe, new_msgstr=female_value, clear_fuzzy="fuzzy" in fe.flags)
+    elif e.msgstr != female_value:
+        logger.info(f"new female translation detected: ORIG: {e.msgid} | MALE: {e.msgstr} | FEMALE: {female_value}")
+        return NewFemaleEntry(msgid=e.msgid, msgstr=female_value)
+    return None
+
+
+def _compute_entry_update(
+    e: polib.POEntry,
+    value: str,
+    context: str | None,
+    overwrite: bool,
+    same: bool,
+    extract_fuzzy: bool,
+) -> EntryUpdate | None:
+    """Decide whether to update a PO entry's msgstr."""
+    # translation is the same
+    if e.msgstr == value and e.msgctxt == context:
+        logger.debug(f"translation is the same for {e.occurrences}")
+        if "fuzzy" in e.flags:
+            if extract_fuzzy:
+                logger.debug(f"{e.occurrences} is fuzzy. Keeping fuzzy flag.")
+                return None
+            else:
+                logger.debug(
+                    f"{e.occurrences} is fuzzy, but extract_fuzzy is not set. "
+                    "Assuming manual translation change to the same value, clearing fuzzy flag."
+                )
+        else:
+            return None
+
+    # translation is the same as source
+    if e.msgid == value and not same:
+        logger.debug(f"string and new translation are the same for {e.occurrences}, skipping: {e.msgid}")
+        return None
+
+    # translation already exists and different, overwrite disabled
+    if e.msgstr is not None and e.msgstr != "" and e.msgstr != value and not overwrite:
+        logger.debug(f"translation already exists for {e.occurrences}, overwrite disabled, skipping")
+        return None
+
+    # all checks passed
+    logger.info(f"translation update for {e.occurrences}: ORIG: {e.msgid} | OLD: {e.msgstr} | NEW: {value}")
+    clear_fuzzy = "fuzzy" in e.flags or bool(e.previous_msgid)
+    return EntryUpdate(entry=e, new_msgstr=value, new_msgctxt=context, clear_fuzzy=clear_fuzzy)
+
+
+def compute_msgstr_updates(
+    trans_entries: list,
+    occurrence_path: str,
+    entries_dict: OrderedDict,
+    female_map: dict[str, polib.POEntry],
+    overwrite: bool,
+    same: bool,
+    extract_fuzzy: bool,
+) -> tuple[list[EntryUpdate], list[FemaleUpdate], list[NewFemaleEntry]]:
+    """Pure decision logic: compute what updates to apply without mutating anything."""
+    entry_updates: list[EntryUpdate] = []
+    female_updates: list[FemaleUpdate] = []
+    new_females: list[NewFemaleEntry] = []
+
+    for t in trans_entries:
+        if (t.value is None) or (t.value == ""):
+            logger.warning(f"no msgid found for {occurrence_path}:{t.index}, skipping string: {t.value}")
+            continue
+
+        if (occurrence_path, t.index) not in entries_dict:
+            continue
+
+        e: polib.POEntry = entries_dict[(occurrence_path, t.index)]
+
+        if t.female:
+            result = _compute_female_update(e, t.female, female_map, overwrite, same)
+            if isinstance(result, FemaleUpdate):
+                female_updates.append(result)
+            elif isinstance(result, NewFemaleEntry):
+                new_females.append(result)
+
+        update = _compute_entry_update(e, t.value, t.context, overwrite, same, extract_fuzzy)
+        if update is not None:
+            entry_updates.append(update)
+
+    return entry_updates, female_updates, new_females
+
+
+def apply_msgstr_updates(
+    po: polib.POFile,
+    entry_updates: list[EntryUpdate],
+    female_updates: list[FemaleUpdate],
+    new_females: list[NewFemaleEntry],
+) -> None:
+    """Apply computed updates to the PO, mutating it in place."""
+    for u in entry_updates:
+        u.entry.msgstr = u.new_msgstr
+        u.entry.msgctxt = u.new_msgctxt
+        if u.clear_fuzzy:
+            logger.debug("Unfuzzied entry")
+            u.entry.previous_msgid = None
+            if "fuzzy" in u.entry.flags:
+                u.entry.flags.remove("fuzzy")
+
+    for fu in female_updates:
+        fu.entry.msgstr = fu.new_msgstr
+        if fu.clear_fuzzy:
+            logger.debug("Unfuzzied female entry")
+            fu.entry.flags.remove("fuzzy")
+            fu.entry.previous_msgid = None
+
+    for nf in new_females:
+        po.append(polib.POEntry(msgid=nf.msgid, msgstr=nf.msgstr, msgctxt=CONTEXT_FEMALE))
+
+
 def file2msgstr(
     input_file: str,
     po: polib.POFile,
@@ -265,7 +427,7 @@ def file2msgstr(
     if encoding is None:
         encoding = CONFIG.encoding
 
-    trans = TRANSFile(filepath=input_file, is_source=False, encoding=encoding)  # load translations
+    trans = TRANSFile(filepath=input_file, is_source=False, encoding=encoding)
 
     if indexed_po is not None:
         entries_dict = indexed_po.occ_dict
@@ -274,89 +436,7 @@ def file2msgstr(
         entries_dict = build_occurrence_dict(po)
         female_map = female_entries(po)
 
-    # newly added female entries, without PO counterpart
-    new_female_entries = []
-
-    for t in trans.entries:
-        index = t.index
-        value = t.value
-        context = t.context
-        female_value = t.female
-
-        if (value is None) or (value == ""):
-            logger.warning(f"no msgid found for {occurrence_path}:{index}, skipping string: {value}")
-            continue
-
-        if (occurrence_path, index) in entries_dict:
-            # map entries to occurrences for faster access, part 2
-            e: polib.POEntry = entries_dict[(occurrence_path, index)]
-
-            if female_value:
-                # female entries have no occurrences, checking if female translation already present
-                if e.msgid in female_map:
-                    fe: polib.POEntry = female_map[e.msgid]
-                    if fe and (fe.msgstr != female_value):
-                        logger.info(
-                            f"female translation change: ORIG: {e.msgid} | OLD: {fe.msgstr} | NEW: {female_value}"
-                        )
-                        skip = False
-                        if not overwrite:
-                            logger.debug("Female translation already exists, overwrite disabled, skipping")
-                            skip = True
-                        if not skip and (e.msgid == female_value):
-                            if same:
-                                logger.info(f"source and female translation are the same, using regardless: {e.msgid}")
-                            else:
-                                logger.info(f"source and female translation are the same for {e.occurrences}, skipping")
-                                skip = True
-                        if not skip:
-                            fe.msgstr = female_value
-                            if "fuzzy" in fe.flags:
-                                logger.debug("Unfuzzied female entry")
-                                fe.flags.remove("fuzzy")
-                                fe.previous_msgid = None
-                elif e.msgstr != female_value:
-                    logger.info(
-                        f"new female translation detected: ORIG: {e.msgid} | MALE: {e.msgstr} | FEMALE: {female_value}"
-                    )
-                    fe = polib.POEntry(msgid=e.msgid, msgstr=female_value, msgctxt=CONTEXT_FEMALE)
-                    new_female_entries.append(fe)
-
-            # translation is the same
-            if e.msgstr == value and e.msgctxt == context:
-                logger.debug(f"translation is the same for {e.occurrences}")
-                if "fuzzy" in e.flags:
-                    if CONFIG.extract_fuzzy:
-                        logger.debug(f"{e.occurrences} is fuzzy. Keeping fuzzy flag.")
-                        continue
-                    else:
-                        logger.debug(
-                            f"{e.occurrences} is fuzzy, but extract_fuzzy is not set. "
-                            "Assuming manual translation change to the same value, clearing fuzzy flag."
-                        )
-                else:
-                    continue
-
-            # translation is the same as source
-            if e.msgid == value and not same:
-                logger.debug(f"string and new translation are the same for {e.occurrences}, skipping: {e.msgid}")
-                continue
-
-            # if translation already exists and different, and overwrite is disabled, cutoff
-            if e.msgstr is not None and e.msgstr != "" and e.msgstr != value and not overwrite:
-                logger.debug(f"translation already exists for {e.occurrences}, overwrite disabled, skipping")
-                continue
-
-            # finally, all checks passed
-            logger.info(f"translation update for {e.occurrences}: ORIG: {e.msgid} | OLD: {e.msgstr} | NEW: {value}")
-            e.msgstr = value
-            e.msgctxt = context
-            if "fuzzy" in e.flags or e.previous_msgid:
-                logger.debug("Unfuzzied entry")
-                e.previous_msgid = None
-                if "fuzzy" in e.flags:
-                    e.flags.remove("fuzzy")
-
-    # add newly found female entries
-    for nfe in new_female_entries:
-        po.append(nfe)
+    entry_updates, female_updates, new_females = compute_msgstr_updates(
+        trans.entries, occurrence_path, entries_dict, female_map, overwrite, same, CONFIG.extract_fuzzy
+    )
+    apply_msgstr_updates(po, entry_updates, female_updates, new_females)
