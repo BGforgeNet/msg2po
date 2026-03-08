@@ -6,7 +6,6 @@ from datetime import datetime
 
 import polib
 from loguru import logger
-from natsort import natsorted
 
 from msg2po.config import CONFIG
 
@@ -84,13 +83,16 @@ def female_entries(po: polib.POFile) -> dict[str, polib.POEntry]:
     return entries
 
 
+def _occ_sort_key(occ: tuple[str, str]) -> tuple[str, int]:
+    """Sort key for occurrence tuples: (filepath, line_number_str) -> (filepath, int)."""
+    return (occ[0], int(occ[1]))
+
+
 def sort_po(po: polib.POFile):
     for e in po:
-        e.occurrences = natsorted(e.occurrences, key=lambda k: (k[0], k[1]))
+        e.occurrences = sorted(e.occurrences, key=_occ_sort_key)
     old_metadata = po.metadata
-    sorted_entries = natsorted(
-        po, key=lambda k: k.occurrences[0] if len(k.occurrences) > 0 else ("zzzzz", "99999")
-    )  # female empty occurrences hack
+    sorted_entries = sorted(po, key=lambda k: _occ_sort_key(k.occurrences[0]) if k.occurrences else ("zzzzz", 99999))
     po2 = _new_po_with_metadata(old_metadata)
     po2.extend(sorted_entries)
     return po2
@@ -119,10 +121,15 @@ def _clone_entry(e: polib.POEntry) -> polib.POEntry:
 
 def po_make_unique(po):
     entries_dict = OrderedDict()
+    cloned = set()  # keys that have been cloned (due to duplicates)
     old_metadata = po.metadata
     for e in po:
         key = (e.msgid, e.msgctxt)
         if key in entries_dict:
+            # Clone on first duplicate to avoid mutating the original entry
+            if key not in cloned:
+                entries_dict[key] = _clone_entry(entries_dict[key])
+                cloned.add(key)
             e0 = entries_dict[key]
             e0.occurrences.extend(e.occurrences)
 
@@ -150,8 +157,7 @@ def po_make_unique(po):
                 e0.previous_msgid_plural = e.previous_msgid_plural
 
         else:
-            # Clone so the original PO's entries are never mutated
-            entries_dict[key] = _clone_entry(e)
+            entries_dict[key] = e
     po2 = _new_po_with_metadata(old_metadata)
     for _key, value in list(entries_dict.items()):
         po2.append(value)
