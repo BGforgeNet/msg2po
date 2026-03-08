@@ -2,7 +2,7 @@
 
 import pytest
 
-from msg2po.core import TRANSFile, is_indexed
+from msg2po.transfile import TRANSFile, is_indexed
 
 
 class TestTRANSFileMSG:

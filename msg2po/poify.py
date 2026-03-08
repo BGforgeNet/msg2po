@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Scans a source language directory and converts all translation files
+# into a single .pot template.
 
 import argparse
 import os
@@ -8,20 +10,15 @@ import natsort
 import polib
 from loguru import logger
 
-from msg2po.core import (
-    CONFIG,
-    VALID_EXTENSIONS,
-    ensure_dir_exists,
-    file2po,
-    get_enc,
-    get_ext,
-    is_indexed,
-    metadata,
-    po_make_unique,
-    sort_po,
-)
+from msg2po.common import get_ext
+from msg2po.config import CONFIG
+from msg2po.conversion import file2po
+from msg2po.core import ensure_dir_exists
+from msg2po.encoding import get_enc
+from msg2po.formats import VALID_EXTENSIONS
 from msg2po.log import cli_entry, setup_logging
-from msg2po.po_utils import po_content_snapshot
+from msg2po.po_utils import metadata, po_content_snapshot, po_make_unique, sort_po
+from msg2po.transfile import is_indexed
 
 
 # prepare po dir

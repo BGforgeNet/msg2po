@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
+# Single-file conversion: game translation file -> PO entries.
 
 import argparse
 
-from msg2po.core import CONFIG, VALID_EXTENSIONS, file2po
+from msg2po.config import CONFIG
+from msg2po.conversion import file2po
+from msg2po.formats import VALID_EXTENSIONS
 from msg2po.log import cli_entry, setup_logging
 
 

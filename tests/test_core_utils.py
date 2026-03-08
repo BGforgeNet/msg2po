@@ -1,22 +1,24 @@
-# Tests for pure utility functions in msg2po.core.
+# Tests for utility functions across msg2po modules.
 
 import pytest
 
+from msg2po.conversion import get_line_format
 from msg2po.core import (
-    TRANSLITERATION_RULES_VIETNAMESE,
     basename,
     copycreate,
     create_dir,
-    encode_custom,
     ensure_dir_exists,
     get_dir,
-    get_line_format,
-    language_slug,
-    metadata,
     parent_dir,
     strip_ext,
+)
+from msg2po.encoding import (
+    TRANSLITERATION_RULES_VIETNAMESE,
+    encode_custom,
     transliterate,
 )
+from msg2po.languages import language_slug
+from msg2po.po_utils import metadata
 
 
 class TestBasename:

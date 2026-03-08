@@ -1,6 +1,6 @@
 # Tests for encoding detection and handling.
 
-from msg2po.core import get_enc
+from msg2po.encoding import get_enc
 
 
 class TestGetEnc:

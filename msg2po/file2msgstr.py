@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
+# Single-file conversion: loads a translation file's strings as msgstr into an existing PO.
 
 import argparse
 
 from polib import pofile
 
-from msg2po.core import CONFIG, VALID_EXTENSIONS, file2msgstr
+from msg2po.config import CONFIG
+from msg2po.conversion import file2msgstr
+from msg2po.formats import VALID_EXTENSIONS
 from msg2po.log import cli_entry, setup_logging
 
 

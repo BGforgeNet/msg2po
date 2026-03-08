@@ -3,13 +3,11 @@
 import polib
 import pytest
 
-from msg2po.core import (
+from msg2po.conversion import file2msgstr, file2po, po2file
+from msg2po.po_utils import (
     CONTEXT_FEMALE,
     EMPTY_COMMENT,
     female_entries,
-    file2msgstr,
-    file2po,
-    po2file,
     po_make_unique,
     sort_po,
     translation_entries,

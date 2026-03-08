@@ -6,7 +6,7 @@ import os
 import ruamel.yaml
 from polib import pofile
 
-from msg2po.core import CONFIG
+from msg2po.config import CONFIG
 from msg2po.log import cli_entry, setup_logging
 
 

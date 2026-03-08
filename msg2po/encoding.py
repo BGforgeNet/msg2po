@@ -94,8 +94,7 @@ def get_enc(lang_path: str = "", file_path: str = ""):
     Infers encoding based on dir/PO name and file path.
     lang_path can be PO path or translation path, only basename is used.
     """
-    # language_slug imported here to avoid circular dependency (it lives in core)
-    from msg2po.core import language_slug
+    from msg2po.languages import language_slug
 
     filename = Path(file_path).resolve().name
 

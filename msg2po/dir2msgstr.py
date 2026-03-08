@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Loads manually edited translation files back into PO msgstr fields.
+# Reverse of unpoify: used when translators edit files directly instead of PO.
 
 import argparse
 import os
@@ -10,21 +12,15 @@ import polib
 from loguru import logger
 from polib import POFile, pofile
 
-from msg2po.core import (
-    CONFIG,
-    VALID_EXTENSIONS,
-    LanguageMap,
-    basename,
-    build_occurrence_dict,
-    female_entries,
-    file2msgstr,
-    find_files,
-    get_enc,
-    get_ext,
-    po_make_unique,
-)
+from msg2po.common import find_files, get_ext
+from msg2po.config import CONFIG
+from msg2po.conversion import build_occurrence_dict, file2msgstr
+from msg2po.core import basename
+from msg2po.encoding import get_enc
+from msg2po.formats import VALID_EXTENSIONS
+from msg2po.languages import LanguageMap
 from msg2po.log import cli_entry, setup_logging
-from msg2po.po_utils import po_content_snapshot
+from msg2po.po_utils import female_entries, po_content_snapshot, po_make_unique
 
 
 def dir2msgstr(

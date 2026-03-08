@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Extracts translated files from PO back into the game's directory structure.
+# Uses ProcessPoolExecutor for parallel extraction per language.
 
 import argparse
 import concurrent.futures
@@ -8,17 +10,14 @@ import sys
 from loguru import logger
 from polib import pofile
 
-from msg2po.core import (
-    CONFIG,
-    LanguageMap,
-    ensure_dir_exists,
-    female_entries,
-    get_enc,
-    get_ext,
-    po2file,
-    translation_entries,
-)
+from msg2po.common import get_ext
+from msg2po.config import CONFIG
+from msg2po.conversion import po2file
+from msg2po.core import ensure_dir_exists
+from msg2po.encoding import get_enc
+from msg2po.languages import LanguageMap
 from msg2po.log import cli_entry, setup_logging
+from msg2po.po_utils import female_entries, translation_entries
 
 
 def extract_po(pf: str, language_map: LanguageMap, base_dir: str):

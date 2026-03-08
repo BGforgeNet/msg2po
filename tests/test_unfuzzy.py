@@ -1,14 +1,13 @@
 # Tests for unfuzzy logic.
-# Note: msg2po.unfuzzy cannot be imported directly because it runs argparse at
-# module level. We test the pure functions by reimplementing them here (they are
-# trivial) and test the core unfuzzy_exact_matches from core.py.
+# The pure functions from unfuzzy.py are reimplemented here for isolated testing.
+# unfuzzy_exact_matches is tested via po_utils.
 
 import os
 
 import polib
 import ruamel.yaml
 
-from msg2po.core import unfuzzy_exact_matches
+from msg2po.po_utils import unfuzzy_exact_matches
 
 
 # Reimplementations of the pure functions from unfuzzy.py, since that module
