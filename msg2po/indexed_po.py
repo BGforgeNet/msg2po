@@ -25,7 +25,3 @@ class IndexedPO:
             female_map=female_entries(po),
             occ_dict=build_occurrence_dict(po),
         )
-
-    def with_rebuilt_indexes(self) -> "IndexedPO":
-        """Return a new IndexedPO with fresh indexes from the same POFile."""
-        return IndexedPO.from_po(self.po)

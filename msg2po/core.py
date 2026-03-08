@@ -10,10 +10,6 @@ def basename(path):
     return Path(path).resolve().name
 
 
-def parent_dir(path):
-    return str(Path(path).resolve().parent)
-
-
 def strip_ext(filename):
     return Path(filename).stem
 

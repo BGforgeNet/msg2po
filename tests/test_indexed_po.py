@@ -33,17 +33,6 @@ class TestIndexedPO:
         ipo = IndexedPO.from_po(po)
         assert ("dialog/1.msg", "100") in ipo.occ_dict
 
-    def test_with_rebuilt_indexes(self):
-        po = self._make_po()
-        ipo = IndexedPO.from_po(po)
-        # Mutate the PO
-        po.append(polib.POEntry(msgid="World", msgstr="Monde", occurrences=[("dialog/2.msg", "200")]))
-        # Original indexes are stale
-        assert "dialog/2.msg" not in ipo.trans_map
-        # Rebuilt indexes reflect the mutation
-        ipo2 = ipo.with_rebuilt_indexes()
-        assert "dialog/2.msg" in ipo2.trans_map
-
     def test_po_reference_is_same_object(self):
         po = self._make_po()
         ipo = IndexedPO.from_po(po)

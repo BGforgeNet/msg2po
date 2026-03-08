@@ -9,7 +9,6 @@ from msg2po.core import (
     create_dir,
     ensure_dir_exists,
     get_dir,
-    parent_dir,
     strip_ext,
 )
 from msg2po.encoding import (
@@ -31,16 +30,6 @@ class TestBasename:
     def test_single_component(self):
         result = basename("baz")
         assert result == "baz"
-
-
-class TestParentDir:
-    def test_simple_path(self):
-        result = parent_dir("/foo/bar/baz")
-        assert result == "/foo/bar"
-
-    def test_trailing_separator(self):
-        result = parent_dir("/foo/bar/baz/")
-        assert result == "/foo/bar"
 
 
 class TestStripExt:
