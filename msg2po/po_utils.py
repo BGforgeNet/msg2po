@@ -88,7 +88,8 @@ def _occ_sort_key(occ: tuple[str, str]) -> tuple[str, int]:
     return (occ[0], int(occ[1]))
 
 
-def sort_po(po: polib.POFile):
+def sort_po(po: polib.POFile) -> polib.POFile:
+    """Sort PO entries by occurrence (filepath, line number). Returns a new POFile."""
     for e in po:
         e.occurrences = sorted(e.occurrences, key=_occ_sort_key)
     old_metadata = po.metadata
@@ -119,7 +120,12 @@ def _clone_entry(e: polib.POEntry) -> polib.POEntry:
     return clone
 
 
-def po_make_unique(po):
+def po_make_unique(po: polib.POFile) -> polib.POFile:
+    """Deduplicate PO entries by (msgid, msgctxt), merging occurrences. Returns a new POFile.
+
+    Non-duplicate entries are shared (not cloned) between input and output.
+    Duplicate entries are cloned before merging to avoid mutating the originals.
+    """
     entries_dict = OrderedDict()
     cloned = set()  # keys that have been cloned (due to duplicates)
     old_metadata = po.metadata
