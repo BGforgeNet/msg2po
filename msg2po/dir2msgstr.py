@@ -37,10 +37,8 @@ def dir2msgstr(
     female_map: Optional[dict[str, "polib.POEntry"]] = None,
     entries_dict: Optional["OrderedDict"] = None,
 ):
-    """
-    src_dir is path to translation directory
-    overwrite means overwrite existing entries if any
-    """
+    """Loads translated strings from files in src_dir into po (mutating it),
+    then returns a deduplicated copy via po_make_unique."""
     logger.debug(f"overwrite is {overwrite}")
 
     skip_files = CONFIG.skip_files
@@ -71,7 +69,7 @@ def dir2msgstr(
 
             enc = get_enc(po_path, file_name)
             logger.info(f"processing {rel_name} with encoding {enc}")
-            po = file2msgstr(
+            file2msgstr(
                 input_file=abs_path,
                 po=po,
                 occurrence_path=rel_name,
@@ -81,8 +79,7 @@ def dir2msgstr(
                 female_map=female_map,
                 entries_dict=entries_dict,
             )
-    po = po_make_unique(po)
-    return po
+    return po_make_unique(po)
 
 
 @cli_entry

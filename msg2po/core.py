@@ -389,8 +389,8 @@ def file2msgstr(
     same: bool = False,
     female_map: Optional[dict[str, polib.POEntry]] = None,
     entries_dict: Optional[OrderedDict] = None,
-):
-    """returns PO file object"""
+) -> None:
+    """Loads translated strings from input_file into po, mutating it in place."""
     if encoding is None:
         encoding = CONFIG.encoding
 
@@ -487,8 +487,6 @@ def file2msgstr(
     # add newly found female entries
     for nfe in new_female_entries:
         po.append(nfe)
-
-    return po
 
 
 # check if TXT file is indexed

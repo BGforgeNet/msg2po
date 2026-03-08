@@ -39,7 +39,7 @@ def main():
     path = args.path if args.path is not None else args.INPUT_FILE
 
     po = pofile(output_file)
-    po = file2msgstr(input_file, po, path, encoding=args.encoding, overwrite=args.overwrite, same=args.same)
+    file2msgstr(input_file, po, path, encoding=args.encoding, overwrite=args.overwrite, same=args.same)
     po.save(output_file, newline=CONFIG.newline_po)
 
 

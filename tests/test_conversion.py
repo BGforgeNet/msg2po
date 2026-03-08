@@ -154,7 +154,7 @@ class TestFile2Msgstr:
     def test_loads_translations(self, msg_file, msg_translated_file):
         """file2msgstr loads translated values into PO msgstr."""
         po = file2po(msg_file, encoding="utf-8")
-        po = file2msgstr(
+        file2msgstr(
             input_file=msg_translated_file,
             po=po,
             occurrence_path=msg_file,
@@ -166,7 +166,7 @@ class TestFile2Msgstr:
     def test_skips_same_as_source(self, msg_file):
         """file2msgstr skips translations identical to source by default."""
         po = file2po(msg_file, encoding="utf-8")
-        po = file2msgstr(
+        file2msgstr(
             input_file=msg_file,
             po=po,
             occurrence_path=msg_file,
@@ -178,7 +178,7 @@ class TestFile2Msgstr:
     def test_loads_same_when_flag_set(self, msg_file):
         """file2msgstr loads same-as-source translations when same=True."""
         po = file2po(msg_file, encoding="utf-8")
-        po = file2msgstr(
+        file2msgstr(
             input_file=msg_file,
             po=po,
             occurrence_path=msg_file,
@@ -190,7 +190,7 @@ class TestFile2Msgstr:
     def test_tra_female_entries(self, tra_file, tra_translated_file):
         """file2msgstr picks up female translations from TRA files."""
         po = file2po(tra_file, encoding="utf-8")
-        po = file2msgstr(
+        file2msgstr(
             input_file=tra_translated_file,
             po=po,
             occurrence_path=tra_file,
