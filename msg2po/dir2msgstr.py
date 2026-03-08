@@ -31,8 +31,7 @@ def dir2msgstr(
     same: bool = False,
     indexed_po: Optional[IndexedPO] = None,
 ):
-    """Loads translated strings from files in src_dir into po (mutating it),
-    then returns a deduplicated copy via po_make_unique."""
+    """Loads translated strings from files in src_dir into po, mutating it in place."""
     logger.debug(f"overwrite is {overwrite}")
 
     skip_files = CONFIG.skip_files
@@ -41,24 +40,29 @@ def dir2msgstr(
         indexed_po = IndexedPO.from_po(po)
 
     abs_src = os.path.abspath(src_dir)
+    female_suffix = CONFIG.female_dir_suffix
     for dir_name, _subdir_list, file_list in os.walk(abs_src, topdown=False, followlinks=True):
+        if dir_name.endswith(female_suffix):
+            continue
+        # Compute relative dir prefix once per directory instead of per file
+        rel_dir = os.path.relpath(dir_name, abs_src)
         for file_name in file_list:
-            abs_path = os.path.join(dir_name, file_name)
-            rel_name = os.path.relpath(abs_path, abs_src)
-            if os.sep != "/":
-                rel_name = rel_name.replace(os.sep, "/")
             fext = get_ext(file_name)
             if fext != extension:
                 continue
-            if dir_name.endswith(CONFIG.female_dir_suffix):
-                logger.debug(f"{rel_name} is a file with female strings, skipping")
-                continue
+            if rel_dir == ".":
+                rel_name = file_name
+            else:
+                rel_name = os.path.join(rel_dir, file_name)
+            if os.sep != "/":
+                rel_name = rel_name.replace(os.sep, "/")
 
             # Skip files as configured
             if rel_name in skip_files:
                 logger.debug(f"{rel_name} is in skip_files. Skipping!")
                 continue
 
+            abs_path = os.path.join(dir_name, file_name)
             enc = get_enc(po_path, file_name)
             logger.info(f"processing {rel_name} with encoding {enc}")
             file2msgstr(
@@ -70,7 +74,7 @@ def dir2msgstr(
                 same=same,
                 indexed_po=indexed_po,
             )
-    return po_make_unique(po)
+    return po
 
 
 @cli_entry
@@ -114,7 +118,7 @@ def main():
         output_file = args.output_file
         po = pofile(output_file)
         snapshot = po_content_snapshot(po)
-        po = dir2msgstr(
+        dir2msgstr(
             src_dir=args.src_dir,
             po=po,
             po_path=output_file,
@@ -122,6 +126,7 @@ def main():
             extension=args.file_ext,
             same=args.same,
         )
+        po = po_make_unique(po)
         if po_content_snapshot(po) != snapshot:
             po.save(output_file, newline=CONFIG.newline_po)
         logger.info(f"Processed directory {args.src_dir}, the result is in {output_file}")
@@ -140,7 +145,7 @@ def main():
             snapshot = po_content_snapshot(po)
             ipo = IndexedPO.from_po(po)
             for ve in VALID_EXTENSIONS:
-                po = dir2msgstr(
+                dir2msgstr(
                     src_dir=lang_dir,
                     po=po,
                     po_path=pf,
@@ -150,6 +155,7 @@ def main():
                     indexed_po=ipo,
                 )
                 logger.info(f"Processed {ve} files in directory {slug}, the result is in {rel_pf}")
+            po = po_make_unique(po)
             if po_content_snapshot(po) != snapshot:
                 po.save(pf, newline=CONFIG.newline_po)
 
