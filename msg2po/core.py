@@ -7,7 +7,6 @@ import re
 import shutil
 import unicodedata
 from collections import OrderedDict
-from contextlib import contextmanager
 from pathlib import Path
 from typing import Optional, TypedDict
 
@@ -146,18 +145,6 @@ def dir_or_exit(d):
         raise FileNotFoundError(f"Directory '{d}' does not exist. Check the path and try again.")
 
 
-@contextmanager
-def cd(newdir):
-    if not newdir:
-        raise ValueError("cannot change to empty directory path")
-    prevdir = os.getcwd()
-    os.chdir(os.path.expanduser(newdir))
-    try:
-        yield
-    finally:
-        os.chdir(prevdir)
-
-
 def copycreate(src_file, dst_file):
     Path(dst_file).parent.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(src_file, dst_file)
@@ -166,10 +153,12 @@ def copycreate(src_file, dst_file):
 ################################
 
 
-def file2po(filepath: str, po_path: str = "", encoding: Optional[str] = None):
+def file2po(filepath: str, po_path: str = "", encoding: Optional[str] = None, occurrence_path: Optional[str] = None):
     """Returns PO file object"""
     if encoding is None:
         encoding = CONFIG.encoding
+    if occurrence_path is None:
+        occurrence_path = filepath
 
     trans = TRANSFile(filepath=filepath, is_source=True, encoding=encoding)  # load translations
 
@@ -187,7 +176,7 @@ def file2po(filepath: str, po_path: str = "", encoding: Optional[str] = None):
         # append to occurrences if id and context match
         if (t.value, context) in trans_map:
             e = po[trans_map[(t.value, context)]]
-            e.occurrences.append((filepath, t.index))
+            e.occurrences.append((occurrence_path, t.index))
             continue
 
         # no matching msgid + msgctxt, add new entry
@@ -195,7 +184,7 @@ def file2po(filepath: str, po_path: str = "", encoding: Optional[str] = None):
             msgid=t.value,
             msgstr="",
             occurrences=[
-                (filepath, t.index),
+                (occurrence_path, t.index),
             ],
             msgctxt=t.context,
             comment=t.comment,
@@ -233,8 +222,9 @@ def po2file(
 ):
     """
     Extract and write to disk a single file from POFile
-    output_file is path relative to dst_dir
-    dst_dir is actually dst language. Used in unpoify and po2file.
+    output_file is the file path to write to
+    occurrence_path is the relative path used for PO occurrence matching
+    dst_dir is the destination language directory. Used in unpoify and po2file.
     """
     if trans_map is None:  # when extracting single file with po2tra/po2msg, etc
         # check if file is present in po, exit if not
@@ -324,14 +314,16 @@ def po2file(
         # If need to create the file
         if same:  # if female translation is the same?
             if female_file is None:  # don't need to copy, automatic fallback
-                logger.debug(f"Female strings are same, not copying - sfall will fallback to male {output_file}")
+                logger.debug(f"Female strings are same, not copying - sfall will fallback to male {occurrence_path}")
                 return True  # cutoff the rest of the function
             else:
                 logger.debug(f"Female strings are same, copying to {female_file}")
                 copycreate(output_file, female_file)
         else:  # if it's different, extract separately
             if female_file is None:
-                logger.warning(f"female strings are different, but female file is not supported for path {output_file}")
+                logger.warning(
+                    f"female strings are different, but female file is not supported for path {occurrence_path}"
+                )
                 return True
             else:
                 logger.debug(f"Also extracting female counterpart into {female_file}")

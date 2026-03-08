@@ -2,7 +2,6 @@
 
 import argparse
 import os
-import re
 import shutil
 import sys
 
@@ -13,15 +12,12 @@ from loguru import logger
 from msg2po.core import (
     CONFIG,
     VALID_EXTENSIONS,
-    basename,
-    cd,
     dir_or_exit,
     file2po,
     get_enc,
     get_ext,
     is_indexed,
     metadata,
-    parent_dir,
     po_make_unique,
     sort_po,
 )
@@ -50,68 +46,67 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
     poify_dir is path to source language directory
     """
     poify_dir = poify_dir.rstrip(os.sep + "/")
-    language_dir = os.path.basename(poify_dir)
-    po_dir = CONFIG.po_dirname
+    abs_poify_dir = os.path.abspath(poify_dir)
+    base_dir = os.path.dirname(abs_poify_dir)
+    lang = os.path.basename(abs_poify_dir)
+
+    po_dir = os.path.join(base_dir, CONFIG.po_dirname)
     prepare_po_dir(po_dir)
-    tra_dir = tra_relpath(poify_dir)
-    # process with po_tool
-    with cd(language_dir):
-        # Final PO
-        lang = basename(language_dir)
-        dst_file = os.path.join(po_dir, lang + ".pot")
-        po = polib.POFile()
+    dst_file = os.path.join(po_dir, lang + ".pot")
 
-        # skip female cuts, they are built from male ones
-        extract_format = CONFIG.extract_format
+    po = polib.POFile()
 
-        skip_files = CONFIG.skip_files
+    # skip female cuts, they are built from male ones
+    extract_format = CONFIG.extract_format
+    skip_files = CONFIG.skip_files
 
-        for dir_name, subdir_list, file_list in natsort.natsorted(
-            os.walk(".", topdown=False, followlinks=True), alg=natsort.ns.PATH
-        ):
-            subdir_list = natsort.natsorted(subdir_list, alg=natsort.ns.PATH)
-            file_list = natsort.natsorted(file_list, alg=natsort.ns.PATH)
-            for file_name in file_list:
-                full_name = os.path.join(dir_name, file_name)
+    for dir_name, subdir_list, file_list in natsort.natsorted(
+        os.walk(abs_poify_dir, topdown=False, followlinks=True), alg=natsort.ns.PATH
+    ):
+        subdir_list = natsort.natsorted(subdir_list, alg=natsort.ns.PATH)
+        file_list = natsort.natsorted(file_list, alg=natsort.ns.PATH)
+        for file_name in file_list:
+            abs_path = os.path.join(dir_name, file_name)
+            # relative to language dir for PO occurrences
+            rel_name = os.path.relpath(abs_path, abs_poify_dir)
 
-                # convert windows paths to linux style, for consistency in POs
-                if os.path.sep == "\\":
-                    full_name = full_name.replace("\\", "/")
+            # convert windows paths to linux style, for consistency in POs
+            if os.path.sep == "\\":
+                rel_name = rel_name.replace("\\", "/")
 
-                full_name = re.sub(r"^\./", "", full_name)  # remove trailing './'
+            # skip female cuts
+            rel_dir = os.path.relpath(dir_name, abs_poify_dir)
+            if extract_format == "sfall" and rel_dir == "cuts_female":
+                logger.debug(f"{rel_name} is in cuts_female. Skipping!")
+                continue
 
-                # skip female cuts
-                pretty_dir_name = re.sub(r"^\./", "", dir_name)
-                if extract_format == "sfall" and pretty_dir_name == "cuts_female":
-                    logger.debug(f"{full_name} is in cuts_female. Skipping!")
-                    continue
+            if rel_name in skip_files:
+                logger.debug(f"{rel_name} is in skip_files. Skipping!")
+                continue
 
-                if full_name in skip_files:
-                    logger.debug(f"{full_name} is in skip_files. Skipping!")
-                    continue
+            ext = get_ext(file_name)
+            if ext not in VALID_EXTENSIONS:
+                continue
 
-                ext = get_ext(file_name)
-                if ext not in VALID_EXTENSIONS:
-                    continue
-
-                # checked txt is indexed and if it is, process it
-                if ext == "txt":
-                    if is_indexed(full_name):
-                        logger.debug(f"{full_name} is indexed TXT")
-                    else:
-                        logger.debug(f"{full_name} is TXT, but not indexed. Skipping!")
-                        continue
-
-                bname = basename(full_name)
-                # non-default encoding?
-                if encoding == CONFIG.encoding:
-                    enc = get_enc(file_path=bname)
+            # check txt is indexed and if it is, process it
+            if ext == "txt":
+                if is_indexed(abs_path):
+                    logger.debug(f"{rel_name} is indexed TXT")
                 else:
-                    enc = encoding
-                logger.info(f"processing {full_name} with encoding {enc}")
-                po2 = file2po(full_name, encoding=enc)
-                for e2 in po2:
-                    po.append(e2)
+                    logger.debug(f"{rel_name} is TXT, but not indexed. Skipping!")
+                    continue
+
+            bname = os.path.basename(rel_name)
+            # non-default encoding?
+            if encoding == CONFIG.encoding:
+                enc = get_enc(file_path=bname)
+            else:
+                enc = encoding
+            logger.info(f"processing {rel_name} with encoding {enc}")
+            po2 = file2po(abs_path, encoding=enc, occurrence_path=rel_name)
+            for e2 in po2:
+                po.append(e2)
+
     po = po_make_unique(po)
     po = sort_po(po)
     clean_po_dir(po_dir)
@@ -129,11 +124,7 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
 
     po.save(dst_file, newline=CONFIG.newline_po)
 
-    logger.info(f"Processed directory {poify_dir}, the result is in {tra_dir}/{po_dir}/{lang}.pot")
-
-
-def tra_relpath(poify_dir: str) -> str:
-    return os.path.relpath(parent_dir(poify_dir))
+    logger.info(f"Processed directory {poify_dir}, the result is in {os.path.relpath(dst_file)}")
 
 
 @cli_entry
@@ -158,10 +149,7 @@ def main():
     # init vars
     poify_dir = args.DIR
     dir_or_exit(poify_dir)
-
-    # so that resulting po has relative occurrences
-    with cd(parent_dir(os.path.abspath(poify_dir))):
-        poify(poify_dir)
+    poify(poify_dir)
 
 
 if __name__ == "__main__":

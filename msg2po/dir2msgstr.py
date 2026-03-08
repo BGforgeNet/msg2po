@@ -2,7 +2,6 @@
 
 import argparse
 import os
-import re
 import sys
 from collections import OrderedDict
 from typing import Optional
@@ -17,7 +16,6 @@ from msg2po.core import (
     LanguageMap,
     basename,
     build_occurrence_dict,
-    cd,
     female_entries,
     file2msgstr,
     find_files,
@@ -40,7 +38,7 @@ def dir2msgstr(
     entries_dict: Optional["OrderedDict"] = None,
 ):
     """
-    src_dir is relative
+    src_dir is path to translation directory
     overwrite means overwrite existing entries if any
     """
     logger.debug(f"overwrite is {overwrite}")
@@ -52,35 +50,37 @@ def dir2msgstr(
     if entries_dict is None:
         entries_dict = build_occurrence_dict(po)
 
-    with cd(src_dir):
-        for dir_name, _subdir_list, file_list in os.walk(".", topdown=False, followlinks=True):
-            for file_name in file_list:
-                full_name = os.path.join(dir_name, file_name)
-                full_name = re.sub(r"^\./", "", full_name)  # remove trailing './'
-                fext = get_ext(file_name)
-                if fext != extension:
-                    continue
-                if dir_name.endswith(CONFIG.female_dir_suffix):
-                    logger.debug(f"{full_name} is a file with female strings, skipping")
-                    continue
+    abs_src = os.path.abspath(src_dir)
+    for dir_name, _subdir_list, file_list in os.walk(abs_src, topdown=False, followlinks=True):
+        for file_name in file_list:
+            abs_path = os.path.join(dir_name, file_name)
+            rel_name = os.path.relpath(abs_path, abs_src)
+            if os.sep != "/":
+                rel_name = rel_name.replace(os.sep, "/")
+            fext = get_ext(file_name)
+            if fext != extension:
+                continue
+            if dir_name.endswith(CONFIG.female_dir_suffix):
+                logger.debug(f"{rel_name} is a file with female strings, skipping")
+                continue
 
-                # Skip files as configured
-                if full_name in skip_files:
-                    logger.debug(f"{full_name} is in skip_files. Skipping!")
-                    continue
+            # Skip files as configured
+            if rel_name in skip_files:
+                logger.debug(f"{rel_name} is in skip_files. Skipping!")
+                continue
 
-                enc = get_enc(po_path, file_name)
-                logger.info(f"processing {full_name} with encoding {enc}")
-                po = file2msgstr(
-                    input_file=full_name,
-                    po=po,
-                    occurrence_path=full_name,
-                    encoding=enc,
-                    overwrite=overwrite,
-                    same=same,
-                    female_map=female_map,
-                    entries_dict=entries_dict,
-                )
+            enc = get_enc(po_path, file_name)
+            logger.info(f"processing {rel_name} with encoding {enc}")
+            po = file2msgstr(
+                input_file=abs_path,
+                po=po,
+                occurrence_path=rel_name,
+                encoding=enc,
+                overwrite=overwrite,
+                same=same,
+                female_map=female_map,
+                entries_dict=entries_dict,
+            )
     po = po_make_unique(po)
     return po
 
@@ -140,29 +140,32 @@ def main():
 
     if args.auto:
         language_map = LanguageMap()
-        with cd(CONFIG.tra_dir):
-            po_paths = find_files(CONFIG.po_dirname, "po")
-            for pf in po_paths:
-                logger.info(f"Loading into {pf}")
-                lang_dir = language_map.po2slug[basename(pf)]
-                po = pofile(pf)
-                snapshot = po_content_snapshot(po)
-                female_map = female_entries(po)
-                occ_dict = build_occurrence_dict(po)
-                for ve in VALID_EXTENSIONS:
-                    po = dir2msgstr(
-                        src_dir=lang_dir,
-                        po=po,
-                        po_path=pf,
-                        overwrite=args.overwrite,
-                        extension=ve,
-                        same=args.same,
-                        female_map=female_map,
-                        entries_dict=occ_dict,
-                    )
-                    logger.info(f"Processed {ve} files in directory {lang_dir}, the result is in {pf}")
-                if po_content_snapshot(po) != snapshot:
-                    po.save(pf, newline=CONFIG.newline_po)
+        abs_tra = os.path.abspath(CONFIG.tra_dir)
+        po_dir_abs = os.path.join(abs_tra, CONFIG.po_dirname)
+        po_paths = find_files(po_dir_abs, "po")
+        for pf in po_paths:
+            rel_pf = os.path.relpath(pf, abs_tra)
+            logger.info(f"Loading into {rel_pf}")
+            slug = language_map.po2slug[basename(pf)]
+            lang_dir = os.path.join(abs_tra, slug)
+            po = pofile(pf)
+            snapshot = po_content_snapshot(po)
+            female_map = female_entries(po)
+            occ_dict = build_occurrence_dict(po)
+            for ve in VALID_EXTENSIONS:
+                po = dir2msgstr(
+                    src_dir=lang_dir,
+                    po=po,
+                    po_path=pf,
+                    overwrite=args.overwrite,
+                    extension=ve,
+                    same=args.same,
+                    female_map=female_map,
+                    entries_dict=occ_dict,
+                )
+                logger.info(f"Processed {ve} files in directory {slug}, the result is in {rel_pf}")
+            if po_content_snapshot(po) != snapshot:
+                po.save(pf, newline=CONFIG.newline_po)
 
 
 if __name__ == "__main__":

@@ -11,7 +11,6 @@ from polib import pofile
 from msg2po.core import (
     CONFIG,
     LanguageMap,
-    cd,
     dir_or_exit,
     female_entries,
     get_enc,
@@ -22,27 +21,30 @@ from msg2po.core import (
 from msg2po.log import cli_entry, setup_logging
 
 
-def extract_po(pf: str, language_map: LanguageMap):
+def extract_po(pf: str, language_map: LanguageMap, base_dir: str):
     """
     pf is po file basename
+    base_dir is the translation root directory (tra_dir)
     """
-    po_path = os.path.join(CONFIG.po_dirname, pf)
-    logger.info(f"processing {po_path}")
+    rel_po_path = os.path.join(CONFIG.po_dirname, pf)
+    abs_po_path = os.path.join(base_dir, rel_po_path)
+    logger.info(f"processing {rel_po_path}")
     # Open PO once, it's a heavy op
-    po = pofile(po_path)
+    po = pofile(abs_po_path)
     trans_map = translation_entries(po)
     female_map = female_entries(po)
 
     dst_dir = language_map.po2slug[pf]
+    abs_dst_dir = os.path.join(base_dir, dst_dir)
 
     for ef in sorted(trans_map):
-        enc = get_enc(po_path, ef)
-        ef_extract_path = os.path.join(dst_dir, ef)
-        logger.debug(f"Extracting {ef} from {po_path} into {ef_extract_path} with encoding {enc}")
-        po2file(po, ef_extract_path, enc, ef, dst_dir=dst_dir, trans_map=trans_map, female_map=female_map)
+        enc = get_enc(abs_po_path, ef)
+        ef_extract_path = os.path.join(abs_dst_dir, ef)
+        logger.debug(f"Extracting {ef} from {rel_po_path} into {os.path.join(dst_dir, ef)} with encoding {enc}")
+        po2file(po, ef_extract_path, enc, ef, dst_dir=abs_dst_dir, trans_map=trans_map, female_map=female_map)
 
-    enc = get_enc(po_path)
-    logger.info(f"Extracted {po_path} into {dst_dir} with encoding {enc}")
+    enc = get_enc(abs_po_path)
+    logger.info(f"Extracted {rel_po_path} into {dst_dir} with encoding {enc}")
 
 
 @cli_entry
@@ -70,8 +72,10 @@ def main():
         logger.error(f"no PO files found in directory {po_dir}")
         sys.exit(1)
 
-    with cd(CONFIG.tra_dir), concurrent.futures.ProcessPoolExecutor() as executor:
-        futures = {executor.submit(extract_po, pf, language_map): pf for pf in po_files}
+    abs_tra = os.path.abspath(CONFIG.tra_dir)
+
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        futures = {executor.submit(extract_po, pf, language_map, abs_tra): pf for pf in po_files}
 
         for future in concurrent.futures.as_completed(futures):
             pf = futures[future]
