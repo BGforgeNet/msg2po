@@ -89,7 +89,10 @@ UTF_FILENAMES = [
 ]
 
 
-def get_enc(lang_path: str = "", file_path: str = ""):
+_UTF_NAME_RE = re.compile(r".*_ee\.tra$")
+
+
+def get_enc(lang_path: str = "", file_path: str = "") -> str:
     """
     Infers encoding based on dir/PO name and file path.
     lang_path can be PO path or translation path, only basename is used.
@@ -124,8 +127,7 @@ def get_enc(lang_path: str = "", file_path: str = ""):
     if filename in UTF_FILENAMES:
         encoding = "utf-8"
 
-    utf_name = re.compile(r".*_ee\.tra$")
-    if utf_name.match(filename):
+    if _UTF_NAME_RE.match(filename):
         encoding = "utf-8"
 
     return encoding
@@ -164,9 +166,11 @@ def encode_custom(text: str, encoding: str = "utf-8") -> str:
     Encodes and decodes the given text using the specified encoding,
     replacing invalid characters.
     If encoding is 'cp1258', it uses the encode_vietnamese function.
+    UTF-8 is a passthrough since all Python strings are valid UTF-8.
     """
+    if encoding == "utf-8":
+        return text
     if encoding == "cp1258":
         return encode_vietnamese(text)
-    else:
-        # Graceful fallback for replace, can't really protect against invalid characters being entered in Weblate?
-        return text.encode(encoding, "replace").decode(encoding)
+    # Graceful fallback for replace, can't really protect against invalid characters being entered in Weblate?
+    return text.encode(encoding, "replace").decode(encoding)

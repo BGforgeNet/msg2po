@@ -1,35 +1,39 @@
 # Language slug mapping and PO-to-directory resolution.
 
+import functools
+
 from msg2po.common import find_files
 from msg2po.config import CONFIG
 from msg2po.core import basename, strip_ext
 
+_SLUG_MAP = {
+    "cs": "czech",
+    "de": "german",
+    "fr": "french",
+    "it": "italian",
+    "hu": "hungarian",
+    "pl": "polish",
+    "pt": "portuguese",
+    "pt_br": "portuguese",
+    "es": "spanish",
+    "ru": "russian",
+    "sv": "swedish",
+    "tchinese": "tchinese",
+    "uk": "ukrainian",
+    "vi": "vietnamese",
+}
 
-def language_slug(po_filename):
+
+@functools.lru_cache(maxsize=64)
+def language_slug(po_filename: str) -> str:
     """
     Allows to extract PO files into simplified language names: pt_BR.po -> portuguese/1.msg.
     Working with language codes is not convenient in mods.
     A temporary hack until a better solution is found.
     """
-    slug_map = {
-        "cs": "czech",
-        "de": "german",
-        "fr": "french",
-        "it": "italian",
-        "hu": "hungarian",
-        "pl": "polish",
-        "pt": "portuguese",
-        "pt_br": "portuguese",
-        "es": "spanish",
-        "ru": "russian",
-        "sv": "swedish",
-        "tchinese": "tchinese",
-        "uk": "ukrainian",
-        "vi": "vietnamese",
-    }
     slug = strip_ext(basename(po_filename)).lower()
     if CONFIG.simple_languages:
-        slug = slug_map.get(slug, slug)
+        slug = _SLUG_MAP.get(slug, slug)
     return slug
 
 
