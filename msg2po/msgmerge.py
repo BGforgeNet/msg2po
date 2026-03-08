@@ -19,7 +19,7 @@ from polib import pofile
 from msg2po.common import find_files
 from msg2po.config import CONFIG
 from msg2po.log import cli_entry, setup_logging
-from msg2po.po_utils import normalize_po
+from msg2po.po_utils import normalize_po, po_content_snapshot
 
 
 def merge(po_path: str, pot_path: str):
@@ -39,9 +39,14 @@ def merge(po_path: str, pot_path: str):
     if res.returncode != 0:
         exit_code = res.returncode
         logger.error(f"msgmerge failed for {po_path}")
+    # Normalize (restore female entries, dedup, sort) and save only if
+    # entries actually changed. Avoids re-wrapping the entire file, which
+    # would conflict with Weblate's wrapping.
     po2 = pofile(po_path)
+    snapshot = po_content_snapshot(po2)
     po2 = normalize_po(po2)
-    po2.save(fpath=po_path, newline=CONFIG.newline_po)
+    if po_content_snapshot(po2) != snapshot:
+        po2.save(fpath=po_path, newline=CONFIG.newline_po)
     return exit_code
 
 

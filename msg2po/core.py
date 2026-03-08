@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import sys
+import unicodedata
 from collections import OrderedDict
 from contextlib import contextmanager
 from pathlib import Path
@@ -640,6 +641,10 @@ class TRANSFile:
                 text = fh.read()
         except UnicodeDecodeError as e:
             raise ValueError(f"Failed to read '{filepath}' with encoding '{self.encoding}': {e}") from None
+        # cp1258 decodes into a mixed normalization form (some precomposed, some
+        # combining marks). Normalize to NFC to match PO files (source of truth).
+        if self.encoding == "cp1258":
+            text = unicodedata.normalize("NFC", text)
         if self.dotall:
             lines = re.findall(self.pattern, text, re.DOTALL)
         else:

@@ -26,6 +26,7 @@ from msg2po.core import (
     sort_po,
 )
 from msg2po.log import cli_entry, setup_logging
+from msg2po.po_utils import po_content_snapshot
 
 
 # prepare po dir
@@ -120,7 +121,7 @@ def poify(poify_dir: str, encoding: str = CONFIG.encoding):
         po.metadata = old_po.metadata
     else:
         old_po = polib.POFile()
-    if po == old_po:
+    if po_content_snapshot(po) == po_content_snapshot(old_po):
         logger.info(f"No change in source directory {poify_dir}")
         sys.exit(0)
     else:

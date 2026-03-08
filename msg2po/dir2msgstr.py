@@ -26,6 +26,7 @@ from msg2po.core import (
     po_make_unique,
 )
 from msg2po.log import cli_entry, setup_logging
+from msg2po.po_utils import po_content_snapshot
 
 
 def dir2msgstr(
@@ -124,6 +125,7 @@ def main():
     if not args.auto:
         output_file = args.output_file
         po = pofile(output_file)
+        snapshot = po_content_snapshot(po)
         po = dir2msgstr(
             src_dir=args.src_dir,
             po=po,
@@ -132,7 +134,8 @@ def main():
             extension=args.file_ext,
             same=args.same,
         )
-        po.save(output_file, newline=CONFIG.newline_po)
+        if po_content_snapshot(po) != snapshot:
+            po.save(output_file, newline=CONFIG.newline_po)
         logger.info(f"Processed directory {args.src_dir}, the result is in {output_file}")
 
     if args.auto:
@@ -143,6 +146,7 @@ def main():
                 logger.info(f"Loading into {pf}")
                 lang_dir = language_map.po2slug[basename(pf)]
                 po = pofile(pf)
+                snapshot = po_content_snapshot(po)
                 female_map = female_entries(po)
                 occ_dict = build_occurrence_dict(po)
                 for ve in VALID_EXTENSIONS:
@@ -157,7 +161,8 @@ def main():
                         entries_dict=occ_dict,
                     )
                     logger.info(f"Processed {ve} files in directory {lang_dir}, the result is in {pf}")
-                po.save(pf, newline=CONFIG.newline_po)
+                if po_content_snapshot(po) != snapshot:
+                    po.save(pf, newline=CONFIG.newline_po)
 
 
 if __name__ == "__main__":

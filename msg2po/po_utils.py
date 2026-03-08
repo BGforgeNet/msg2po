@@ -212,6 +212,18 @@ def normalize_po(po: polib.POFile) -> polib.POFile:
     return po
 
 
+def po_content_snapshot(po: polib.POFile) -> set:
+    """Snapshot PO entry content for change detection, ignoring formatting and order.
+
+    Used together with po_wrap.py to avoid unnecessary PO re-saves: even if
+    wrapping differs between polib and Weblate's translate-toolkit, we only
+    save when actual translation content changes.
+    """
+    return {
+        (e.msgid, e.msgctxt, e.msgstr, tuple(sorted(e.msgstr_plural.items())), tuple(e.flags), e.obsolete) for e in po
+    }
+
+
 def _new_po_with_metadata(old_metadata) -> polib.POFile:
     """Helper to create a new POFile preserving metadata."""
     po = polib.POFile()
