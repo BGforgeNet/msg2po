@@ -521,11 +521,117 @@ def is_indexed(txt_filename: str, encoding: Optional[str] = None) -> bool:
 
 class TRANSEntry:
     def __init__(self):
-        self.index = None
-        self.value = None
-        self.context = None
-        self.female = None
-        self.comment = None
+        self.index: Optional[str] = None
+        self.value: Optional[str] = None
+        self.context: Optional[str] = None
+        self.female: Optional[str] = None
+        self.comment: Optional[str] = None
+
+
+def _load_lines(filepath: str, pattern: str, dotall: bool, encoding: str) -> list[tuple[str, ...]]:
+    """Read a translation file and return regex-matched line tuples."""
+    try:
+        with open(filepath, encoding=encoding) as fh:
+            text = fh.read()
+    except UnicodeDecodeError as e:
+        raise ValueError(f"Failed to read '{filepath}' with encoding '{encoding}': {e}") from None
+    # cp1258 decodes into a mixed normalization form (some precomposed, some
+    # combining marks). Normalize to NFC to match PO files (source of truth).
+    if encoding == "cp1258":
+        text = unicodedata.normalize("NFC", text)
+    if dotall:
+        return re.findall(pattern, text, re.DOTALL)
+    return re.findall(pattern, text)
+
+
+def _load_female_lines(filepath: str, fformat: FileFormat, encoding: str) -> Optional[list[tuple[str, ...]]]:
+    """Load separate female file lines if the format uses separate female files.
+    Returns None if no female file exists or format uses inline female."""
+    if fformat["line_format"]["female"] != "separate":
+        return None
+
+    female_dir = get_dir(filepath) + CONFIG.female_dir_suffix
+    female_file = os.path.join(female_dir, basename(filepath))
+    if not os.path.isfile(female_file):
+        logger.debug(f"female file not found: {female_file}")
+        return None
+
+    logger.debug(f"found female file {female_file}")
+    lines = _load_lines(female_file, fformat["pattern"], fformat["dotall"], encoding)
+    return lines
+
+
+def _parse_entries(
+    lines: list[tuple[str, ...]],
+    fformat: FileFormat,
+    fext: str,
+    filepath: str,
+    is_source: bool,
+    comment: Optional[str],
+    female_lines: Optional[list[tuple[str, ...]]],
+) -> list[TRANSEntry]:
+    """Parse regex-matched lines into TRANSEntry objects.
+    Validates forbidden characters, duplicate indices, and '000' index."""
+    entries: list[TRANSEntry] = []
+    seen: set[str] = set()
+    forbidden_characters = fformat["forbidden_characters"]
+
+    for line in lines:
+        entry = TRANSEntry()
+
+        index = line[fformat["index"]]
+        entry.value = str(line[fformat["value"]])
+
+        for fc in forbidden_characters:
+            if fc in entry.value:
+                logger.error(f"{fext} strings may not contain '{fc}' character, entry: {entry}")
+                raise ValueError("Invalid translation character")
+
+        if index == "000":
+            logger.error(f"{filepath} - invalid entry index '000' found, entry: {entry}")
+            raise ValueError("Invalid entry index")
+
+        entry.index = index
+
+        # 1. generic comment for all entries in file
+        entry.comment = comment
+        # 2. handle empty lines in source files
+        if entry.value == "" and is_source is True:
+            entry.value = " "
+            entry.comment = EMPTY_COMMENT
+
+        # context
+        if "context" in fformat:
+            entry.context = line[fformat["context"]]
+        if entry.context == "":
+            entry.context = None
+
+        # inline female (TRA format)
+        if fext == "tra" and "female" in fformat:
+            entry.female = str(line[fformat["female"]])
+            if entry.female == "":
+                entry.female = None
+            if entry.female and entry.context:
+                raise ValueError(f"TRA strings with female variants may not have context: {line}")
+
+        # separate female files (sfall)
+        if not is_source and female_lines is not None and female_lines != lines:
+            matching = [fl for fl in female_lines if fl[fformat["index"]] == entry.index]
+            if matching:
+                female_value = str(matching[0][fformat["value"]])
+                if female_value != entry.value:
+                    logger.debug(f"found alternative female string for line {entry.index}: {female_value}")
+                entry.female = female_value
+
+        if entry.index in seen:
+            logger.error(f"{filepath} - duplicate string index '{entry.index}', last value: {entry.value}")
+            raise ValueError("Duplicate entry indices")
+        seen.add(index)
+
+        if entry.value is not None and entry.value != "":
+            entries.append(entry)
+
+    return entries
 
 
 class TRANSFile:
@@ -536,118 +642,27 @@ class TRANSFile:
     """
 
     def __init__(self, filepath: str, is_source: bool = False, encoding: Optional[str] = None):
-        self.entries: list[TRANSEntry] = []
         if encoding is None:
             encoding = CONFIG.encoding
         self.encoding = encoding
         fext = get_ext(filepath)
         self.fformat: FileFormat = FILE_FORMAT[fext]
-        self.pattern: str = self.fformat["pattern"]
-        self.dotall: bool = self.fformat["dotall"]
         self.filepath = filepath
-        self.forbidden_characters: list[str] = self.fformat["forbidden_characters"]
-        self.comment: Optional[str] = self.fformat.get("comment")
 
-        self.lines = self.load_lines(filepath)
+        lines = _load_lines(filepath, self.fformat["pattern"], self.fformat["dotall"], encoding)
 
-        # enabled for file2msgstr, disabled for file2po
+        female_lines = None
         if not is_source:
-            self.lines_female = None
-            if self.fformat["line_format"]["female"] == "separate":
-                female_dir = get_dir(filepath) + CONFIG.female_dir_suffix
-                female_file = os.path.join(female_dir, basename(filepath))
-                if os.path.isfile(female_file):
-                    logger.debug(f"found female file {female_file}")
-                    self.lines_female = self.load_lines(female_file)
-                else:
-                    logger.debug(f"female file not found: {female_file}")
-
-            if self.lines_female is not None:
-                if self.lines_female == self.lines:
+            female_lines = _load_female_lines(filepath, self.fformat, encoding)
+            if female_lines is not None:
+                if female_lines == lines:
                     logger.debug("female lines are identical")
                 else:
                     logger.debug("female lines are different")
 
-        # protection against duplicate indexes, part 1
-        seen: set[str] = set()
-
-        for line in self.lines:
-            entry = TRANSEntry()
-
-            # index and value
-            index = line[self.fformat["index"]]
-            entry.value = str(line[self.fformat["value"]])
-
-            for fc in self.forbidden_characters:
-                if fc in entry.value:
-                    logger.error(f"{fext} strings may not contain '{fc}' character, entry: {entry}")
-                    raise ValueError("Invalid translation character")
-
-            # fail on invalid '000' entries in MSG files
-            if index == "000":
-                logger.error(f"{filepath} - invalid entry index '000' found, entry: {entry}")
-                raise ValueError("Invalid entry index")
-
-            entry.index = line[self.fformat["index"]]
-
-            # comment
-            # 1. generic comment for all entries in file
-            entry.comment = self.comment
-            # 2. handle empty lines in source files
-            if entry.value == "" and is_source is True:
-                entry.value = " "
-                entry.comment = EMPTY_COMMENT
-
-            # context
-            if "context" in self.fformat:
-                entry.context = line[self.fformat["context"]]
-            if entry.context == "":
-                entry.context = None
-
-            # female
-            if fext == "tra" and "female" in self.fformat:  # TRA file specific
-                entry.female = str(line[self.fformat["female"]])
-                if entry.female == "":
-                    entry.female = None
-
-                if entry.female and entry.context:
-                    raise ValueError(f"TRA strings with female variants may not have context: {line}")
-
-            # sfall female extraction
-            if not is_source and (self.lines_female is not None) and self.lines_female != self.lines:
-                matching = [fl for fl in self.lines_female if fl[self.fformat["index"]] == entry.index]
-                if matching:
-                    female_line = matching[0]
-                    entry.female = str(female_line[self.fformat["value"]])
-                    if entry.female != entry.value:
-                        logger.debug(f"found alternative female string for line {entry.index}: {entry.female}")
-
-            # protection against duplicate indexes, part 2
-            if entry.index in seen:
-                logger.error(f"{filepath} - duplicate string index '{entry.index}', last value: {entry.value}")
-                raise ValueError("Duplicate entry indices")
-            else:
-                seen.add(index)
-
-            # produce the final list of strings
-            if entry.value is not None and entry.value != "":
-                self.entries.append(entry)
-
-    def load_lines(self, filepath: str):
-        try:
-            with open(filepath, encoding=self.encoding) as fh:
-                text = fh.read()
-        except UnicodeDecodeError as e:
-            raise ValueError(f"Failed to read '{filepath}' with encoding '{self.encoding}': {e}") from None
-        # cp1258 decodes into a mixed normalization form (some precomposed, some
-        # combining marks). Normalize to NFC to match PO files (source of truth).
-        if self.encoding == "cp1258":
-            text = unicodedata.normalize("NFC", text)
-        if self.dotall:
-            lines = re.findall(self.pattern, text, re.DOTALL)
-        else:
-            lines = re.findall(self.pattern, text)
-        return lines
+        self.entries = _parse_entries(
+            lines, self.fformat, fext, filepath, is_source, self.fformat.get("comment"), female_lines
+        )
 
 
 def language_slug(po_filename):
