@@ -159,7 +159,7 @@ def main():
     poify_dir = args.DIR
     dir_or_exit(poify_dir)
 
-    # so that resulting po has relative occurences
+    # so that resulting po has relative occurrences
     with cd(parent_dir(os.path.abspath(poify_dir))):
         poify(poify_dir)
 

@@ -80,8 +80,8 @@ class TestDirOrExit:
         # Should not raise
         dir_or_exit(str(tmp_path))
 
-    def test_missing_dir_exits(self, tmp_path):
-        with pytest.raises(SystemExit):
+    def test_missing_dir_raises(self, tmp_path):
+        with pytest.raises(FileNotFoundError):
             dir_or_exit(str(tmp_path / "nonexistent"))
 
 

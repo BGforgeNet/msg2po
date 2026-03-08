@@ -5,7 +5,6 @@
 import os
 import re
 import shutil
-import sys
 import unicodedata
 from collections import OrderedDict
 from contextlib import contextmanager
@@ -144,8 +143,7 @@ def dir_or_exit(d):
     if Path(d).is_dir():
         logger.debug(f"Found directory {d}")
     else:
-        logger.error(f"Directory '{d}' does not exist. Check the path and try again.")
-        sys.exit(1)
+        raise FileNotFoundError(f"Directory '{d}' does not exist. Check the path and try again.")
 
 
 @contextmanager
