@@ -7,6 +7,7 @@ from polib import pofile
 
 from msg2po.conversion import po2file
 from msg2po.formats import VALID_EXTENSIONS
+from msg2po.indexed_po import IndexedPO
 from msg2po.log import cli_entry, setup_logging
 
 
@@ -29,7 +30,8 @@ def main():
     path = args.path if args.path is not None else args.OUTPUT_FILE
 
     po = pofile(args.INPUT_FILE)
-    po2file(po, args.OUTPUT_FILE, args.encoding, path)
+    ipo = IndexedPO.from_po(po)
+    po2file(po, args.OUTPUT_FILE, args.encoding, path, indexed_po=ipo)
 
 
 if __name__ == "__main__":

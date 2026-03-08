@@ -8,6 +8,7 @@ from polib import pofile
 from msg2po.config import CONFIG
 from msg2po.conversion import file2msgstr
 from msg2po.formats import VALID_EXTENSIONS
+from msg2po.indexed_po import IndexedPO
 from msg2po.log import cli_entry, setup_logging
 
 
@@ -42,7 +43,8 @@ def main():
     path = args.path if args.path is not None else args.INPUT_FILE
 
     po = pofile(output_file)
-    file2msgstr(input_file, po, path, encoding=args.encoding, overwrite=args.overwrite, same=args.same)
+    ipo = IndexedPO.from_po(po)
+    file2msgstr(input_file, po, path, encoding=args.encoding, overwrite=args.overwrite, same=args.same, indexed_po=ipo)
     po.save(output_file, newline=CONFIG.newline_po)
 
 

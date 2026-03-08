@@ -3,9 +3,14 @@
 # po2file: PO entries -> game file
 # file2msgstr: game file translations -> PO msgstr fields
 
+from __future__ import annotations
+
 import os
 from collections import OrderedDict
-from typing import Optional
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from msg2po.indexed_po import IndexedPO
 
 import polib
 from loguru import logger
@@ -19,7 +24,7 @@ from msg2po.po_utils import CONTEXT_FEMALE, EMPTY_COMMENT, female_entries, metad
 from msg2po.transfile import TRANSFile
 
 
-def file2po(filepath: str, po_path: str = "", encoding: Optional[str] = None, occurrence_path: Optional[str] = None):
+def file2po(filepath: str, po_path: str = "", encoding: str | None = None, occurrence_path: str | None = None):
     """Returns PO file object"""
     if encoding is None:
         encoding = CONFIG.encoding
@@ -83,20 +88,21 @@ def po2file(
     encoding: str,
     occurrence_path: str,
     dst_dir=None,
-    trans_map=None,
-    female_map=None,
+    indexed_po: IndexedPO | None = None,
 ) -> None:
     """
     Extract and write to disk a single file from POFile.
     output_file is the file path to write to.
     occurrence_path is the relative path used for PO occurrence matching.
     dst_dir is the destination language directory. Used in unpoify and po2file.
+    indexed_po provides precomputed indexes; if None, indexes are computed on demand.
     """
-    if trans_map is None:  # when extracting single file with po2tra/po2msg, etc
-        # check if file is present in po, exit if not
+    if indexed_po is not None:
+        trans_map = indexed_po.trans_map
+        female_map = indexed_po.female_map
+    else:
         check_path_in_po(po, occurrence_path)
         trans_map = translation_entries(po)
-    if female_map is None:
         female_map = female_entries(po)
 
     # create parent directory
@@ -198,10 +204,10 @@ def po2file(
                     file2.writelines(lines_female)
 
 
-def get_female_filepath(path: str, dst_dir: str, same: bool = True) -> Optional[str]:
+def get_female_filepath(path: str, dst_dir: str, same: bool = True) -> str | None:
     """Determine female file path based on format and sfall conventions."""
     # default: just add _female suffix
-    female_path: Optional[str] = path.replace(dst_dir + os.sep, dst_dir + CONFIG.female_dir_suffix + os.sep)
+    female_path: str | None = path.replace(dst_dir + os.sep, dst_dir + CONFIG.female_dir_suffix + os.sep)
     if CONFIG.extract_format == "sfall":
         female_path = None  # default for sfall: don't copy, it will fallback to male
         if "cuts" in path.split(os.sep):  # cuts dont' fallback
@@ -250,11 +256,10 @@ def file2msgstr(
     input_file: str,
     po: polib.POFile,
     occurrence_path: str,
-    encoding: Optional[str] = None,
+    encoding: str | None = None,
     overwrite: bool = True,
     same: bool = False,
-    female_map: Optional[dict[str, polib.POEntry]] = None,
-    entries_dict: Optional[OrderedDict] = None,
+    indexed_po: IndexedPO | None = None,
 ) -> None:
     """Loads translated strings from input_file into po, mutating it in place."""
     if encoding is None:
@@ -262,9 +267,11 @@ def file2msgstr(
 
     trans = TRANSFile(filepath=input_file, is_source=False, encoding=encoding)  # load translations
 
-    if entries_dict is None:
+    if indexed_po is not None:
+        entries_dict = indexed_po.occ_dict
+        female_map = indexed_po.female_map
+    else:
         entries_dict = build_occurrence_dict(po)
-    if female_map is None:
         female_map = female_entries(po)
 
     # newly added female entries, without PO counterpart

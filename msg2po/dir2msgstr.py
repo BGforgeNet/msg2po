@@ -5,22 +5,21 @@
 import argparse
 import os
 import sys
-from collections import OrderedDict
 from typing import Optional
 
-import polib
 from loguru import logger
 from polib import POFile, pofile
 
 from msg2po.common import find_files, get_ext
 from msg2po.config import CONFIG
-from msg2po.conversion import build_occurrence_dict, file2msgstr
+from msg2po.conversion import file2msgstr
 from msg2po.core import basename
 from msg2po.encoding import get_enc
 from msg2po.formats import VALID_EXTENSIONS
+from msg2po.indexed_po import IndexedPO
 from msg2po.languages import LanguageMap
 from msg2po.log import cli_entry, setup_logging
-from msg2po.po_utils import female_entries, po_content_snapshot, po_make_unique
+from msg2po.po_utils import po_content_snapshot, po_make_unique
 
 
 def dir2msgstr(
@@ -30,8 +29,7 @@ def dir2msgstr(
     overwrite: bool = True,
     extension: str = "",
     same: bool = False,
-    female_map: Optional[dict[str, "polib.POEntry"]] = None,
-    entries_dict: Optional["OrderedDict"] = None,
+    indexed_po: Optional[IndexedPO] = None,
 ):
     """Loads translated strings from files in src_dir into po (mutating it),
     then returns a deduplicated copy via po_make_unique."""
@@ -39,10 +37,8 @@ def dir2msgstr(
 
     skip_files = CONFIG.skip_files
 
-    if female_map is None:
-        female_map = female_entries(po)
-    if entries_dict is None:
-        entries_dict = build_occurrence_dict(po)
+    if indexed_po is None:
+        indexed_po = IndexedPO.from_po(po)
 
     abs_src = os.path.abspath(src_dir)
     for dir_name, _subdir_list, file_list in os.walk(abs_src, topdown=False, followlinks=True):
@@ -72,8 +68,7 @@ def dir2msgstr(
                 encoding=enc,
                 overwrite=overwrite,
                 same=same,
-                female_map=female_map,
-                entries_dict=entries_dict,
+                indexed_po=indexed_po,
             )
     return po_make_unique(po)
 
@@ -143,8 +138,7 @@ def main():
             lang_dir = os.path.join(abs_tra, slug)
             po = pofile(pf)
             snapshot = po_content_snapshot(po)
-            female_map = female_entries(po)
-            occ_dict = build_occurrence_dict(po)
+            ipo = IndexedPO.from_po(po)
             for ve in VALID_EXTENSIONS:
                 po = dir2msgstr(
                     src_dir=lang_dir,
@@ -153,8 +147,7 @@ def main():
                     overwrite=args.overwrite,
                     extension=ve,
                     same=args.same,
-                    female_map=female_map,
-                    entries_dict=occ_dict,
+                    indexed_po=ipo,
                 )
                 logger.info(f"Processed {ve} files in directory {slug}, the result is in {rel_pf}")
             if po_content_snapshot(po) != snapshot:

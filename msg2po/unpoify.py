@@ -15,9 +15,9 @@ from msg2po.config import CONFIG
 from msg2po.conversion import po2file
 from msg2po.core import ensure_dir_exists
 from msg2po.encoding import get_enc
+from msg2po.indexed_po import IndexedPO
 from msg2po.languages import LanguageMap
 from msg2po.log import cli_entry, setup_logging
-from msg2po.po_utils import female_entries, translation_entries
 
 
 def extract_po(pf: str, language_map: LanguageMap, base_dir: str):
@@ -30,17 +30,16 @@ def extract_po(pf: str, language_map: LanguageMap, base_dir: str):
     logger.info(f"processing {rel_po_path}")
     # Open PO once, it's a heavy op
     po = pofile(abs_po_path)
-    trans_map = translation_entries(po)
-    female_map = female_entries(po)
+    ipo = IndexedPO.from_po(po)
 
     dst_dir = language_map.po2slug[pf]
     abs_dst_dir = os.path.join(base_dir, dst_dir)
 
-    for ef in sorted(trans_map):
+    for ef in sorted(ipo.trans_map):
         enc = get_enc(abs_po_path, ef)
         ef_extract_path = os.path.join(abs_dst_dir, ef)
         logger.debug(f"Extracting {ef} from {rel_po_path} into {os.path.join(dst_dir, ef)} with encoding {enc}")
-        po2file(po, ef_extract_path, enc, ef, dst_dir=abs_dst_dir, trans_map=trans_map, female_map=female_map)
+        po2file(po, ef_extract_path, enc, ef, dst_dir=abs_dst_dir, indexed_po=ipo)
 
     enc = get_enc(abs_po_path)
     logger.info(f"Extracted {rel_po_path} into {dst_dir} with encoding {enc}")
