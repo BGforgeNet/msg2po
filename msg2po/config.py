@@ -9,7 +9,7 @@ from typing import Any
 import ruamel.yaml
 from loguru import logger
 
-VERSION = "1.4.3"
+VERSION = "1.5.0"
 
 TRANSLATION_DEFAULTS: dict[str, Any] = {
     "encoding": "cp1252",

@@ -1,5 +1,11 @@
 ## Changelog
 
+### 1.5.0
+
+- Performance improvements: `poify` is ~2.5x faster, `dir2msgstr` is ~11% faster.
+- All CLI commands now support `--verbose`, `--quiet`, and `--timestamps` flags.
+- Clearer error messages for missing directories and encoding failures.
+
 ### 1.4.3
 
 - Fixed regex handling in `dir2msgstr` and `poify`.
