@@ -19,17 +19,14 @@ poify    →  Weblate  →  unpoify  →  dir2msgstr (optional)
 ## Key Commands
 
 ```bash
-uv sync                        # Install dependencies
-uv build                       # Build package
-uv run <command>               # Run a console script
-uv run ruff check              # Lint
+uv run ruff check              # Lint (rules: E, F, W, I, UP, B, SIM)
+uv run ruff check --fix        # Lint with auto-fix
 uv run ruff format             # Format
+uv run ruff format --check     # Format check
 uv run ty check                # Type check
-uv run pytest                  # Run tests
-uv run pytest -k "test_name"   # Single test
-./tests/e2e.sh                 # E2E tests (slow)
-./tests/all.sh                 # Full suite
 ```
+
+Ruff config: line-length 120, SIM108 ignored (ternary often less readable here).
 
 **Pre-commit:**
 ```bash
