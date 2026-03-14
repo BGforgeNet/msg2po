@@ -69,3 +69,4 @@ translation:
 - **Lint:** ShellCheck, ruff, ty
 - **Test:** pytest (parallel with lint)
 - **Release:** `uv build` + `uv publish` on tag
+- **GitHub Action:** Composite action (`action.yml`) automates poify/unpoify/dir2msgstr in CI

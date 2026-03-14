@@ -75,13 +75,16 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+
     - name: Initialize environment
       shell: bash
       run: |
         set -xeu -o pipefail
-        if [ "$RUNNER_OS" == "Linux" ]; then
-          sudo apt-get install -y -qq -o=Dpkg::Use-Pty=0 gettext virtualenv
-        elif [ "$RUNNER_OS" == "Windows" ]; then
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          sudo apt-get install -y -qq -o=Dpkg::Use-Pty=0 gettext
+        elif [ "$RUNNER_OS" = "Windows" ]; then
           wget https://github.com/mlocati/gettext-iconv-windows/releases/download/v0.21-v1.16/gettext0.21-iconv1.16-static-32.zip -O gettext.zip
           7z e gettext.zip bin/msgmerge.exe
           mv msgmerge.exe "${GITHUB_ACTION_PATH}/msg2po/"
@@ -90,25 +93,18 @@ runs:
           echo "$RUNNER_OS not supported"
           exit 1
         fi
-        echo "VIRTUALENV_PATH=${GITHUB_ACTION_PATH}/venv" >> $GITHUB_ENV  # Next steps
-        export VIRTUALENV_PATH="${GITHUB_ACTION_PATH}/venv"  # This step
-        virtualenv "$VIRTUALENV_PATH"
-        # Very verbose
-        source "$VIRTUALENV_PATH/bin/activate" >/dev/null 2>&1 || true
-        pip3 install -r "$GITHUB_ACTION_PATH/requirements.txt" --quiet
+        uv sync
         echo "${GITHUB_ACTION_PATH}/msg2po" >> $GITHUB_PATH
         echo "PYTHONPATH=${GITHUB_ACTION_PATH}" >> $GITHUB_ENV
 
-    # smart filters https://github.com/AurorNZ/paths-filter
     - name: Get path filters for checking changes
       shell: bash
       run: |
-        source "$VIRTUALENV_PATH/bin/activate" >/dev/null 2>&1 || true
-        bgforge_config.py paths-filter > ../filters.yml # not sure how to get tmp dir
-        cat ../filters.yml # for debug
+        uv run bgforge_config.py paths-filter > ../filters.yml
+        cat ../filters.yml
 
     - name: Check changes
-      uses: AurorNZ/paths-filter@v3.0.1
+      uses: AurorNZ/paths-filter@v3.2.2
       id: changes
       with:
         filters: ../filters.yml
