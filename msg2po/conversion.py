@@ -122,7 +122,7 @@ def po2file(
         po_index = file_trans["po_index"]
         entry = po[po_index]
 
-        if entry.msgstr == "" or "fuzzy" in entry.flags and not extract_fuzzy:  # if not translated, keep msgid
+        if entry.msgstr == "" or ("fuzzy" in entry.flags and not extract_fuzzy):  # if not translated, keep msgid
             value = entry.msgid
         else:
             value = entry.msgstr  # either translated or fuzzy+extract_fuzzy

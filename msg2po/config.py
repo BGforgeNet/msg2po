@@ -4,12 +4,13 @@
 
 import os
 from dataclasses import dataclass, field
+from importlib.metadata import version as _pkg_version
 from typing import Any
 
 import ruamel.yaml
 from loguru import logger
 
-VERSION = "1.5.0"
+VERSION = _pkg_version("msg2po")
 
 TRANSLATION_DEFAULTS: dict[str, Any] = {
     "encoding": "cp1252",

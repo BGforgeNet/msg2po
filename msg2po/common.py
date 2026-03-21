@@ -2,12 +2,12 @@
 import os
 
 
-def find_files(dir: str, ext: str):
+def find_files(directory: str, ext: str):
     """
-    Find files with extension ext in directory dir
+    Find files with extension ext in directory
     """
     files = []
-    for root, _subdir_list, file_list in os.walk(dir):
+    for root, _subdir_list, file_list in os.walk(directory):
         for f in file_list:
             if get_ext(f) == ext:
                 files.append(os.path.join(root, f))
