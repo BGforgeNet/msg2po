@@ -104,7 +104,7 @@ runs:
         cat ../filters.yml
 
     - name: Check changes
-      uses: AurorNZ/paths-filter@v3.2.2
+      uses: AurorNZ/paths-filter@c9dd42e99db87803313ff6f4b1150cc9f6c836af
       id: changes
       with:
         filters: ../filters.yml
