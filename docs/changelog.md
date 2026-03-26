@@ -1,5 +1,9 @@
 ## Changelog
 
+### 1.5.1
+
+- Fixed GitHub action failing, introduced in v1.5.0.
+
 ### 1.5.0
 
 - Performance improvements: `poify` is ~2.5x faster, `dir2msgstr` is ~11% faster.

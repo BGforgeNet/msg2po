@@ -93,14 +93,14 @@ runs:
           echo "$RUNNER_OS not supported"
           exit 1
         fi
-        uv sync
+        uv sync --project "$GITHUB_ACTION_PATH"
         echo "${GITHUB_ACTION_PATH}/msg2po" >> $GITHUB_PATH
         echo "PYTHONPATH=${GITHUB_ACTION_PATH}" >> $GITHUB_ENV
 
     - name: Get path filters for checking changes
       shell: bash
       run: |
-        uv run bgforge_config.py paths-filter > ../filters.yml
+        uv run --project "$GITHUB_ACTION_PATH" bgforge_config.py paths-filter > ../filters.yml
         cat ../filters.yml
 
     - name: Check changes

@@ -27,13 +27,6 @@ uv run ty check                # Type check
 ```
 
 Ruff config: line-length 120, SIM108 ignored (ternary often less readable here).
-
-**Pre-commit:**
-```bash
-uv run pre-commit install      # Set up hooks
-uv run pre-commit run --all-files  # Run manually
-```
-
 ## Core Modules
 
 - **formats.py** - FILE_FORMAT dict (MSG, SVE, TXT, TRA specs)

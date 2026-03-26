@@ -2,8 +2,9 @@
 
 set -xeu -o pipefail
 
-# shellcheck source=/dev/null  # Nothing interesting here
-source "$VIRTUALENV_PATH/bin/activate" >/dev/null 2>&1 || true
+# Activate uv-managed venv so direct script calls (poify.py, etc.) can import dependencies.
+# shellcheck source=/dev/null
+source "$GITHUB_ACTION_PATH/.venv/bin/activate"
 
 tra_dir="$(bgforge_config.py translation tra_dir)"
 src_lang="$(bgforge_config.py translation src_lang)"
