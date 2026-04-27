@@ -250,10 +250,20 @@ def po_content_snapshot(po: polib.POFile) -> set:
 
     Used together with po_wrap.py to avoid unnecessary PO re-saves: even if
     wrapping differs between polib and Weblate's translate-toolkit, we only
-    save when actual translation content changes.
+    save when entry data actually changes. This includes occurrences, since
+    stale source locations must still trigger a rewrite.
     """
     return {
-        (e.msgid, e.msgctxt, e.msgstr, tuple(sorted(e.msgstr_plural.items())), tuple(e.flags), e.obsolete) for e in po
+        (
+            e.msgid,
+            e.msgctxt,
+            e.msgstr,
+            tuple(sorted(e.msgstr_plural.items())),
+            tuple(sorted(e.occurrences)),
+            tuple(e.flags),
+            e.obsolete,
+        )
+        for e in po
     }
 
 
