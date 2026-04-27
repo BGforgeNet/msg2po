@@ -1,9 +1,12 @@
 # Tests for file2po, po2file, and roundtrip conversions.
 
+from dataclasses import replace
+
 import polib
 import pytest
 
 from msg2po.conversion import file2msgstr, file2po, po2file
+from msg2po.config import CONFIG
 from msg2po.po_utils import (
     CONTEXT_FEMALE,
     EMPTY_COMMENT,
@@ -146,6 +149,24 @@ class TestPo2File:
 
         assert "Bonjour le monde" in content
         assert "{100}{}{Bonjour le monde}" in content
+
+    def test_removes_stale_dialog_female_file_when_falling_back_to_male(self, tmp_path, monkeypatch):
+        po = polib.POFile()
+        po.append(polib.POEntry(msgid="Hello", msgstr="Bonjour", occurrences=[("dialog/test.msg", "100")]))
+
+        config = replace(CONFIG, extract_format="sfall")
+        monkeypatch.setattr("msg2po.conversion.CONFIG", config)
+
+        dst_dir = tmp_path / "french"
+        output = dst_dir / "dialog" / "test.msg"
+        stale_female = dst_dir / "dialog_female" / "test.msg"
+        stale_female.parent.mkdir(parents=True)
+        stale_female.write_text("{100}{}{STALE}\n", encoding="utf-8")
+
+        po2file(po, str(output), "utf-8", "dialog/test.msg", dst_dir=str(dst_dir))
+
+        assert output.exists()
+        assert not stale_female.exists()
 
 
 class TestFile2Msgstr:

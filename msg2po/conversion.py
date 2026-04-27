@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 from collections import OrderedDict
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -187,6 +188,10 @@ def po2file(
         # If need to create the file
         if same:  # if female translation is the same?
             if female_file is None:  # don't need to copy, automatic fallback
+                stale_female = get_stale_female_filepath(output_file)
+                if stale_female is not None and Path(stale_female).exists():
+                    logger.debug(f"Female strings are same, deleting stale female file {stale_female}")
+                    Path(stale_female).unlink()
                 logger.debug(f"Female strings are same, not copying - sfall will fallback to male {occurrence_path}")
                 return
             else:
@@ -216,6 +221,15 @@ def get_female_filepath(path: str, dst_dir: str, same: bool = True) -> str | Non
         if "dialog" in path.split(os.sep) and not same:  # dialog, female translation differs
             female_path = path.replace(os.sep + "dialog" + os.sep, os.sep + "dialog_female" + os.sep)
     return female_path
+
+
+def get_stale_female_filepath(path: str) -> str | None:
+    """Return the stale dialog_female path to remove when sfall falls back to male."""
+    if CONFIG.extract_format != "sfall":
+        return None
+    if "dialog" not in path.split(os.sep):
+        return None
+    return path.replace(os.sep + "dialog" + os.sep, os.sep + "dialog_female" + os.sep)
 
 
 def get_line_format(e, ext: str):
