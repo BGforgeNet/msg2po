@@ -168,6 +168,25 @@ class TestPo2File:
         assert output.exists()
         assert not stale_female.exists()
 
+    def test_skips_ambiguous_occurrence_less_female_entry(self, tmp_path, monkeypatch):
+        po = polib.POFile()
+        po.append(polib.POEntry(msgid="Shared", msgstr="Male A", occurrences=[("dialog/a.msg", "100")]))
+        po.append(polib.POEntry(msgid="Shared", msgstr="Male B", occurrences=[("dialog/b.msg", "200")]))
+        po.append(polib.POEntry(msgid="Shared", msgstr="Female shared", msgctxt=CONTEXT_FEMALE))
+
+        config = replace(CONFIG, extract_format="sfall")
+        monkeypatch.setattr("msg2po.conversion.CONFIG", config)
+        monkeypatch.setattr("msg2po.po_utils.CONFIG", config)
+
+        dst_dir = tmp_path / "lang"
+        output = dst_dir / "dialog" / "b.msg"
+
+        po2file(po, str(output), "utf-8", "dialog/b.msg", dst_dir=str(dst_dir))
+
+        female_output = dst_dir / "dialog_female" / "b.msg"
+        assert output.read_text(encoding="utf-8") == "{200}{}{Male B}\n"
+        assert not female_output.exists()
+
 
 class TestFile2Msgstr:
     def test_loads_translations(self, msg_file, msg_translated_file):
@@ -216,8 +235,39 @@ class TestFile2Msgstr:
             encoding="utf-8",
         )
         fe_map = female_entries(po)
-        assert "Male greeting" in fe_map
-        assert fe_map["Male greeting"].msgstr == "Salutation feminine"
+        assert (tra_file, "103") in fe_map
+        assert fe_map[(tra_file, "103")].msgstr == "Salutation feminine"
+
+    def test_new_female_entry_keeps_occurrence_scope(self, tmp_path, monkeypatch):
+        source = tmp_path / "dialog" / "scope.msg"
+        source.parent.mkdir(parents=True)
+        source.write_text("{100}{}{Shared}\n", encoding="utf-8")
+
+        translated = tmp_path / "lang" / "dialog" / "scope.msg"
+        translated.parent.mkdir(parents=True)
+        translated.write_text("{100}{}{Male}\n", encoding="utf-8")
+
+        translated_female = tmp_path / "lang" / "dialog_female" / "scope.msg"
+        translated_female.parent.mkdir(parents=True)
+        translated_female.write_text("{100}{}{Female}\n", encoding="utf-8")
+
+        config = replace(CONFIG, extract_format="sfall")
+        monkeypatch.setattr("msg2po.transfile.CONFIG", config)
+        monkeypatch.setattr("msg2po.conversion.CONFIG", config)
+        monkeypatch.setattr("msg2po.po_utils.CONFIG", config)
+
+        po = file2po(str(source), encoding="utf-8", occurrence_path="dialog/scope.msg")
+        file2msgstr(
+            input_file=str(translated),
+            po=po,
+            occurrence_path="dialog/scope.msg",
+            encoding="utf-8",
+            same=True,
+        )
+
+        female = next(e for e in po if e.msgctxt == CONTEXT_FEMALE)
+        assert female.msgstr == "Female"
+        assert female.occurrences == [("dialog/scope.msg", "100")]
 
 
 class TestSortPo:
@@ -292,8 +342,8 @@ class TestFemaleEntries:
         po.append(male)
         po.append(female)
         fe_map = female_entries(po)
-        assert "Hello" in fe_map
-        assert fe_map["Hello"].msgstr == "Bonjour F"
+        assert ("f.tra", "1") in fe_map
+        assert fe_map[("f.tra", "1")].msgstr == "Bonjour F"
 
     def test_empty_when_no_female(self, msg_file):
         po = file2po(msg_file, encoding="utf-8")

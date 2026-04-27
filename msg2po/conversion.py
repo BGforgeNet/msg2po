@@ -137,8 +137,9 @@ def po2file(
 
         # female strings
         female = None
-        if entry.msgid in female_map:
-            fe_entry = female_map[entry.msgid]
+        female_occurrence = (occurrence_path, str(file_index))
+        if female_occurrence in female_map:
+            fe_entry = female_map[female_occurrence]
             if fe_entry.msgstr == "" or "fuzzy" in fe_entry.flags and not extract_fuzzy:
                 female = fe_entry.msgid
             else:
@@ -292,18 +293,20 @@ class NewFemaleEntry:
 
     msgid: str
     msgstr: str
+    occurrence: tuple[str, str]
 
 
 def _compute_female_update(
     e: polib.POEntry,
     female_value: str,
-    female_map: dict[str, polib.POEntry],
+    female_map: dict[tuple[str, str], polib.POEntry],
+    occurrence: tuple[str, str],
     overwrite: bool,
     same: bool,
 ) -> FemaleUpdate | NewFemaleEntry | None:
     """Decide what to do with a female translation value."""
-    if e.msgid in female_map:
-        fe = female_map[e.msgid]
+    if occurrence in female_map:
+        fe = female_map[occurrence]
         if not fe or fe.msgstr == female_value:
             return None
         logger.info(f"female translation change: ORIG: {e.msgid} | OLD: {fe.msgstr} | NEW: {female_value}")
@@ -319,7 +322,7 @@ def _compute_female_update(
         return FemaleUpdate(entry=fe, new_msgstr=female_value, clear_fuzzy="fuzzy" in fe.flags)
     elif e.msgstr != female_value:
         logger.info(f"new female translation detected: ORIG: {e.msgid} | MALE: {e.msgstr} | FEMALE: {female_value}")
-        return NewFemaleEntry(msgid=e.msgid, msgstr=female_value)
+        return NewFemaleEntry(msgid=e.msgid, msgstr=female_value, occurrence=occurrence)
     return None
 
 
@@ -367,7 +370,7 @@ def compute_msgstr_updates(
     trans_entries: list,
     occurrence_path: str,
     entries_dict: OrderedDict,
-    female_map: dict[str, polib.POEntry],
+    female_map: dict[tuple[str, str], polib.POEntry],
     overwrite: bool,
     same: bool,
     extract_fuzzy: bool,
@@ -386,9 +389,10 @@ def compute_msgstr_updates(
             continue
 
         e: polib.POEntry = entries_dict[(occurrence_path, t.index)]
+        occurrence = (occurrence_path, t.index)
 
         if t.female:
-            result = _compute_female_update(e, t.female, female_map, overwrite, same)
+            result = _compute_female_update(e, t.female, female_map, occurrence, overwrite, same)
             if isinstance(result, FemaleUpdate):
                 female_updates.append(result)
             elif isinstance(result, NewFemaleEntry):
@@ -425,7 +429,7 @@ def apply_msgstr_updates(
             fu.entry.previous_msgid = None
 
     for nf in new_females:
-        po.append(polib.POEntry(msgid=nf.msgid, msgstr=nf.msgstr, msgctxt=CONTEXT_FEMALE))
+        po.append(polib.POEntry(msgid=nf.msgid, msgstr=nf.msgstr, msgctxt=CONTEXT_FEMALE, occurrences=[nf.occurrence]))
 
 
 def file2msgstr(

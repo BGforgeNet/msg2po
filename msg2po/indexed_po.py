@@ -14,7 +14,7 @@ from msg2po.po_utils import female_entries, translation_entries
 class IndexedPO:
     po: polib.POFile
     trans_map: dict
-    female_map: dict[str, polib.POEntry]
+    female_map: dict[tuple[str, str], polib.POEntry]
     occ_dict: OrderedDict
 
     @classmethod

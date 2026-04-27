@@ -1,7 +1,7 @@
 # PO file manipulation utilities: sorting, deduplication, female entry management,
 # metadata generation, and fuzzy flag cleanup.
 
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 from datetime import datetime
 
 import polib
@@ -54,32 +54,37 @@ def translation_entries(po: polib.POFile):
     return entries
 
 
-def female_entries(po: polib.POFile) -> dict[str, polib.POEntry]:
+def female_entries(po: polib.POFile) -> dict[tuple[str, str], polib.POEntry]:
     """
-    Returns mapping of male msgids to corresponding female PO entries.
-    Uses pre-built dicts for O(n) lookup instead of O(n^2) linear scans.
+    Returns mapping of male occurrences to corresponding female PO entries.
+
+    Female entries with explicit occurrences are scoped to those occurrences.
+    Legacy female entries without occurrences are only mapped when they have
+    exactly one possible male occurrence; ambiguous global matches are skipped.
     """
-    # Pre-build lookup dicts: msgid -> entry for non-female entries
-    male_no_ctx = {}  # entries with no context
-    male_any_ctx = {}  # entries with context != female
+    male_occurrences: dict[str, list[tuple[str, str]]] = defaultdict(list)
     for e in po:
         if e.msgctxt == CONTEXT_FEMALE:
             continue
-        if not e.msgctxt:
-            male_no_ctx.setdefault(e.msgid, e)
-        else:
-            male_any_ctx.setdefault(e.msgid, e)
+        for occurrence in e.occurrences:
+            male_occurrences[e.msgid].append(occurrence)
 
     entries = {}
     for e in po:
-        if e.msgctxt != CONTEXT_FEMALE or len(e.occurrences) != 0:
+        if e.msgctxt != CONTEXT_FEMALE:
             continue
-        # Prefer male entry without context, fall back to any non-female context
-        me = male_no_ctx.get(e.msgid) or male_any_ctx.get(e.msgid)
-        if me:
-            entries[me.msgid] = e
-        else:
+        if e.occurrences:
+            for occurrence in e.occurrences:
+                entries[occurrence] = e
+            continue
+
+        matches = male_occurrences.get(e.msgid, [])
+        if len(matches) == 1:
+            entries[matches[0]] = e
+        elif len(matches) == 0:
             logger.warning(f"couldn't find a corresponding male counterpart for a female entry: {e}")
+        else:
+            logger.warning(f"ambiguous female entry without occurrences, skipping auto-match: {e.msgid}")
     return entries
 
 
