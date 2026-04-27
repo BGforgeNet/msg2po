@@ -10,6 +10,17 @@ poify    →  Weblate  →  unpoify  →  dir2msgstr (optional)
 (game → PO)       (PO → game)    (reload edits)
 ```
 
+**Round-trip testing.** "Round-trip" against a downstream repo means emulating the GitHub Action's full chain (`action/{poify,unpoify,dir2msgstr}.sh`), not individual binaries. The action's `poify` step runs `poify.py` *then* `msgmerge.py` — running `poify` alone leaves language POs un-merged against the new POT and any cross-context contamination uncorrected. Full sequence on a downstream clone:
+
+```bash
+poify         data/text/english   # regenerate POT
+msgmerge-female                   # update each language PO from POT
+unpoify       data/text/po        # PO → game files
+dir2msgstr    --auto --overwrite  # game files → PO msgstrs
+```
+
+Check `git status` / `git diff` after **each** step (a net-zero diff at the end can hide a step that dirties and a later step that reverts).
+
 ## Dependencies
 
 - **polib** - PO file parsing
