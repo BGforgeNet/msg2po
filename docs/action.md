@@ -114,7 +114,7 @@ If for some reason standard configurations don't fit your workflow, check the fo
 
 #### Poify
 
-**Poify** scans source language strings and regenerates POT file. Then it merges POs with updated POT, which allows translators to see new and changed strings.
+**Poify** scans source language strings and regenerates POT file. Then it always merges POs with the current POT, which both exposes new and changed strings to translators and clears stale PO/POT discrepancies that may survive translation-side roundtrips.
 
 ```yaml
 name: poify

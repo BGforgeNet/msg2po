@@ -1,5 +1,9 @@
 ## Changelog
 
+### 1.5.2
+
+- Action: `poify` now always runs `msgmerge`, even when the POT file itself is unchanged. This lets the action clear stale PO/POT occurrence mismatches that can be reintroduced by translation-side PO updates.
+
 ### 1.5.1
 
 - Fixed GitHub action failing, introduced in v1.5.0.

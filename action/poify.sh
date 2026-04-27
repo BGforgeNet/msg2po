@@ -8,11 +8,8 @@ source "$(dirname "$0")/init.sh"
 if [[ "$INPUT_POIFY" == 'true' ]]; then
     echo 'Updating POT'
     poify.py
-    # shellcheck disable=SC2154  # from init.sh
-    if [[ "$(git status --porcelain "$pot_path" | wc -l)" != "0" ]]; then
-        echo 'Updating POs from pot'
-        msgmerge.py
-    fi
+    echo 'Updating POs from pot'
+    msgmerge.py
 fi
 
 # shellcheck disable=SC2154  # from init.sh
