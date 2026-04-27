@@ -42,4 +42,4 @@ class TestIndexedPO:
         po = self._make_po()
         ipo = IndexedPO.from_po(po)
         with pytest.raises(AttributeError):
-            ipo.po = polib.POFile()  # type: ignore[misc]
+            ipo.po = polib.POFile()  # ty: ignore[invalid-assignment]

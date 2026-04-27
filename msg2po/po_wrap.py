@@ -125,7 +125,10 @@ def apply_to_polib():
     Call this once at import time.
     """
 
-    def _str_field_patched(self, fieldname, delflag, plural_index, field, wrapwidth=WRAP_WIDTH):
+    def _str_field_patched(self, fieldname, delflag, plural_index, field, wrapwidth=78):
+        # Default 78 matches polib's original signature; the wrapwidth-77 override
+        # is applied via POFile.wrapwidth in the __init__ patch below, so callers
+        # always pass an explicit value and this default is unused.
         raw_lines = field.splitlines(True)
         if len(raw_lines) > 1 and all(line.endswith("\n") for line in raw_lines):
             # Multi-line field where every line ends with \n (metadata header).
@@ -163,20 +166,21 @@ def apply_to_polib():
             ret.append(f'{delflag}"{polib.escape(line)}"')
         return ret
 
-    # Monkey-patching polib internals — type: ignore needed because replacement
-    # signatures intentionally differ from originals.
-    polib._BaseEntry._str_field = _str_field_patched  # type: ignore[assignment]
+    # Monkey-patching polib internals. ty rejects these assignments because the
+    # class-level / module-level attributes are typed against the originals;
+    # the replacement signatures are compatible at runtime.
+    polib._BaseEntry._str_field = _str_field_patched  # ty: ignore[invalid-assignment]
 
     # Override default wrapwidth from 78 to 77 for all POFile instances
     _original_pofile = polib.pofile
 
-    def _pofile_patched(*args, **kwargs):
-        po = _original_pofile(*args, **kwargs)
+    def _pofile_patched(pofile, **kwargs):
+        po = _original_pofile(pofile, **kwargs)
         if po.wrapwidth == 78:
             po.wrapwidth = WRAP_WIDTH
         return po
 
-    polib.pofile = _pofile_patched  # type: ignore[assignment]
+    polib.pofile = _pofile_patched  # ty: ignore[invalid-assignment]
 
     _original_init = polib.POFile.__init__
 
@@ -185,4 +189,4 @@ def apply_to_polib():
         if self.wrapwidth == 78:
             self.wrapwidth = WRAP_WIDTH
 
-    polib.POFile.__init__ = _pofile_init_patched  # type: ignore[assignment]
+    polib.POFile.__init__ = _pofile_init_patched  # ty: ignore[invalid-assignment]
