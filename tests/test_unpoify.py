@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from msg2po.unpoify import clean_generated_female_dirs
 
 

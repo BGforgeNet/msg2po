@@ -5,8 +5,8 @@ from dataclasses import replace
 import polib
 import pytest
 
-from msg2po.conversion import file2msgstr, file2po, po2file
 from msg2po.config import CONFIG
+from msg2po.conversion import file2msgstr, file2po, po2file
 from msg2po.po_utils import (
     CONTEXT_FEMALE,
     EMPTY_COMMENT,
