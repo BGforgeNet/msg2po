@@ -25,8 +25,8 @@ class TestIndexedPO:
     def test_from_po_builds_female_map(self):
         po = self._make_po()
         ipo = IndexedPO.from_po(po)
-        assert ("dialog/1.msg", "100") in ipo.female_map
-        assert ipo.female_map[("dialog/1.msg", "100")].msgstr == "Bonjour F"
+        assert "Hello" in ipo.female_map
+        assert ipo.female_map["Hello"].msgstr == "Bonjour F"
 
     def test_from_po_builds_occ_dict(self):
         po = self._make_po()

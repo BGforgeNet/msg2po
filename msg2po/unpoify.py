@@ -5,7 +5,6 @@
 import argparse
 import concurrent.futures
 import os
-import shutil
 import sys
 
 from loguru import logger
@@ -19,17 +18,6 @@ from msg2po.encoding import get_enc
 from msg2po.indexed_po import IndexedPO
 from msg2po.languages import LanguageMap
 from msg2po.log import cli_entry, setup_logging
-
-
-def clean_generated_female_dirs(dst_dir: str) -> None:
-    """Remove generated *_female directories before regenerating translated files."""
-    if not os.path.isdir(dst_dir):
-        return
-
-    female_suffix = CONFIG.female_dir_suffix
-    for entry in os.scandir(dst_dir):
-        if entry.is_dir() and entry.name.endswith(female_suffix):
-            shutil.rmtree(entry.path)
 
 
 def extract_po(pf: str, language_map: LanguageMap, base_dir: str):
@@ -46,7 +34,6 @@ def extract_po(pf: str, language_map: LanguageMap, base_dir: str):
 
     dst_dir = language_map.po2slug[pf]
     abs_dst_dir = os.path.join(base_dir, dst_dir)
-    clean_generated_female_dirs(abs_dst_dir)
 
     for ef in sorted(ipo.trans_map):
         enc = get_enc(abs_po_path, ef)
