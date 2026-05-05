@@ -1,5 +1,9 @@
 ## Changelog
 
+### 1.5.3
+
+- `msgmerge-female` now strips `\r` from CRLF line endings in PO and POT files before invoking gettext `msgmerge`. Working trees produced by Git's `autocrlf=true` on Windows would otherwise produce mixed-ending output and spurious fuzzy/duplicate entries.
+
 ### 1.5.2
 
 - Action: `poify` now always runs `msgmerge`, even when the POT file itself is unchanged. This lets the action clear stale PO/POT occurrence mismatches that can be reintroduced by translation-side PO updates.

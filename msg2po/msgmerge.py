@@ -22,8 +22,26 @@ from msg2po.log import cli_entry, setup_logging
 from msg2po.po_utils import normalize_po, po_content_snapshot
 
 
+def _strip_cr(path: str) -> None:
+    """Strip CRs from CRLF line endings before invoking gettext.
+
+    On Windows checkouts under core.autocrlf=true, .po/.pot files arrive with
+    CRLF endings. gettext msgmerge then leaks the embedded \\r into string
+    fields (msgids, occurrence filenames, ...), producing mixed-ending output
+    and spurious fuzzy/duplicate entries from the polluted comparisons. The
+    output writer itself emits only LF, so feeding pre-canonicalized input
+    is sufficient to get clean output.
+    """
+    with open(path, "rb") as f:
+        data = f.read()
+    if b"\r\n" in data:
+        with open(path, "wb") as f:
+            f.write(data.replace(b"\r\n", b"\n"))
+
+
 def merge(po_path: str, pot_path: str):
     logger.info(po_path)
+    _strip_cr(po_path)
     exit_code = 0
     cmd = ["msgmerge", "--previous", "--no-wrap", "-U", "-q", "--backup=off", po_path, pot_path]
     res = subprocess.run(
@@ -67,6 +85,7 @@ def main():
 
     # single file
     if (args.PO is not None) and (args.POT is not None):
+        _strip_cr(args.POT)
         res = merge(args.PO, args.POT)
         if res != 0:
             logger.error(f"msgmerge failed for {args.PO}")
@@ -77,6 +96,10 @@ def main():
     po_dir = CONFIG.po_dir
     po_files = find_files(po_dir, "po")
     pot_file = os.path.join(po_dir, CONFIG.src_lang + ".pot")
+
+    # Canonicalize POT once before the worker pool: each worker would
+    # otherwise race to rewrite the same shared file.
+    _strip_cr(pot_file)
 
     logger.info(f"Merging PO files in {po_dir} with {pot_file}")
     pool = Pool()

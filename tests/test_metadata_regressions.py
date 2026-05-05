@@ -64,6 +64,39 @@ class TestMsgmergeOccurrenceOnlyNormalization:
         assert po[0].occurrences == [("game/one.msg", "100"), ("game/two.msg", "200")]
 
 
+class TestMsgmergeStripsCRLF:
+    def test_merge_canonicalizes_crlf_input_to_lf(self, tmp_path, monkeypatch):
+        """gettext msgmerge on Windows leaks \\r from CRLF input into msgids
+        and occurrence filenames; pre-canonicalize PO/POT before invoking it."""
+        po_path = tmp_path / "it.po"
+        pot_path = tmp_path / "en.pot"
+
+        po = polib.POFile()
+        po.metadata = {"Content-Type": "text/plain; charset=UTF-8"}
+        po.append(polib.POEntry(msgid="Hello", msgstr="ciao", occurrences=[("game/one.msg", "100")]))
+        po.save(po_path)
+        pot = polib.POFile()
+        pot.metadata = {"Content-Type": "text/plain; charset=UTF-8"}
+        pot.append(polib.POEntry(msgid="Hello", msgstr="", occurrences=[("game/one.msg", "100")]))
+        pot.save(pot_path)
+
+        for p in (po_path, pot_path):
+            data = p.read_bytes()
+            p.write_bytes(data.replace(b"\n", b"\r\n"))
+            assert b"\r\n" in p.read_bytes()
+
+        def fake_run(*_args, **_kwargs):
+            return type("Result", (), {"stdout": "", "stderr": "", "returncode": 0})()
+
+        monkeypatch.setattr("msg2po.msgmerge.subprocess.run", fake_run)
+
+        merge(str(po_path), str(pot_path))
+
+        assert b"\r\n" not in po_path.read_bytes()
+        # POT is canonicalized in main() outside merge() to avoid pool races,
+        # so the subprocess-mocked single-file call here only strips the PO.
+
+
 class TestDir2MsgstrOccurrenceOnlyNormalization:
     def test_dir2msgstr_saves_dedup_when_only_occurrences_change(self, tmp_path, monkeypatch):
         po_path = tmp_path / "it.po"
