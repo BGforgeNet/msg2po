@@ -1,5 +1,9 @@
 ## Changelog
 
+### WIP
+
+- Action: now fails the run if any file with a `working-tree-encoding` gitattribute is not stored as UTF-8 in Git. Files uploaded through the GitHub web UI or contents API bypass Git's encoding filter and commit raw legacy bytes, which Git silently flags as `failed to encode` on checkout without failing the build. The check surfaces the affected files so they can be re-committed correctly.
+
 ### 1.5.3
 
 - `msgmerge-female` now strips `\r` from CRLF line endings in PO and POT files before invoking gettext `msgmerge`. Working trees produced by Git's `autocrlf=true` on Windows would otherwise produce mixed-ending output and spurious fuzzy/duplicate entries.

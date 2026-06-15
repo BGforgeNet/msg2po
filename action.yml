@@ -75,6 +75,10 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Check working-tree-encoding integrity
+      shell: bash
+      run: $GITHUB_ACTION_PATH/action/check-encoding.py
+
     - name: Install uv
       uses: astral-sh/setup-uv@v7
 
