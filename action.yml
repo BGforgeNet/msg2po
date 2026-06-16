@@ -81,6 +81,11 @@ runs:
 
     - name: Install uv
       uses: astral-sh/setup-uv@v7
+      with:
+        # The action's dependencies live in $GITHUB_ACTION_PATH, not the consumer's workspace, so
+        # setup-uv's workspace-keyed cache has nothing to match and warns it can never invalidate.
+        # Caching a handful of small pure-Python deps isn't worth it - disable it.
+        enable-cache: false
 
     - name: Initialize environment
       shell: bash
