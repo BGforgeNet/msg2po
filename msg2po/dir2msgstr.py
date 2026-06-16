@@ -5,7 +5,6 @@
 import argparse
 import os
 import sys
-from typing import Optional
 
 from loguru import logger
 from polib import POFile, pofile
@@ -29,7 +28,7 @@ def dir2msgstr(
     overwrite: bool = True,
     extension: str = "",
     same: bool = False,
-    indexed_po: Optional[IndexedPO] = None,
+    indexed_po: IndexedPO | None = None,
 ):
     """Loads translated strings from files in src_dir into po, mutating it in place."""
     logger.debug(f"overwrite is {overwrite}")

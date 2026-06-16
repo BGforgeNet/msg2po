@@ -90,7 +90,9 @@ def main() -> int:
         if iconv_ok(batch, encoding):
             continue
         # The group failed somewhere; find the offending files.
-        bad.extend(path for (path, _), blob in zip(items, split_blobs(batch)) if not iconv_ok(blob, encoding))
+        bad.extend(
+            path for (path, _), blob in zip(items, split_blobs(batch), strict=True) if not iconv_ok(blob, encoding)
+        )
 
     if bad:
         print("::error::Files with a working-tree-encoding attribute are not stored as UTF-8 in Git.")

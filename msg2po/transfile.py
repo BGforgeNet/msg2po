@@ -5,7 +5,6 @@ import os
 import re
 import unicodedata
 from dataclasses import dataclass
-from typing import Optional
 
 from loguru import logger
 
@@ -20,9 +19,9 @@ from msg2po.po_utils import EMPTY_COMMENT
 class TRANSEntry:
     index: str
     value: str
-    context: Optional[str] = None
-    female: Optional[str] = None
-    comment: Optional[str] = None
+    context: str | None = None
+    female: str | None = None
+    comment: str | None = None
 
 
 def _load_lines(filepath: str, pattern: str, dotall: bool, encoding: str) -> list[tuple[str, ...]]:
@@ -41,7 +40,7 @@ def _load_lines(filepath: str, pattern: str, dotall: bool, encoding: str) -> lis
     return re.findall(pattern, text)
 
 
-def _load_female_lines(filepath: str, fformat: FileFormat, encoding: str) -> Optional[list[tuple[str, ...]]]:
+def _load_female_lines(filepath: str, fformat: FileFormat, encoding: str) -> list[tuple[str, ...]] | None:
     """Load separate female file lines if the format uses separate female files.
     Returns None if no female file exists or format uses inline female."""
     if fformat["line_format"]["female"] != "separate":
@@ -64,8 +63,8 @@ def _parse_entries(
     fext: str,
     filepath: str,
     is_source: bool,
-    comment: Optional[str],
-    female_lines: Optional[list[tuple[str, ...]]],
+    comment: str | None,
+    female_lines: list[tuple[str, ...]] | None,
 ) -> list[TRANSEntry]:
     """Parse regex-matched lines into TRANSEntry objects.
     Validates forbidden characters, duplicate indices, and '000' index."""
@@ -93,14 +92,14 @@ def _parse_entries(
             entry_comment = EMPTY_COMMENT
 
         # context
-        context: Optional[str] = None
+        context: str | None = None
         if "context" in fformat:
             context = line[fformat["context"]]
         if context == "":
             context = None
 
         # inline female (format has female index in regex, e.g. TRA)
-        female: Optional[str] = None
+        female: str | None = None
         if "female" in fformat:
             female = str(line[fformat["female"]])
             if female == "":
@@ -135,7 +134,7 @@ class TRANSFile:
     This is because PO gettext format doesn't tolerate empty msgids.
     """
 
-    def __init__(self, filepath: str, is_source: bool = False, encoding: Optional[str] = None):
+    def __init__(self, filepath: str, is_source: bool = False, encoding: str | None = None):
         if encoding is None:
             encoding = CONFIG.encoding
         self.encoding = encoding
@@ -159,7 +158,7 @@ class TRANSFile:
         )
 
 
-def is_indexed(txt_filename: str, encoding: Optional[str] = None) -> bool:
+def is_indexed(txt_filename: str, encoding: str | None = None) -> bool:
     """Check if a TXT file is fully indexed (all non-empty lines match index:value pattern)."""
     if encoding is None:
         encoding = CONFIG.encoding
