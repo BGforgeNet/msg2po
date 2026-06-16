@@ -1,6 +1,6 @@
 ## Changelog
 
-### WIP
+### 1.6.0
 
 - Action: now fails the run if any file with a `working-tree-encoding` gitattribute is not stored as UTF-8 in Git. Files uploaded through the GitHub web UI or contents API bypass Git's encoding filter and commit raw legacy bytes, which Git silently flags as `failed to encode` on checkout without failing the build. The check surfaces the affected files so they can be re-committed correctly.
 - Dropped support for Python 3.9 (end of life). The minimum supported version is now Python 3.10.
